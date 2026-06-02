@@ -1,0 +1,125 @@
+:root {
+  --background: 20 20% 98%;
+  --text: 222 47% 11%;
+  --warning: 0 84% 60%;
+  --alert: 38 92% 50%;
+  --blue: 199 89% 50%;
+  --cyan: 189 94% 43%;
+  --success: 142 71% 45%;
+  --success-secondary: 160 84% 39%;
+  --muted: 0 0% 100%;
+  --border: 220 13% 91%;
+  --primary: 11 88% 56%;
+  --primary-btn: 11 88% 56%;
+  --primary-hover: 11 88% 46%;
+  --secondary: 220 14% 96%;
+  --ring: 11 88% 56%;
+  --radius: 1rem;
+}
+
+.dark {
+  --background: 24 10% 12%;
+  --text: 24 10% 95%;
+  --warning: 0 84% 60%;
+  --alert: 43 96% 56%;
+  --blue: 198 93% 57%;
+  --cyan: 188 86% 53%;
+  --success: 142 69% 58%;
+  --success-secondary: 161 94% 30%;
+  --muted: 24 10% 16%;
+  --border: 24 10% 22%;
+  --primary: 11 88% 65%;
+  --primary-btn: 11 88% 60%;
+  --primary-hover: 11 88% 75%;
+  --secondary: 24 10% 18%;
+  --ring: 11 88% 65%;
+}
+
+.dark a,
+.dark p,
+.dark span,
+.dark div,
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: color-mix(in srgb, hsl(var(--text)), transparent 5%);
+}
+
+.dark .text-slate-700,
+.dark .text-slate-600,
+.dark .text-slate-500,
+.dark .text-slate-400 {
+  color: color-mix(in srgb, hsl(var(--text)), transparent 20%);
+}
+
+/* Global Fixes for slate utilities when used without weights */
+.text-slate {
+  color: #334155 !important; /* slate-700 */
+}
+.bg-slate {
+  background-color: #f1f5f9 !important; /* slate-100 */
+}
+.border-slate {
+  border-color: #e2e8f0 !important; /* slate-200 */
+}
+
+.dark .text-slate {
+  color: #f4f4f5 !important; /* zinc-100 */
+}
+.dark .bg-slate {
+  background-color: #1e293b !important; /* slate-800 */
+}
+.dark .border-slate {
+  border-color: #334155 !important; /* slate-700 */
+}
+
+.home-slider-desktop {
+  display: none !important;
+}
+
+.home-slider-mobile {
+  display: block !important;
+}
+
+@media (min-width: 768px) {
+  .home-slider-desktop {
+    display: block !important;
+  }
+
+  .home-slider-mobile {
+    display: none !important;
+  }
+}
+
+/* Desktop Megamenu Animations */
+#desktopMegamenu {
+    transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top center;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-10px);
+    display: block !important;
+    visibility: hidden;
+}
+
+#desktopMegamenu.megamenu-animate-in {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#desktopMegamenu.megamenu-animate-out {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition-duration: 140ms;
+    visibility: visible;
+    pointer-events: none;
+}
+
+#desktopMegamenu.hidden {
+    display: none !important;
+}

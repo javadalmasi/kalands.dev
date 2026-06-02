@@ -1,0 +1,323 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --breakpoint-*: initial;
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1380px;
+
+  --shadow-base: 0px 4px 20px rgba(0, 0, 0, 0.03);
+  --shadow-hover: 0px 10px 30px rgba(0, 0, 0, 0.08);
+
+  --radius-base: 16px;
+  --radius-squircle: 16px;
+
+  --color-white: #fefeff;
+  --color-black: #0d0d0d;
+  --color-border: hsl(var(--border));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-warning: hsl(var(--warning));
+  --color-alert: hsl(var(--alert));
+  --color-blue: hsl(var(--blue));
+  --color-cyan: hsl(var(--cyan));
+
+  --color-success: hsl(var(--success));
+  --color-success-secondary: hsl(var(--success-secondary));
+
+  --color-text: hsl(var(--text));
+  --color-primary: hsl(var(--primary));
+  --color-primary-btn: hsl(var(--primary-btn));
+  --color-primary-hover: hsl(var(--primary-hover));
+  --color-secondary: hsl(var(--secondary));
+  --color-muted: hsl(var(--muted));
+
+  --font-iranyekan: IRANYekan;
+
+  --animate-border-width: border-width 500ms forwards;
+  --animate-border-width-reverse: border-width-reverse 500ms forwards;
+
+  @keyframes border-width {
+    from {
+      width: 0;
+      opacity: 0;
+    }
+    to {
+      width: 100%;
+      opacity: 1;
+    }
+  }
+  @keyframes border-width-reverse {
+    from {
+      width: 100%;
+      opacity: 1;
+    }
+    to {
+      width: 0;
+      opacity: 0;
+    }
+  }
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (width >= theme(--breakpoint-lg)) {
+    padding-inline: 0.625rem;
+  }
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border, currentColor);
+  }
+  html {
+    @apply scroll-smooth;
+  }
+  html {
+    scrollbar-color: hsl(var(--text)) transparent;
+  }
+  ::selection {
+    background: oklch(62.68% 0 0 / 26.67%);
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"] {
+    -webkit-appearance: none;
+    margin: 0;
+    -moz-appearance: textfield !important;
+  }
+
+  /* Color Mode transition */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  ::view-transition-old(root) {
+    z-index: 1;
+  }
+
+  ::view-transition-new(root) {
+    z-index: 2147483646;
+  }
+
+  .dark::view-transition-old(root) {
+    z-index: 2147483646;
+  }
+
+  .dark::view-transition-new(root) {
+    z-index: 1;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply text-text bg-background;
+  }
+  input,
+  textarea,
+  select {
+    @apply text-slate-700 placeholder:text-slate-400 border-slate-200 bg-white focus:ring-primary/20 focus:border-primary dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400 dark:border-white/10 dark:focus:border-primary/40;
+  }
+  .dark {
+    color-scheme: dark;
+  }
+  .swiper .swiper-pagination-bullet {
+    @apply !bg-primary;
+  }
+
+  .swiper-button-prev,
+  .swiper-button-next {
+    @apply !top-1/2 !m-0 !h-11 !w-11 !-translate-y-1/2 !rounded-squircle !border !border-slate-200 !bg-white !text-slate-700 !shadow-md !transition-all !duration-300 hover:!scale-105 hover:!border-primary hover:!bg-primary hover:!text-white active:!scale-95 dark:!border-white/10 dark:!bg-slate-800 dark:!text-white;
+  }
+
+  .swiper-button-prev::after,
+  .swiper-button-next::after {
+    content: "";
+    width: 18px;
+    height: 18px;
+    display: block;
+    background-color: currentColor;
+  }
+
+
+  .swiper-button-next::after {
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15.41 16.58 10.83 12l4.58-4.59L14 6l-6 6 6 6z'/%3E%3C/svg%3E") center/contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15.41 16.58 10.83 12l4.58-4.59L14 6l-6 6 6 6z'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+
+  .swiper-button-prev::after {
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6z'/%3E%3C/svg%3E") center/contain no-repeat;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6z'/%3E%3C/svg%3E") center/contain no-repeat;
+  }
+
+  .swiper-button-prev {
+    @apply !right-3 lg:!right-4;
+  }
+  .swiper-button-next {
+    @apply !left-3 lg:!left-4;
+  }
+
+  .swiper-thumb-active {
+    @apply !border-2 !border-primary;
+  }
+}
+
+@utility btn-base {
+  @apply flex items-center justify-center gap-x-2 rounded-squircle px-5 py-3 text-sm font-semibold transition-all duration-300 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility btn-primary {
+  @apply btn-base bg-primary text-white hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/20;
+}
+
+@utility btn-secondary {
+  @apply btn-base bg-secondary text-text hover:bg-border;
+}
+
+@utility btn-destructive {
+  @apply btn-base bg-warning text-white hover:opacity-90 hover:shadow-lg hover:shadow-warning/20;
+}
+
+@utility btn-warning {
+  @apply btn-base bg-alert text-white hover:opacity-90;
+}
+
+@utility btn-ghost {
+  @apply btn-base bg-transparent text-text hover:bg-secondary;
+}
+
+@utility btn-subtle {
+  @apply btn-base bg-primary/10 text-primary hover:bg-primary/20;
+}
+
+@utility btn-icon {
+  @apply flex h-10 w-10 items-center justify-center rounded-squircle bg-secondary text-text transition-all duration-200 hover:bg-border;
+}
+
+/* Legacy utility overrides to prevent breaks during migration */
+@utility btn-primary-legacy {
+  @apply flex items-center justify-center gap-x-1 rounded-squircle border border-primary/20 bg-primary/10 px-4 py-3 text-primary transition-all duration-200 hover:bg-primary/20 focus:outline-hidden disabled:opacity-60;
+}
+
+.swiper.product-slider {
+  padding-top: calc(var(--spacing) * 3);
+}
+
+.product-slider .swiper-button-next,
+.product-slider .swiper-button-prev,
+.product-slider-wrapped .swiper-button-next,
+.product-slider-wrapped .swiper-button-prev {
+  display: none !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 dark:bg-white/10 rounded-full;
+}
+
+.dark .bg-white {
+  background-color: rgb(15 23 42 / 1) !important;
+}
+
+.dark .from-white {
+  --tw-gradient-from: rgb(15 23 42 / 1) var(--tw-gradient-from-position) !important;
+}
+
+.dark .via-white\/90 {
+  --tw-gradient-via: rgb(15 23 42 / 0.9) var(--tw-gradient-via-position) !important;
+}
+
+.dark .text-slate {
+  color: rgb(203 213 225 / 1) !important;
+}
+
+#mySidenav {
+  @apply translate-x-full transition-transform duration-300 ease-in-out;
+}
+
+#mySidenav.sidenav-open {
+  @apply translate-x-0;
+}
+
+.mega-menu-active {
+  @apply bg-primary/10 text-primary;
+}
+
+@keyframes expand {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes collapse {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+@keyframes show {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes hide {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+#main-container {
+  @apply relative z-10 transition-transform duration-300 ease-in-out;
+}
+#main-container.main-away {
+  transform: translateX(-100%);
+}
+
+#sub-container {
+  @apply absolute inset-0 z-20 transition-transform duration-300 ease-in-out;
+  transform: translateX(100%);
+}
+#sub-container.sub-open {
+  transform: translateX(0);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 dark:bg-slate-700 rounded-full;
+}
+
+/* Ensure no border on mega menu child items as requested */
+#mega-menu-childs a {
+  border: none !important;
+}
+
+/* Smooth transition for desktop mega menu */
+#desktopMegamenu {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+#desktopMegamenu.hidden {
+  display: none;
+  opacity: 0;
+  transform: translateY(-10px);
+}
+#desktopMegamenu:not(.hidden) {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}

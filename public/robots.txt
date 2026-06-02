@@ -1,0 +1,34 @@
+User-Agent: *
+Allow: /$
+Allow: /product/*
+Allow: /result/*
+Allow: /main/*
+Allow: /seller/*
+Allow: /build/*
+Allow: /assets/*
+Allow: *.js
+Allow: *.css
+Disallow: /result/*?*brands%5B*
+Disallow: /result/*?*categories%5B*
+Disallow: /result/*?*colors%5B*
+Disallow: /main/*?*brands%5B*
+Disallow: /main/*?*categories%5B*
+Disallow: /main/*?*colors%5B*
+Disallow: /seller/*?*brands%5B*
+Disallow: /seller/*?*categories%5B*
+Disallow: /seller/*?*colors%5B*
+Disallow: /
+Disallow: /v1/add/*
+Disallow: /admin/*
+Disallow: /users/*
+Disallow: /auth/*
+Disallow: /profile/*
+Disallow: /comments/*
+Disallow: /bookmark/*
+Disallow: /like/*
+Disallow: /go/*
+
+Sitemap: https://www.kalands.ir/sitemap.xml
+
+
+

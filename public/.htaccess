@@ -1,0 +1,46 @@
+<IfModule litespeed>
+RewriteEngine on
+
+# --- LITESPEED OPTIMIZATION START ---
+    CacheLookup on crawler
+    LSPHP_ProcessGroup on
+    LSPHP_Workers 100
+    QuicEnable on
+    SpdyEnabled http3 http2
+# --- LITESPEED OPTIMIZATION END ---
+
+	Header always unset x-dk-request-id
+    Header always unset x-dk-server-id
+    Header always unset x-edge-server
+    Header always unset x-real-status-code
+	Header always unset server-timing
+
+	RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    RewriteCond %{HTTP_HOST} ^kalands.ir [NC]
+    RewriteRule ^(.*)$ https://www.kalands.ir/$1 [L,R=301,NC]
+
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>

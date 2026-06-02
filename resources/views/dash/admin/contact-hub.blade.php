@@ -1,0 +1,198 @@
+<x-layouts.admin-dashboard title="ماژول تماس با ما">
+    @php($authkey = request()->route('authkey'))
+
+    <div class="flex items-center justify-between gap-4 mb-6">
+        <h1 class="admin-page-title !mb-0">ماژول تماس با ما</h1>
+    </div>
+
+    <div class="admin-card mb-6 !p-0 overflow-hidden">
+        <div class="flex border-b border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="contact-tabs">
+            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-messages">
+                <span class="material-icons text-base">email</span>
+                <span>پیام‌های دریافتی</span>
+            </button>
+            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-settings">
+                <span class="material-icons text-base">settings</span>
+                <span>تنظیمات اطلاعات تماس</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="tab-messages" class="tab-content space-y-4">
+        <form method="GET" class="admin-card grid gap-3 md:grid-cols-4">
+            <input type="hidden" name="tab" value="tab-messages">
+            <div class="space-y-1">
+                <label class="text-[10px] font-bold opacity-60 px-1">مرتب‌سازی</label>
+                <select name="sort" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                    <option value="latest" @selected(($sort ?? 'latest') === 'latest')>جدیدترین</option>
+                    <option value="oldest" @selected(($sort ?? '') === 'oldest')>قدیمی‌ترین</option>
+                    <option value="subject" @selected(($sort ?? '') === 'subject')>موضوع</option>
+                </select>
+            </div>
+            <div class="space-y-1">
+                <label class="text-[10px] font-bold opacity-60 px-1">وضعیت مشاهده</label>
+                <select name="read" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                    <option value="all" @selected(($read ?? 'all') === 'all')>همه پیام‌ها</option>
+                    <option value="unread" @selected(($read ?? '') === 'unread')>خوانده‌نشده</option>
+                    <option value="read" @selected(($read ?? '') === 'read')>خوانده‌شده</option>
+                </select>
+            </div>
+            <div class="md:col-span-2 flex items-end">
+                <button class="admin-btn justify-center w-full h-[38px]"><span class="material-icons">filter_alt</span>اعمال فیلتر</button>
+            </div>
+        </form>
+
+        <form id="bulk-contact-form" method="POST" action="{{ route('dash.admin.contact.bulk', ['authkey' => $authkey]) }}" class="admin-card mb-4">
+            @csrf
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <label class="inline-flex items-center gap-2 text-xs cursor-pointer bg-slate/5 px-3 py-2 rounded-lg border border-slate/10 hover:bg-slate/10 transition-colors">
+                        <input type="checkbox" id="select-all-messages" class="rounded border-slate/30">
+                        <span class="font-bold opacity-70">انتخاب همه</span>
+                    </label>
+                    <div class="h-8 w-px bg-slate/10"></div>
+                    <div class="flex items-center gap-2">
+                        <select name="action" class="rounded-lg border border-slate/20 bg-white p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10 focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                            <option value="read">خوانده شد</option>
+                            <option value="unread">خوانده‌نشده</option>
+                            <option value="delete">حذف دائمی</option>
+                        </select>
+                        <button class="admin-btn admin-btn-primary !py-2" type="submit" data-admin-confirm="این اقدام روی پیام‌های انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟">
+                            <span class="material-icons !text-sm">done_all</span>
+                            تایید و اجرا
+                        </button>
+                    </div>
+                </div>
+                <div class="text-[10px] font-bold opacity-40">
+                    تعداد کل پیام‌ها: {{ $messages->total() }}
+                </div>
+            </div>
+        </form>
+
+        <div class="space-y-3">
+            @forelse($messages as $message)
+                <div class="admin-card {{ $message->is_read ? 'opacity-80' : 'border-r-4 border-primary' }}">
+                    <div class="mb-1 flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" form="bulk-contact-form" name="message_ids[]" value="{{ $message->id }}" class="contact-item-checkbox">
+                            <p class="font-bold">{{ $message->subject }}</p>
+                        </div>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full {{ $message->is_read ? 'bg-slate/10 text-slate' : 'bg-primary/10 text-primary' }} font-bold">
+                            {{ $message->is_read ? 'خوانده‌شده' : 'جدید' }}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2 text-[11px] text-slate/70 mb-2">
+                        <span class="material-icons text-xs">person</span>
+                        <span>{{ $message->name }}</span>
+                        <span class="mx-1 opacity-30">|</span>
+                        <span class="material-icons text-xs">email</span>
+                        <span class="admin-ltr">{{ $message->email }}</span>
+                        <span class="mx-1 opacity-30">|</span>
+                        <span class="material-icons text-xs">schedule</span>
+                        <span>{{ $message->created_at->diffForHumans() }}</span>
+                    </div>
+                    <p class="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ $message->message }}</p>
+                    <div class="mt-4 admin-actions text-xs border-t border-slate/5 pt-3">
+                        <a href="{{ route('dash.admin.contact.edit', ['authkey' => $authkey, 'contactMessage' => $message->id]) }}" class="admin-btn admin-btn-secondary !p-1.5" title="ویرایش">
+                            <span class="material-icons !text-base">edit</span>
+                        </a>
+                        @if(!$message->is_read)
+                            <form action="{{ route('dash.admin.contact.read', ['authkey' => $authkey, 'contactMessage' => $message->id]) }}" method="POST">
+                                @csrf
+                                <button class="admin-btn admin-btn-secondary"><span class="material-icons !text-base">mark_email_read</span>خوانده شد</button>
+                            </form>
+                        @endif
+                        <form action="{{ route('dash.admin.contact.delete', ['authkey' => $authkey, 'contactMessage' => $message->id]) }}" method="POST" data-admin-confirm="حذف این پیام غیرقابل بازگشت است. ادامه می‌دهید؟">
+                            @csrf
+                            @method('DELETE')
+                            <button class="admin-btn admin-btn-danger !p-1.5" title="حذف"><span class="material-icons !text-base">delete</span></button>
+                        </form>
+                    </div>
+                </div>
+            @empty
+                <div class="admin-card text-center py-10 opacity-50">
+                    <span class="material-icons text-4xl block mb-2">mail_outline</span>
+                    پیامی یافت نشد.
+                </div>
+            @endforelse
+        </div>
+        <div class="mt-4">{{ $messages->links() }}</div>
+    </div>
+
+    <div id="tab-settings" class="tab-content hidden space-y-6">
+        <form action="{{ route('dash.admin.contact.page.info.save', ['authkey' => $authkey]) }}" method="POST" class="space-y-6">
+            @csrf
+
+            <div class="admin-card is-surface">
+                <div class="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-slate/10">
+                    <div class="flex items-center gap-3">
+                        <div class="rounded-full bg-primary/10 p-2 text-primary">
+                            <span class="material-icons">visibility</span>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-slate">نمایش باکس اطلاعات تماس</h2>
+                            <p class="text-xs text-slate/60 mt-1">فعال یا غیرفعال سازی بخش نمایش اطلاعات تماس در سایت</p>
+                        </div>
+                    </div>
+                    <label class="admin-switch"><input type="checkbox" name="enabled" value="1" class="admin-switch-input" @checked(old('enabled', $settings['enabled'] ?? true))><div class="admin-switch-track"></div><div class="admin-switch-ball"></div></label>
+                </div>
+
+                <div class="grid gap-6 md:grid-cols-2">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold px-1">عنوان باکس تماس</label>
+                        <input name="title" value="{{ old('title', $settings['title'] ?? '') }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="مثلا: با ما در ارتباط باشید">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold px-1">ایمیل</label>
+                        <input name="email" type="email" value="{{ old('email', $settings['email'] ?? '') }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr" placeholder="info@example.com">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold px-1">تلفن</label>
+                        <input name="phone" value="{{ old('phone', $settings['phone'] ?? '') }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr" placeholder="021-12345678">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold px-1">ساعت پاسخگویی</label>
+                        <input name="work_hours" value="{{ old('work_hours', $settings['work_hours'] ?? '') }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="شنبه تا چهارشنبه ۹ تا ۱۷">
+                    </div>
+                    <div class="space-y-1 md:col-span-2">
+                        <label class="text-xs font-bold px-1">آدرس</label>
+                        <input name="address" value="{{ old('address', $settings['address'] ?? '') }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="تهران، خیابان ...">
+                    </div>
+                    <div class="space-y-1 md:col-span-2">
+                        <label class="text-xs font-bold px-1">توضیحات کوتاه</label>
+                        <textarea name="description" rows="3" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="توضیحات مختصری در مورد تماس با ما...">{{ old('description', $settings['description'] ?? '') }}</textarea>
+                    </div>
+                    <div class="space-y-1 md:col-span-2">
+                        <label class="text-xs font-bold px-1">Iframe نقشه (گوگل یا نشان)</label>
+                        <textarea name="map_iframe" rows="4" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr" placeholder="<iframe ...></iframe>">{{ old('map_iframe', $settings['map_iframe'] ?? '') }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-card is-surface">
+                <h3 class="font-bold text-slate mb-6 flex items-center gap-2">
+                    <span class="material-icons text-primary">toggle_on</span>
+                    تنظیمات نمایش آیتم‌ها
+                </h3>
+
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach($toggles as $toggle)
+                        <div class="flex items-center justify-between p-3 rounded-xl bg-slate/5 border border-slate/10 transition-all hover:bg-slate/10">
+                            <span class="text-sm font-medium text-slate">{{ $toggle['label'] }}</span>
+                            <label class="admin-switch"><input type="checkbox" name="{{ $toggle['name'] }}" value="1" class="admin-switch-input" @checked(old($toggle['name'], $settings[$toggle['name']] ?? true))><div class="admin-switch-track"></div><div class="admin-switch-ball"></div></label>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-slate/10">
+                    <button class="admin-btn admin-btn-primary w-full sm:w-auto px-10 h-12 justify-center">
+                        <span class="material-icons">save</span>
+                        ذخیره تمامی تنظیمات
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+</x-layouts.admin-dashboard>
+    @vite(['resources/js/admin-contact-hub.js'])

@@ -1,0 +1,4 @@
+.sortable-ghost { opacity: 0.4; background: rgba(var(--color-primary-rgb), 0.1) !important; }
+.editor-box { min-width: 250px; cursor: pointer; }
+.inactive-item { border-style: dashed !important; border-color: rgba(239, 68, 68, 0.5) !important; color: #ef4444 !important; }
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
