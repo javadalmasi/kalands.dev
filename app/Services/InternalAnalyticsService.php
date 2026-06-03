@@ -86,7 +86,8 @@ class InternalAnalyticsService
         $error = $this->normaliseError($payload);
         $utm = $this->extractUtm($url);
 
-        $detect = new MobileDetect($userAgent, $request->headers->all());
+        $detect = new MobileDetect();
+        $detect->setHttpHeaders(array_map(fn($values) => implode(', ', $values), $request->headers->all()));
 
         $isBounce = null;
         $sessionDuration = null;
