@@ -669,6 +669,7 @@ class AdminDashboardController extends Controller
                 'description' => 'مدیریت یکپارچه ایمیل (عمومی/تراکنشی) و پیامک (SMS)',
                 'icon' => 'hub',
                 'permission' => 'communication.view',
+                'category' => 'communication',
             ],
             [
                 'key' => 'contact',
@@ -676,6 +677,7 @@ class AdminDashboardController extends Controller
                 'description' => 'مدیریت پیام‌های دریافتی و تنظیمات اطلاعات تماس',
                 'icon' => 'contact_support',
                 'permission' => 'contact.view',
+                'category' => 'communication',
             ],
             [
                 'key' => 'affiliate',
@@ -683,6 +685,7 @@ class AdminDashboardController extends Controller
                 'description' => 'تنظیمات لینک‌سازی و رهگیری افیلیت',
                 'icon' => 'link',
                 'permission' => 'affiliate.view',
+                'category' => 'communication',
             ],
             [
                 'key' => 'file_manager',
@@ -690,6 +693,7 @@ class AdminDashboardController extends Controller
                 'description' => 'مدیریت فایل‌ها در صفحه اختصاصی فایل منیجر',
                 'icon' => 'folder',
                 'permission' => 'file_manager.view',
+                'category' => 'data',
             ],
             [
                 'key' => 'home_items_management',
@@ -697,6 +701,7 @@ class AdminDashboardController extends Controller
                 'description' => 'مدیریت یکپارچه اسلایدرها، بنرها و دسته‌بندی‌های صفحه اصلی',
                 'icon' => 'home_repair_service',
                 'permission' => 'home_items.view',
+                'category' => 'content',
             ],
             [
                 'key' => 'email_templates',
@@ -704,6 +709,7 @@ class AdminDashboardController extends Controller
                 'description' => 'مدیریت تمپلیت، هدر/فوتر، پیش‌نمایش و متغیرها',
                 'icon' => 'drafts',
                 'permission' => 'email_templates.view',
+                'category' => 'communication',
             ],
             [
                 'key' => 'queues',
@@ -711,6 +717,7 @@ class AdminDashboardController extends Controller
                 'description' => 'حالت پردازش، توکن Cron و گزارش اجراها',
                 'icon' => 'queue',
                 'permission' => 'queues.view',
+                'category' => 'technical',
             ],
             [
                 'key' => 'comments',
@@ -718,6 +725,7 @@ class AdminDashboardController extends Controller
                 'description' => 'مدیریت نظرات، گزارش‌گیری و تنظیمات ارسال نظر',
                 'icon' => 'forum',
                 'permission' => 'comments.view',
+                'category' => 'content',
             ],
             [
                 'key' => 'tickets',
@@ -725,6 +733,7 @@ class AdminDashboardController extends Controller
                 'description' => 'مدیریت تیکت‌ها، دسته‌بندی‌ها و تنظیمات ارسال تیکت',
                 'icon' => 'confirmation_number',
                 'permission' => 'tickets.view',
+                'category' => 'content',
             ],
             [
                 'key' => 'faq',
@@ -732,6 +741,7 @@ class AdminDashboardController extends Controller
                 'description' => 'مدیریت سوالات متداول سایت و نمایش در صفحه FAQ',
                 'icon' => 'quiz',
                 'permission' => 'faq.view',
+                'category' => 'content',
             ],
             [
                 'key' => 'analytics',
@@ -739,6 +749,7 @@ class AdminDashboardController extends Controller
                 'description' => 'آمار بازدید، کاربران زنده، اهداف، محتوا و محصولات پربازدید',
                 'icon' => 'analytics',
                 'permission' => 'analytics.view',
+                'category' => 'analytics',
             ],
             [
                 'key' => 'geoip',
@@ -746,6 +757,7 @@ class AdminDashboardController extends Controller
                 'description' => 'مدیریت دیتابیس‌های مکان‌دهی IP و گزارش بروزرسانی‌ها',
                 'icon' => 'language',
                 'permission' => 'geoip.view',
+                'category' => 'technical',
             ],
             [
                 'key' => 'robots',
@@ -753,6 +765,7 @@ class AdminDashboardController extends Controller
                 'description' => 'ویرایش و تست فایل robots.txt برای مدیریت دسترسی ربات‌ها',
                 'icon' => 'settings_suggest',
                 'permission' => 'robots.view',
+                'category' => 'technical',
             ],
             [
                 'key' => 'search',
@@ -760,6 +773,7 @@ class AdminDashboardController extends Controller
                 'description' => 'تنظیمات جستجوی سریع در کل سیستم (ماژول‌ها، کاربران، محصولات)',
                 'icon' => 'search',
                 'permission' => 'search.view',
+                'category' => 'technical',
             ],
             [
                 'key' => 'megamenu',
@@ -767,6 +781,7 @@ class AdminDashboardController extends Controller
                 'description' => 'مدیریت ویژوال آیتم‌های مگا منو با قابلیت درگ اند دراپ',
                 'icon' => 'menu',
                 'permission' => 'megamenu.view',
+                'category' => 'content',
             ],
             [
                 'key' => 'error_pages',
@@ -774,6 +789,7 @@ class AdminDashboardController extends Controller
                 'description' => 'مدیریت لینک‌های کمکی و آیکون‌های نمایش داده شده در صفحات خطا',
                 'icon' => 'report_problem',
                 'permission' => 'error_pages.view',
+                'category' => 'content',
             ],
             [
                 'key' => 'cache_management',
@@ -781,6 +797,7 @@ class AdminDashboardController extends Controller
                 'description' => 'تنظیمات هدرهای کش وب‌سرویس‌ها و بهینه‌سازی وب‌سرور',
                 'icon' => 'bolt',
                 'permission' => 'cache_management.view',
+                'category' => 'technical',
             ],
             [
                 'key' => 'object_cache',
@@ -788,6 +805,7 @@ class AdminDashboardController extends Controller
                 'description' => 'تنظیمات درایور، پیشوند، تست اتصال، پاکسازی و مرور آیتم‌های کش لاراول',
                 'icon' => 'memory',
                 'permission' => 'object_cache.view',
+                'category' => 'technical',
             ],
             [
                 'key' => 'visitor_intelligence',
@@ -795,6 +813,7 @@ class AdminDashboardController extends Controller
                 'description' => 'مدیریت الگوهای تشخیص ربات، خزنده‌ها و ASNهای معتبر',
                 'icon' => 'psychology',
                 'permission' => 'geoip.full',
+                'category' => 'technical',
             ],
             [
                 'key' => 'artisan_commands',
@@ -802,6 +821,7 @@ class AdminDashboardController extends Controller
                 'description' => 'اجرای دستورات کاربردی Artisan مانند پاکسازی کش، اجرای migration و ...',
                 'icon' => 'terminal',
                 'permission' => 'dashboard.view',
+                'category' => 'technical',
             ],
             [
                 'key' => 'categories',
@@ -809,6 +829,7 @@ class AdminDashboardController extends Controller
                 'description' => 'مدیریت درخت دسته‌بندی محصولات و نگاشت هوشمند بین فروشگاه‌ها',
                 'icon' => 'category',
                 'permission' => 'dashboard.view',
+                'category' => 'data',
             ],
         ];
 
@@ -845,7 +866,23 @@ class AdminDashboardController extends Controller
             return auth('admin')->user()->hasPermission($m['permission']);
         })->values()->toArray();
 
-        return view('dash.admin.modules', compact('modules', 'settings', 'fileExplorer'));
+        $groupLabels = [
+            'communication' => 'ارتباطات',
+            'content' => 'مدیریت محتوا',
+            'data' => 'داده‌ها و فایل‌ها',
+            'technical' => 'فنی و بهینه‌سازی',
+            'analytics' => 'تحلیل و آمار',
+        ];
+        $groupIcons = [
+            'communication' => 'hub',
+            'content' => 'article',
+            'data' => 'folder_open',
+            'technical' => 'settings',
+            'analytics' => 'analytics',
+        ];
+        $grouped = collect($modules)->groupBy('category');
+
+        return view('dash.admin.modules', compact('modules', 'settings', 'fileExplorer', 'groupLabels', 'groupIcons', 'grouped'));
     }
 
     public function moduleSettings(string $authkey, string $moduleKey, Request $request, SettingsRepository $settingsRepository, EmailTemplateService $emailTemplateService, SliderStorage $sliderStorage, HomeCategoryBannerStorage $homeCategoryBannerStorage)
