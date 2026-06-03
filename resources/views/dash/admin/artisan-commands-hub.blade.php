@@ -132,30 +132,166 @@
                     </div>
 
                     <div class="space-y-8 text-sm text-slate leading-7">
-                        <section id="doc-commands">
+                        <section id="doc-intro">
                             <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">terminal</span>
-                                دستورات
+                                <span class="material-icons text-primary text-lg">info</span>
+                                معرفی ماژول
                             </h3>
-                            <p>در این بخش دستورات Artisan قابل اجرا توسط مدیریت سایت لیست شده‌اند. هر دستور شامل توضیح مختصر و آیکون شناسایی است.</p>
+                            <p>ماژول دستورات Artisan، دسترسی به اجرای دستورات خط فرمان لاراول را از طریق رابط کاربری وب فراهم می‌کند. این ماژول باعث می‌شود توانایی‌های مدیریت سایت، بهینه‌سازی و تنظیمات سیستم را بدون دسترسی به ترمینال دریافت کنید.</p>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-cache-clear">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">cached</span>
+                                پاکسازی کش سیستم
+                            </h3>
+                            <p>تمام کش‌های ذخیره شده در برنامه (شامل کش تنظیمات، مسیرها، قالب‌ها و سایر داده‌های موقت) را پاک می‌کند. این کار برای اعمال تغییرات جدید پس از به‌روزرسانی کد یا تنظیمات مفید است.</p>
+                            <ul class="list-disc list-inside mt-3 space-y-1 mr-4">
+                                <li>پس از اجرا، صفحات سایت ممکن است کمی کندتر لود شوند تا کش مجدداً ساخته شود</li>
+                                <li>برای دیتابیس‌های بزرگ توصیه می‌شود قبل از اجرا عملیات بکاپ داشته باشید</li>
+                            </ul>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-view-cache">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">visibility</span>
+                                بازسازی کش قالب‌ها (Blade)
+                            </h3>
+                            <p>تمام قالب‌های Blade را کامپایل و در حافظه کش ذخیره می‌کند. این کار سرعت بارگذاری صفحات را افزایش می‌دهد. برای استفاده در محیط تولید توصیه می‌شود.</p>
                             <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">نکات ایمنی</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li>دستورات خطرناک نیاز به تأیید رمز عبور دارند</li>
-                                    <li>تمام اجراها در لاگ ذخیره می‌شوند</li>
-                                    <li>فقط ادمین‌های مجاز می‌توانند دستورات را اجرا کنند</li>
-                                </ul>
+                                <h4 class="font-bold text-slate mb-2">مرتبط:</h4>
+                                <p class="text-xs">مشابه <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs">view:clear</code> که کش قالب‌ها را پاک می‌کند.</p>
                             </div>
                         </section>
 
                         <hr class="border-slate/10">
 
-                        <section id="doc-logs">
+                        <section id="doc-config-cache">
                             <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">history</span>
-                                آخرین اجراها
+                                <span class="material-icons text-primary text-lg">settings_backup_restore</span>
+                                پاکسازی/بازسازی کش تنظیمات
                             </h3>
-                            <p>تاریخچه ۱۵ اجرای آخر به همراه مجری و خروجی نمایش داده می‌شود.</p>
+                            <p>فایل‌های تنظیمات (config) را در فایل کش ذخیره می‌کند تا سرعت لود تنظیمات را افزایش دهد.</p>
+                            <ul class="list-disc list-inside mt-3 space-y-1 mr-4">
+                                <li><code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">config:clear</code>: کش تنظیمات را پاک می‌کند</li>
+                                <li><code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">config:cache</code>: تنظیمات را در کش ذخیره می‌کند</li>
+                            </ul>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-route-cache">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">alt_route</span>
+                                پاکسازی/بازسازی کش مسیرها
+                            </h3>
+                            <p>مسیرهای برنامه (routes) را در فایل کش ذخیره می‌کند تا سرعت مسیریابی را افزایش دهد.</p>
+                            <ul class="list-disc list-inside mt-3 space-y-1 mr-4">
+                                <li><code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">route:clear</code>: کش مسیرها را پاک می‌کند</li>
+                                <li><code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">route:cache</code>: مسیرها را در کش ذخیره می‌کند</li>
+                            </ul>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-optimize">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">rocket_launch</span>
+                                بهینه‌سازی کلی (Optimize)
+                            </h3>
+                            <p>تمامی کش‌های بهینه‌سازی (config، route، view و event) را به صورت یکجا پاک یا بازسازی می‌کند. این دستور برای عملیات سریع و همزمان چند کش مفید است.</p>
+                            <ul class="list-disc list-inside mt-3 space-y-1 mr-4">
+                                <li>در محیط توسعه: استفاده از <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">optimize:clear</code> توصیه می‌شود</li>
+                                <li>در محیط تولید: استفاده از <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">optimize</code> پس از به‌روزرسانی</li>
+                            </ul>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-storage-link">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">link</span>
+                                ایجاد لینک نمادین استوریج
+                            </h3>
+                            <p>لینک نمادین (<code dir="ltr">symlink</code>) از <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">storage/app/public</code> به <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">public/storage</code> ایجاد می‌کند.</p>
+                            <ul class="list-disc list-inside mt-3 space-y-1 mr-4">
+                                <li>این دستور برای دسترسی به فایل‌های آپلودی ضروری است</li>
+                                <li>در صورت وجود پرونده با همان نام، لینک ایجاد نمی‌شود</li>
+                            </ul>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-migrate">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">storage</span>
+                                اجرای Migrationها
+                            </h3>
+                            <p>تمامی migrationهای اجرا نشده را به ترتیب بر روی دیتابیس اعمال می‌کند. این دستور برای به‌روزرسانی ساختار دیتابیس استفاده می‌شود.</p>
+                            <div class="mt-4 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                                <h4 class="font-bold text-amber-700 mb-2">هشدار مهم:</h4>
+                                <p class="text-xs text-amber-700">تغییرات در دیتابیس انجام می‌شود. توصیه می‌شود قبل از اجرا از دیتابیس پشتیبان تهیه کنید.</p>
+                            </div>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-migrate-fresh">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-danger text-lg">dangerous</span>
+                                ریست و اجرای مجدد Migrationها
+                            </h3>
+                            <p>تمام جداول دیتابیس را حذف کرده و سپس تمام migrationها را از ابتدا اجرا می‌کند. تمام داده‌ها از بین می‌روند!</p>
+                            <div class="mt-4 bg-danger/10 border border-danger/20 rounded-xl p-4">
+                                <h4 class="font-bold text-danger mb-2">⚠️ خطرناک:</h4>
+                                <p class="text-xs text-danger">تمام داده‌های دیتابیس برای همیشه حذف می‌شوند. این عملیات فقط در محیط توسعه توصیه می‌شود.</p>
+                            </div>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-clear-logs">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-warning text-lg">delete_sweep</span>
+                                حذف لاگ‌ها
+                            </h3>
+                            <p>تمام فایل‌های لاگ ذخیره شده در مسیر <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">storage/logs</code> را پاک می‌کند. این کار فضای دیسک را آزاد می‌سازد.</p>
+                            <ul class="list-disc list-inside mt-3 space-y-1 mr-4">
+                                <li>قبل از حذف، از لاگ‌ها برای عیب‌یابی استفاده کنید</li>
+                                <li>لاگ‌های مهم را برای آینده قبلاً ذخیره کنید</li>
+                            </ul>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-queue">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">queue</span>
+                                مدیریت صف‌ها
+                            </h3>
+                            <p>عملیات‌های طولانی‌مدت را در صف (Queue) پردازش می‌کند:</p>
+                            <ul class="list-disc list-inside mt-3 space-y-1 mr-4">
+                                <li><code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">queue:work --stop-when-empty</code>: صف را یک بار پردازش می‌کند و سپس متوقف می‌شود</li>
+                                <li><code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">queue:restart</code>: تمام workerهای صف را دوباره راه‌اندازی می‌کند</li>
+                            </ul>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-security">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">security</span>
+                                نکات امنیتی
+                            </h3>
+                            <ul class="list-disc list-inside space-y-2 mr-4">
+                                <li>دستورات خطرناک (<code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">migrate:fresh</code>، <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">clear_logs</code>) نیاز به رمز عبور دارند</li>
+                                <li>تمامی اجراها در لاگ ذخیره می‌شوند (شامل مجری، زمان و خروجی)</li>
+                                <li>فقط ادمین‌های مجاز می‌توانند دستورات را اجرا کنند</li>
+                            </ul>
                         </section>
                     </div>
                 </div>
@@ -165,8 +301,18 @@
                 <div class="admin-card !p-4 sticky top-4">
                     <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
                     <nav class="space-y-1">
-                        <a href="#doc-commands" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">دستورات</a>
-                        <a href="#doc-logs" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">آخرین اجراها</a>
+                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
+                        <a href="#doc-cache-clear" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">پاکسازی کش</a>
+                        <a href="#doc-view-cache" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">کش قالب‌ها</a>
+                        <a href="#doc-config-cache" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">کش تنظیمات</a>
+                        <a href="#doc-route-cache" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">کش مسیرها</a>
+                        <a href="#doc-optimize" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">بهینه‌سازی</a>
+                        <a href="#doc-storage-link" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">لینک استوریج</a>
+                        <a href="#doc-migrate" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">Migrationها</a>
+                        <a href="#doc-migrate-fresh" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">ریست Migration</a>
+                        <a href="#doc-clear-logs" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">حذف لاگ‌ها</a>
+                        <a href="#doc-queue" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">مدیریت صف</a>
+                        <a href="#doc-security" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">نکات امنیتی</a>
                     </nav>
                 </div>
             </aside>
