@@ -23,6 +23,10 @@
                 <span class="material-icons text-base">settings</span>
                 <span>تنظیمات</span>
             </button>
+            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
+                <span class="material-icons text-base">help_outline</span>
+                <span>راهنما</span>
+            </button>
         </div>
     </div>
 
@@ -320,6 +324,101 @@
                 </div>
             </div>
         </form>
+    </div>
+
+    <div id="tab-help" class="tab-content hidden">
+        <div class="flex gap-6 items-start">
+            <div class="flex-1 min-w-0">
+                <div class="admin-card space-y-6">
+                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
+                        <span class="material-icons text-2xl text-primary">help_outline</span>
+                        <h2 class="font-bold text-slate text-lg">راهنمای کامل ماژول تیکت</h2>
+                    </div>
+
+                    <div class="space-y-8 text-sm text-slate leading-7">
+                        <section id="doc-intro">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">info</span>
+                                معرفی ماژول
+                            </h3>
+                            <p>ماژول تیکت، سامانه ارتباطی بین کاربران و پشتیبانی سایت است. این ماژول امکان ارسال، پاسخ، دسته‌بندی و مسدودسازی تیکت‌ها را فراهم می‌کند و با ویژگی‌های پیشرفته‌ای مانند اولویت‌بندی و اعلان ادمین تجهیز شده است.</p>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-moderation">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">fact_check</span>
+                                پاسخ به تیکت‌ها
+                            </h3>
+                            <p>در این تب می‌توانید تیکت‌های ارسال شده توسط کاربران را مشاهده و پاسخ دهید:</p>
+                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
+                                <li><b>وضعیت باز:</b> تیکت‌های منتظر پاسخ پشتیبانی</li>
+                                <li><b>پاسخ داده شده:</b> تیکت‌هایی که پاسخ داده و منتظر پاسخ کاربر هستند</li>
+                                <li><b>بسته شده:</b> تیکت‌های تمام شده</li>
+                                <li><b>اسپم:</b> تیکت‌های شناسایی شده به عنوان اسپم</li>
+                            </ul>
+                            <p class="mt-3">امکان عملیات دسته‌جمعی (تغییر وضعیت، حذف) و فیلتر بر اساس وضعیت و اولویت وجود دارد.</p>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-categories">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">category</span>
+                                دسته‌بندی‌ها
+                            </h3>
+                            <p>دسته‌بندی‌ها برای سازماندهی تیکت‌ها و ارجاع سریع به بخش مربوطه استفاده می‌شوند. می‌توانید دسته‌بندی جدید ایجاد، existing را ویرایش یا غیرفعال کنید.</p>
+                            <p class="mt-3">هر تیکت می‌تواند به یک دسته‌بندی تعلق داشته باشد.</p>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-blocked">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">block</span>
+                                کاربران مسدود شده
+                            </h3>
+                            <p>کاربران مسدود شده نمی‌توانند تیکت جدید ثبت کنند یا به تیکت‌های موجود پاسخ دهند. در این بخش می‌توانید:</p>
+                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
+                                <li>لیست کاربران مسدود را مشاهده کنید</li>
+                                <li>با جستجوی نام، ایمیل یا تلفن کاربر را پیدا و مسدود کنید</li>
+                                <li>مسدودیت کاربران را در هر زمان بردارید</li>
+                            </ul>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-settings">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">settings</span>
+                                تنظیمات
+                            </h3>
+                            <p>در این بخش می‌توانید:</p>
+                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
+                                <li>فعال یا غیرفعال بودن فرم ارسال تیکت را کنترل کنید</li>
+                                <li>پیام هشدار برای زمان غیرفعال بودن تنظیم کنید</li>
+                                <li>نام پاسخ‌دهنده را در پنل کاربری مخفی کنید</li>
+                                <li>ایمیل ادمین برای دریافت اعلان تیکت‌های جدید تعیین کنید</li>
+                            </ul>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="hidden lg:block w-64 shrink-0">
+                <div class="admin-card !p-4 sticky top-4">
+                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
+                    <nav class="space-y-1">
+                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
+                        <a href="#doc-moderation" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">پاسخ به تیکت‌ها</a>
+                        <a href="#doc-categories" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">دسته‌بندی‌ها</a>
+                        <a href="#doc-blocked" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">کاربران مسدود</a>
+                        <a href="#doc-settings" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">تنظیمات</a>
+                    </nav>
+                </div>
+            </aside>
+        </div>
     </div>
 
 </x-layouts.admin-dashboard>
