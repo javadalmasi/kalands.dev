@@ -39,7 +39,7 @@
                      data-label="{{ $cmd['label'] }}"
                      data-description="{{ $cmd['description'] }}"
                      data-icon="{{ $cmd['icon'] }}"
-                     data-danger="{{ $cmd['danger'] ?? false }}"
+                     data-danger="{{ ($cmd['danger'] ?? false) ? 'true' : 'false' }}"
                      data-warning-message="{{ $cmd['warning_message'] ?? '' }}">
                     <div class="flex items-center gap-4">
                         <div class="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
@@ -141,7 +141,7 @@
                             <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
                                 <h4 class="font-bold text-slate mb-2">نکات ایمنی</h4>
                                 <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li>دستورات خطرناک دارای پیام هشدار هستند</li>
+                                    <li>دستورات خطرناک نیاز به تأیید رمز عبور دارند</li>
                                     <li>تمام اجراها در لاگ ذخیره می‌شوند</li>
                                     <li>فقط ادمین‌های مجاز می‌توانند دستورات را اجرا کنند</li>
                                 </ul>
@@ -198,6 +198,18 @@
                     خروجی دستور
                 </h4>
                 <pre id="artisan-modal-output-text" class="bg-slate-900 text-green-400 text-xs p-4 rounded-lg overflow-x-auto max-h-64 ltr leading-relaxed font-mono whitespace-pre-wrap"></pre>
+            </div>
+
+            <div id="artisan-modal-password-section" class="hidden">
+                <div class="border-t border-slate/10 pt-4 mt-2">
+                    <label for="artisan-modal-password-input" class="block text-xs font-bold text-slate mb-1.5">رمز عبور فعلی (برای دستورات خطرناک)</label>
+                    <div class="relative">
+                        <input type="password" id="artisan-modal-password-input" class="admin-dialog-input w-full text-right pr-10" placeholder="رمز عبور خود را وارد کنید" autocomplete="off">
+                        <button type="button" class="absolute left-2 top-1/2 -translate-y-1/2 text-slate/40 hover:text-slate transition-colors" id="artisan-modal-password-toggle" tabindex="-1">
+                            <span class="material-icons text-base">visibility_off</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div id="artisan-modal-error" class="hidden mt-4 p-4 rounded-lg border text-sm flex items-center gap-3 bg-danger/10 border-danger/20 text-danger">

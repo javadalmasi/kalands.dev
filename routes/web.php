@@ -265,6 +265,7 @@ Route::prefix('dash/admin/{authkey}')
         Route::get('/cache-management/htaccess-backup', [AdminDashboardController::class, 'downloadHtaccessBackup'])->name('cache-management.htaccess.backup')->middleware('permission:cache_management.edit');
 
         Route::post('/artisan-commands/execute', [AdminDashboardController::class, 'executeArtisanCommand'])->name('artisan-commands.execute')->middleware('permission:dashboard.view');
+        Route::post('/artisan-commands/verify-password', [AdminDashboardController::class, 'verifyArtisanPassword'])->name('artisan-commands.verify-password')->middleware('permission:dashboard.view');
         Route::post('/visitor-intelligence/save', [AdminDashboardController::class, 'saveVisitorIntelligence'])->name('visitor-intelligence.save')->middleware('permission:geoip.full');
         Route::post('/visitor-intelligence/test', [AdminDashboardController::class, 'testUserAgent'])->name('visitor-intelligence.test')->middleware('permission:geoip.full');
         Route::post('/visitor-intelligence/asn-fetch', [AdminDashboardController::class, 'fetchAsnData'])->name('visitor-intelligence.asn_fetch')->middleware('permission:geoip.full');

@@ -3246,7 +3246,7 @@ class AdminDashboardController extends Controller
         return view('dash.admin.artisan-commands-hub', compact('commands', 'recentLogs'));
     }
 
-    public function executeArtisanCommand(Request $request): JsonResponse
+    public function executeArtisanCommand(Request $request, PasswordHashService $passwordHashService): JsonResponse
     {
         $commandKey = $request->input('command');
         $commands = collect($this->artisanCommandsList());
@@ -3257,6 +3257,31 @@ class AdminDashboardController extends Controller
                 'ok' => false,
                 'message' => 'دستور مورد نظر یافت نشد.',
             ]);
+        }
+
+        if ($matched['danger'] ?? false) {
+            $password = $request->input('password');
+            if (!$password) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'برای اجرای این دستور، رمز عبور الزامی است.',
+                ]);
+            }
+
+            $admin = auth('admin')->user();
+            if (!$admin || !$admin->password_hash || !$admin->password_salt) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'اطلاعات حساب کاربری یافت نشد.',
+                ]);
+            }
+
+            if (!$passwordHashService->verify($password, $admin->password_salt, $admin->password_hash)) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'رمز عبور وارد شده اشتباه است.',
+                ]);
+            }
         }
 
         $admin = auth('admin')->user();
@@ -3316,6 +3341,37 @@ class AdminDashboardController extends Controller
                 ->pluck('id');
             ArtisanExecutionLog::whereIn('id', $ids)->delete();
         }
+    }
+
+    public function verifyArtisanPassword(Request $request, PasswordHashService $passwordHashService): JsonResponse
+    {
+        $password = $request->input('password');
+        if (!$password) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'رمز عبور را وارد کنید.',
+            ]);
+        }
+
+        $admin = auth('admin')->user();
+        if (!$admin || !$admin->password_hash || !$admin->password_salt) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'اطلاعات حساب کاربری یافت نشد.',
+            ]);
+        }
+
+        if (!$passwordHashService->verify($password, $admin->password_salt, $admin->password_hash)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'رمز عبور وارد شده اشتباه است.',
+            ]);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'رمز عبور با موفقیت تأیید شد.',
+        ]);
     }
 
     public function cacheManagementHub(Request $request, SettingsRepository $settingsRepository)
