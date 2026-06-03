@@ -228,6 +228,15 @@ Route::prefix('dash/admin/{authkey}')
         Route::get('/analytics/dashboard', [InternalAnalyticsController::class, 'dashboard'])->name('analytics_dashboard')->middleware('permission:analytics.view');
         Route::get('/analytics/report', [InternalAnalyticsController::class, 'report'])->name('analytics_report')->middleware('permission:analytics.view');
         Route::get('/analytics/user-details/{userId}', [InternalAnalyticsController::class, 'userActivity'])->name('analytics_user_details')->middleware('permission:analytics.view');
+        Route::get('/analytics/raw-events', [InternalAnalyticsController::class, 'userRawEvents'])->name('analytics_raw_events')->middleware('permission:analytics.view');
+        Route::get('/analytics/user-journey', [InternalAnalyticsController::class, 'userJourney'])->name('analytics_user_journey')->middleware('permission:analytics.view');
+        Route::get('/analytics/cohort', [InternalAnalyticsController::class, 'cohort'])->name('analytics_cohort')->middleware('permission:analytics.view');
+        Route::get('/analytics/funnels', [InternalAnalyticsController::class, 'funnels'])->name('analytics_funnels')->middleware('permission:analytics.view');
+        Route::post('/analytics/funnels/save', [InternalAnalyticsController::class, 'saveFunnel'])->name('analytics_funnels_save')->middleware('permission:analytics.full');
+        Route::post('/analytics/funnels/delete/{key}', [InternalAnalyticsController::class, 'deleteFunnel'])->name('analytics_funnels_delete')->middleware('permission:analytics.full');
+        Route::post('/analytics/alerts/save', [InternalAnalyticsController::class, 'saveAlert'])->name('analytics_alerts_save')->middleware('permission:analytics.full');
+        Route::post('/analytics/alerts/delete/{id}', [InternalAnalyticsController::class, 'deleteAlert'])->name('analytics_alerts_delete')->middleware('permission:analytics.full');
+        Route::get('/analytics/csv-export', [InternalAnalyticsController::class, 'csvExport'])->name('analytics_csv_export')->middleware('permission:analytics.view');
         Route::get('/analytics/export', [InternalAnalyticsController::class, 'export'])->name('analytics_export')->middleware('permission:analytics.full');
         Route::post('/analytics/import', [InternalAnalyticsController::class, 'import'])->name('analytics_import')->middleware('permission:analytics.full');
         Route::post('/analytics/prune', [InternalAnalyticsController::class, 'prune'])->name('analytics_prune')->middleware('permission:analytics.full');

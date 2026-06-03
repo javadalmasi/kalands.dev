@@ -1,7 +1,8 @@
 (function() {
     const TABS_WITH_FILTERS = new Set([
         'tab-overview', 'tab-reports', 'tab-content',
-        'tab-search', 'tab-goals', 'tab-users', 'tab-errors'
+        'tab-search', 'tab-goals', 'tab-users', 'tab-errors',
+        'tab-funnels', 'tab-sessions', 'tab-cohort', 'tab-compare', 'tab-raw'
     ]);
 
     const filterCard = document.getElementById('analytics-filter-card');

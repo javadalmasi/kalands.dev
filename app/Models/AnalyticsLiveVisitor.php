@@ -22,10 +22,14 @@ class AnalyticsLiveVisitor extends Model
         'user_agent',
         'first_seen_at',
         'last_seen_at',
+        'pageviews_count',
+        'is_bounced',
     ];
 
     protected $casts = [
         'first_seen_at' => 'datetime',
         'last_seen_at' => 'datetime',
+        'pageviews_count' => 'integer',
+        'is_bounced' => 'boolean',
     ];
 }

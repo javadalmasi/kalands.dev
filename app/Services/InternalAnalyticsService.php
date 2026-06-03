@@ -2,9 +2,13 @@
 
 namespace App\Services;
 
+use App\Models\AnalyticsAlert;
 use App\Models\AnalyticsDailyStat;
 use App\Models\AnalyticsEvent;
+use App\Models\AnalyticsFunnel;
+use App\Models\AnalyticsFunnelDaily;
 use App\Models\AnalyticsLiveVisitor;
+use App\Models\AnalyticsSession;
 use App\Models\Product;
 use App\Models\User;
 use App\Repositories\SettingsRepository;
@@ -13,6 +17,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Detection\MobileDetect;
 
 class InternalAnalyticsService
 {
@@ -34,6 +39,10 @@ class InternalAnalyticsService
             'live_user_window_minutes' => 5,
             'raw_event_retention_days' => 90,
             'stats_retention_days' => 365,
+            'session_timeout_minutes' => 30,
+            'heartbeat_enabled' => true,
+            'alerting_enabled' => true,
+            'anomaly_sensitivity' => 3,
         ];
     }
 
@@ -53,12 +62,16 @@ class InternalAnalyticsService
         }
 
         $eventType = (string) ($payload['event_type'] ?? 'pageview');
-        if (!in_array($eventType, ['pageview', 'goal', 'error'], true)) {
+        if (!in_array($eventType, ['pageview', 'goal', 'error', 'heartbeat'], true)) {
             return false;
         }
 
         if ($eventType === 'error' && !($settings['error_tracking_enabled'] ?? true)) {
             return false;
+        }
+
+        if ($eventType === 'heartbeat') {
+            return $this->trackHeartbeat($request, $payload);
         }
 
         $url = $this->limit((string) ($payload['url'] ?? url()->current()), 1000);
@@ -73,6 +86,18 @@ class InternalAnalyticsService
         $error = $this->normaliseError($payload);
         $utm = $this->extractUtm($url);
 
+        $detect = new MobileDetect($userAgent, $request->headers->all());
+
+        $isBounce = null;
+        $sessionDuration = null;
+        $sessionNum = null;
+
+        if ($eventType === 'pageview') {
+            $isBounce = $this->checkIsBounce($sessionId);
+            $sessionDuration = $this->getSessionDuration($sessionId, $payload);
+            $sessionNum = $this->getSessionNum($sessionId);
+        }
+
         $event = AnalyticsEvent::query()->create([
             'session_id' => $sessionId,
             'visitor_hash' => $this->hash($sessionId),
@@ -80,6 +105,9 @@ class InternalAnalyticsService
             'event_type' => $eventType,
             'goal_key' => $eventType === 'goal' ? $goal['key'] : null,
             'goal_label' => $eventType === 'goal' ? $goal['label'] : null,
+            'funnel_key' => $this->limit((string) ($payload['funnel_key'] ?? ''), 80) ?: null,
+            'funnel_step' => isset($payload['funnel_step']) ? (int) $payload['funnel_step'] : null,
+            'funnel_step_name' => $this->limit((string) ($payload['funnel_step_name'] ?? ''), 120) ?: null,
             'product_id' => $this->limit((string) ($payload['product_id'] ?? $pathContext['product_id'] ?? ''), 120) ?: null,
             'category_key' => $pathContext['category_key'],
             'seller_id' => $pathContext['seller_id'],
@@ -98,10 +126,12 @@ class InternalAnalyticsService
             'referrer_type' => $this->referrerType($referrerUrl, $request->getHost()),
             'country_code' => $location['country_code'] ?? null,
             'country_name' => $location['country_name'] ?? null,
+            'city' => $this->limit((string) ($location['city'] ?? ''), 120) ?: null,
+            'region' => $this->limit((string) ($location['region'] ?? ''), 120) ?: null,
             'device_type' => $this->deviceType($userAgent),
-            'device_brand' => $this->deviceBrand($userAgent),
-            'browser' => $this->browser($userAgent),
-            'platform' => $this->platform($userAgent),
+            'device_brand' => $this->deviceBrand($detect, $userAgent),
+            'browser' => $this->browser($detect, $userAgent),
+            'platform' => $this->platform($detect, $userAgent),
             'ip_address' => $this->limit($ip, 45),
             'ip_hash' => $this->hash($ip),
             'user_agent' => $userAgent,
@@ -109,6 +139,10 @@ class InternalAnalyticsService
             'error_message' => $eventType === 'error' ? $error['message'] : null,
             'error_source' => $eventType === 'error' ? $error['source'] : null,
             'error_line' => $eventType === 'error' ? $error['line'] : null,
+            'scroll_depth_pct' => $eventType === 'pageview' ? $this->limit((int) ($payload['scroll_depth'] ?? 0), 100) : null,
+            'session_num' => $sessionNum,
+            'session_duration' => $sessionDuration,
+            'is_bounce' => $isBounce,
             'occurred_at' => now(),
         ]);
 
@@ -117,6 +151,63 @@ class InternalAnalyticsService
         }
 
         return true;
+    }
+
+    private function trackHeartbeat(Request $request, array $payload): bool
+    {
+        $sessionId = $this->normaliseSessionId((string) ($payload['visitor_id'] ?? ''));
+        if (!$sessionId) return false;
+
+        $visitor = AnalyticsLiveVisitor::query()->where('session_id', $sessionId)->first();
+        if ($visitor) {
+            $visitor->timestamps = false;
+            $visitor->updateQuietly(['last_seen_at' => now()]);
+        }
+
+        return true;
+    }
+
+    private function checkIsBounce(string $sessionId): bool
+    {
+        $visitor = AnalyticsLiveVisitor::query()->where('session_id', $sessionId)->first();
+        if ($visitor) {
+            $visitor->timestamps = false;
+            $visitor->increment('pageviews_count');
+            $visitor->updateQuietly(['is_bounced' => false]);
+            return false;
+        }
+        return true;
+    }
+
+    private function getSessionDuration(string $sessionId, array $payload): ?int
+    {
+        if (!empty($payload['session_duration'])) {
+            return (int) $payload['session_duration'];
+        }
+
+        $visitor = AnalyticsLiveVisitor::query()->where('session_id', $sessionId)->first();
+        if ($visitor && $visitor->first_seen_at) {
+            return (int) $visitor->first_seen_at->diffInSeconds(now());
+        }
+
+        return null;
+    }
+
+    private function getSessionNum(string $sessionId): int
+    {
+        $sessionDate = now()->toDateString();
+        $count = AnalyticsEvent::query()
+            ->where('session_id', $sessionId)
+            ->where('event_type', 'pageview')
+            ->whereNull('session_num')
+            ->count();
+
+        $existing = AnalyticsEvent::query()
+            ->where('session_id', $sessionId)
+            ->whereNotNull('session_num')
+            ->value('session_num');
+
+        return $existing ?: 1;
     }
 
     public function aggregatePendingEvents(int $limit = 2000): int
@@ -129,19 +220,34 @@ class InternalAnalyticsService
 
         if ($events->isEmpty()) {
             $this->cleanup();
+            $this->processSessions();
+            $this->aggregateFunnels();
+            $this->checkAlerts();
             return 0;
         }
 
         $increments = [];
         $eventIds = [];
+        $sessionData = [];
+        $uniqueVisitors = [];
+        $funnelEvents = [];
 
         foreach ($events as $event) {
             $eventIds[] = $event->id;
             $date = $event->occurred_at->toDateString();
 
+            if ($event->event_type === 'heartbeat') continue;
+
             if ($event->event_type === 'pageview') {
                 $this->addIncrement($increments, $date, 'pageview', '__all__', 'همه بازدیدها');
                 $this->addIncrement($increments, $date, 'page', $event->path ?: '/', $event->title ?: $event->path ?: '/');
+
+                $sessionData[$event->session_id] = $event;
+
+                $vh = $event->visitor_hash;
+                if (!isset($uniqueVisitors[$date][$vh])) {
+                    $uniqueVisitors[$date][$vh] = true;
+                }
 
                 if ($event->country_code) {
                     $this->addIncrement($increments, $date, 'country', $event->country_code, $event->country_name ?: $event->country_code);
@@ -202,6 +308,10 @@ class InternalAnalyticsService
                 if ($event->search_engine) {
                     $this->addIncrement($increments, $date, 'search_engine', $event->search_engine, $event->search_engine);
                 }
+
+                if ($event->city) {
+                    $this->addIncrement($increments, $date, 'city', $event->city, $event->city);
+                }
             }
 
             $this->addIncrement($increments, $date, 'activity', $event->event_type, $this->activityLabel($event->event_type));
@@ -210,10 +320,18 @@ class InternalAnalyticsService
                 $this->addIncrement($increments, $date, 'goal', $event->goal_key, $event->goal_label ?: $event->goal_key);
             }
 
+            if ($event->funnel_key) {
+                $funnelEvents[] = $event;
+            }
+
             if ($event->event_type === 'error') {
                 $this->addIncrement($increments, $date, 'error', '__all__', 'همه خطاها');
                 $this->addIncrement($increments, $date, 'error', $event->path ?: '/', $event->error_message ?: $event->path ?: 'خطای ناشناس');
             }
+        }
+
+        foreach ($uniqueVisitors as $date => $visitors) {
+            $this->addIncrement($increments, $date, 'unique_visitor', '__all__', 'بازدیدکننده یکتا', count($visitors));
         }
 
         foreach ($increments as $item) {
@@ -222,7 +340,6 @@ class InternalAnalyticsService
                 'metric' => $item['metric'],
                 'dimension_key' => $item['dimension_key'],
             ]);
-
             $stat->dimension_label = $item['dimension_label'];
             $stat->count = (int) $stat->count + $item['count'];
             $stat->save();
@@ -233,16 +350,476 @@ class InternalAnalyticsService
             ->update(['processed_at' => now()]);
 
         $this->cleanup();
+        $this->processSessions();
+        $this->aggregateFunnels($funnelEvents);
+        $this->checkAlerts();
         Cache::put(self::CACHE_PREFIX . 'last_aggregated_at', now()->toDateTimeString(), 86400);
 
         return count($eventIds);
     }
 
+    private function processSessions(): void
+    {
+        $timeout = (int) $this->settings()['session_timeout_minutes'];
+        $cutoff = now()->subMinutes($timeout);
+
+        $expiredVisitors = AnalyticsLiveVisitor::query()
+            ->where('last_seen_at', '<', $cutoff)
+            ->get();
+
+        foreach ($expiredVisitors as $visitor) {
+            $duration = $visitor->first_seen_at->diffInSeconds($visitor->last_seen_at);
+            $date = $visitor->first_seen_at->toDateString();
+
+            AnalyticsSession::query()->updateOrCreate(
+                ['session_id' => $visitor->session_id],
+                [
+                    'visitor_hash' => $visitor->visitor_hash,
+                    'user_id' => $visitor->user_id,
+                    'date' => $date,
+                    'started_at' => $visitor->first_seen_at,
+                    'ended_at' => $visitor->last_seen_at,
+                    'duration_seconds' => $duration,
+                    'pageviews_count' => $visitor->pageviews_count,
+                    'is_bounce' => $visitor->is_bounced,
+                    'entry_path' => $this->getFirstPath($visitor->session_id),
+                    'exit_path' => $visitor->path,
+                    'device_type' => $visitor->device_type,
+                    'country_code' => $visitor->country_code,
+                ]
+            );
+
+            $this->aggregateSessionMetrics($date, $duration, $visitor->is_bounced);
+
+            $visitor->delete();
+        }
+    }
+
+    private function aggregateSessionMetrics(string $date, int $duration, bool $isBounce): void
+    {
+        $stat = AnalyticsDailyStat::query()->firstOrNew([
+            'date' => $date,
+            'metric' => 'session',
+            'dimension_key' => '__all__',
+        ]);
+        $stat->dimension_label = 'جلسات';
+        $stat->count = (int) $stat->count + 1;
+        $stat->save();
+
+        $durStat = AnalyticsDailyStat::query()->firstOrNew([
+            'date' => $date,
+            'metric' => 'session_duration',
+            'dimension_key' => '__all__',
+        ]);
+        $durStat->dimension_label = 'مدت جلسه (ثانیه)';
+        $durStat->count = (int) $durStat->count + $duration;
+        $durStat->save();
+
+        if ($isBounce) {
+            $bounceStat = AnalyticsDailyStat::query()->firstOrNew([
+                'date' => $date,
+                'metric' => 'bounce',
+                'dimension_key' => '__all__',
+            ]);
+            $bounceStat->dimension_label = 'نرخ پرش';
+            $bounceStat->count = (int) $bounceStat->count + 1;
+            $bounceStat->save();
+        }
+    }
+
+    private function getFirstPath(string $sessionId): ?string
+    {
+        return AnalyticsEvent::query()
+            ->where('session_id', $sessionId)
+            ->where('event_type', 'pageview')
+            ->oldest('occurred_at')
+            ->value('path');
+    }
+
+    private function aggregateFunnels(array $funnelEvents = []): void
+    {
+        if (empty($funnelEvents)) {
+            $funnelEvents = AnalyticsEvent::query()
+                ->whereNotNull('funnel_key')
+                ->whereNull('processed_at')
+                ->get();
+        }
+
+        $funnels = AnalyticsFunnel::query()->where('is_active', true)->get()->keyBy('key');
+
+        foreach ($funnelEvents as $event) {
+            $fk = $event->funnel_key;
+            if (!$fk || !isset($funnels[$fk])) continue;
+
+            $step = (int) $event->funnel_step;
+            $date = $event->occurred_at->toDateString();
+
+            AnalyticsFunnelDaily::query()->updateOrCreate(
+                [
+                    'funnel_key' => $fk,
+                    'date' => $date,
+                    'step' => $step,
+                ],
+                [
+                    'step_name' => (string) ($event->funnel_step_name ?: "Step {$step}"),
+                    'entered' => DB::raw('entered + 1'),
+                ]
+            );
+        }
+    }
+
+    public function funnelReport(string $funnelKey, ?Carbon $start = null, ?Carbon $end = null): array
+    {
+        $funnel = AnalyticsFunnel::query()->where('key', $funnelKey)->first();
+        if (!$funnel) return [];
+
+        $start = $start ?: now()->subDays(29)->startOfDay();
+        $end = $end ?: now()->endOfDay();
+
+        $steps = is_string($funnel->steps) ? json_decode($funnel->steps, true) : ($funnel->steps ?? []);
+
+        $daily = AnalyticsFunnelDaily::query()
+            ->where('funnel_key', $funnelKey)
+            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->selectRaw('step, step_name, SUM(entered) as total_entered, SUM(exited) as total_exited')
+            ->groupBy('step', 'step_name')
+            ->orderBy('step')
+            ->get()
+            ->keyBy('step');
+
+        $result = [];
+        $previousTotal = null;
+
+        foreach ($steps as $i => $step) {
+            $stepNum = $i + 1;
+            $data = $daily->get($stepNum);
+            $entered = $data ? (int) $data->total_entered : 0;
+            $exited = $data ? (int) $data->total_exited : 0;
+            $conversion = $previousTotal !== null && $previousTotal > 0
+                ? round(($entered / $previousTotal) * 100, 1)
+                : 100;
+            $dropoff = $previousTotal !== null ? $previousTotal - $entered : 0;
+            $dropoffRate = $previousTotal !== null && $previousTotal > 0
+                ? round(($dropoff / $previousTotal) * 100, 1)
+                : 0;
+
+            $result[] = [
+                'step' => $stepNum,
+                'name' => $step['name'] ?? $data->step_name ?? "Step {$stepNum}",
+                'entered' => $entered,
+                'exited' => $exited,
+                'conversion_pct' => $conversion,
+                'dropoff' => $dropoff,
+                'dropoff_pct' => $dropoffRate,
+            ];
+
+            $previousTotal = $entered;
+        }
+
+        return [
+            'funnel' => $funnel->toArray(),
+            'steps' => $result,
+        ];
+    }
+
+    public function cohortAnalysis(?Carbon $start = null, int $periods = 12): array
+    {
+        $start = $start ?: now()->subMonths($periods)->startOfMonth();
+        $end = now()->endOfMonth();
+
+        $firstVisits = AnalyticsEvent::query()
+            ->selectRaw('visitor_hash, MIN(DATE(occurred_at)) as first_date')
+            ->where('event_type', 'pageview')
+            ->whereNotNull('visitor_hash')
+            ->where('occurred_at', '>=', $start)
+            ->groupBy('visitor_hash')
+            ->get()
+            ->groupBy('first_date');
+
+        $cohorts = [];
+        foreach ($firstVisits as $firstDate => $visitors) {
+            $hashes = $visitors->pluck('visitor_hash')->toArray();
+            $cohortMonth = Carbon::parse($firstDate)->startOfMonth()->toDateString();
+
+            $monthlyActivity = AnalyticsEvent::query()
+                ->selectRaw('strftime(\'%Y-%m\', occurred_at) as month, COUNT(DISTINCT visitor_hash) as active')
+                ->whereIn('visitor_hash', $hashes)
+                ->where('event_type', 'pageview')
+                ->where('occurred_at', '>=', $firstDate)
+                ->groupBy('month')
+                ->orderBy('month')
+                ->pluck('active', 'month');
+
+            $total = count($hashes);
+            $periodData = [];
+            for ($i = 0; $i < 6; $i++) {
+                $m = Carbon::parse($cohortMonth)->addMonthsNoOverflow($i)->format('Y-m');
+                $active = (int) ($monthlyActivity[$m] ?? 0);
+                $periodData[] = [
+                    'period' => $m,
+                    'active' => $active,
+                    'retention_pct' => $total > 0 ? round(($active / $total) * 100, 1) : 0,
+                ];
+            }
+
+            $cohorts[] = [
+                'cohort' => $cohortMonth,
+                'total' => $total,
+                'periods' => $periodData,
+            ];
+        }
+
+        return array_slice($cohorts, 0, 12);
+    }
+
+    public function userJourney(string $sessionId, int $limit = 50): array
+    {
+        $events = AnalyticsEvent::query()
+            ->where('session_id', $sessionId)
+            ->where('event_type', '!=', 'heartbeat')
+            ->orderBy('occurred_at')
+            ->limit($limit)
+            ->get()
+            ->map(fn($e) => [
+                'type' => $e->event_type,
+                'path' => $e->path,
+                'title' => $e->title,
+                'time' => $e->occurred_at->toDateTimeString(),
+                'time_ago' => $e->occurred_at->diffForHumans(),
+                'goal' => $e->goal_label,
+                'funnel' => $e->funnel_key ? [
+                    'key' => $e->funnel_key,
+                    'step' => $e->funnel_step,
+                    'step_name' => $e->funnel_step_name,
+                ] : null,
+            ]);
+
+        $paths = AnalyticsEvent::query()
+            ->where('session_id', $sessionId)
+            ->where('event_type', 'pageview')
+            ->orderBy('occurred_at')
+            ->pluck('path')
+            ->toArray();
+
+        return [
+            'events' => $events,
+            'path_sequence' => $paths,
+            'session' => AnalyticsSession::query()->where('session_id', $sessionId)->first(),
+        ];
+    }
+
+    public function popularPaths(?Carbon $start = null, ?Carbon $end = null, int $limit = 20): array
+    {
+        $start = $start ?: now()->subDays(29)->startOfDay();
+        $end = $end ?: now()->endOfDay();
+
+        $transitions = AnalyticsEvent::query()
+            ->from('analytics_events as a1')
+            ->join('analytics_events as a2', function ($join) {
+                $join->on('a1.session_id', '=', 'a2.session_id')
+                    ->whereRaw('a2.id = (SELECT MIN(id) FROM analytics_events WHERE session_id = a1.session_id AND id > a1.id)');
+            })
+            ->where('a1.event_type', 'pageview')
+            ->where('a2.event_type', 'pageview')
+            ->whereBetween('a1.occurred_at', [$start, $end])
+            ->selectRaw('a1.path as from_path, a2.path as to_path, COUNT(*) as count')
+            ->groupBy('a1.path', 'a2.path')
+            ->orderByDesc('count')
+            ->limit($limit)
+            ->get();
+
+        return $transitions->map(fn($t) => [
+            'from' => $t->from_path,
+            'to' => $t->to_path,
+            'count' => (int) $t->count,
+        ])->all();
+    }
+
+    public function rawData(array $filters = [], int $perPage = 50, int $page = 1): array
+    {
+        $query = AnalyticsEvent::query()
+            ->where('event_type', '!=', 'heartbeat');
+
+        if (!empty($filters['from'])) {
+            $query->where('occurred_at', '>=', Carbon::parse($filters['from']));
+        }
+        if (!empty($filters['to'])) {
+            $query->where('occurred_at', '<=', Carbon::parse($filters['to']));
+        }
+        if (!empty($filters['event_type'])) {
+            $query->where('event_type', $filters['event_type']);
+        }
+        if (!empty($filters['session_id'])) {
+            $query->where('session_id', $filters['session_id']);
+        }
+        if (!empty($filters['visitor_hash'])) {
+            $query->where('visitor_hash', $filters['visitor_hash']);
+        }
+        if (!empty($filters['path'])) {
+            $query->where('path', 'like', '%' . $filters['path'] . '%');
+        }
+        if (!empty($filters['search'])) {
+            $s = '%' . $filters['search'] . '%';
+            $query->where(fn($q) => $q->where('path', 'like', $s)
+                ->orWhere('title', 'like', $s)
+                ->orWhere('search_term', 'like', $s));
+        }
+
+        $total = $query->count();
+        $items = $query->latest('occurred_at')
+            ->skip(($page - 1) * $perPage)
+            ->limit($perPage)
+            ->get()
+            ->map(fn($e) => [
+                'id' => $e->id,
+                'type' => $e->event_type,
+                'session_id' => $e->session_id,
+                'user_id' => $e->user_id,
+                'path' => $e->path,
+                'title' => $e->title,
+                'goal' => $e->goal_label,
+                'referrer' => $e->referrer_type,
+                'country' => $e->country_name,
+                'city' => $e->city,
+                'device' => $e->device_brand . ' ' . $e->device_type,
+                'browser' => $e->browser,
+                'platform' => $e->platform,
+                'utm_source' => $e->utm_source,
+                'utm_campaign' => $e->utm_campaign,
+                'search_term' => $e->search_term,
+                'duration' => $e->session_duration,
+                'bounce' => $e->is_bounce,
+                'scroll' => $e->scroll_depth_pct,
+                'error' => $e->error_message,
+                'time' => $e->occurred_at->toDateTimeString(),
+            ]);
+
+        return [
+            'data' => $items,
+            'total' => $total,
+            'per_page' => $perPage,
+            'page' => $page,
+            'last_page' => max(1, (int) ceil($total / $perPage)),
+        ];
+    }
+
+    public function comparativeReport(string $metric, Carbon $currentStart, Carbon $currentEnd, Carbon $previousStart, Carbon $previousEnd): array
+    {
+        $current = AnalyticsEvent::query()
+            ->where('event_type', $metric === 'pageview' ? 'pageview' : ($metric === 'goal' ? 'goal' : 'error'))
+            ->whereBetween('occurred_at', [$currentStart, $currentEnd])
+            ->count();
+
+        $previous = AnalyticsEvent::query()
+            ->where('event_type', $metric === 'pageview' ? 'pageview' : ($metric === 'goal' ? 'goal' : 'error'))
+            ->whereBetween('occurred_at', [$previousStart, $previousEnd])
+            ->count();
+
+        $change = $previous > 0 ? round((($current - $previous) / $previous) * 100, 1) : ($current > 0 ? 100 : 0);
+
+        $currentSeries = $this->filteredSeries(['start' => $currentStart, 'end' => $currentEnd, 'period' => 'day'], $metric === 'pageview' ? 'pageview' : ($metric === 'goal' ? 'goal' : 'error'));
+        $previousSeries = $this->filteredSeries(['start' => $previousStart, 'end' => $previousEnd, 'period' => 'day'], $metric === 'pageview' ? 'pageview' : ($metric === 'goal' ? 'goal' : 'error'));
+
+        return [
+            'metric' => $metric,
+            'current' => ['start' => $currentStart->toDateString(), 'end' => $currentEnd->toDateString(), 'total' => $current],
+            'previous' => ['start' => $previousStart->toDateString(), 'end' => $previousEnd->toDateString(), 'total' => $previous],
+            'change' => $change,
+            'change_direction' => $change >= 0 ? 'up' : 'down',
+            'series' => [
+                'current' => $currentSeries,
+                'previous' => $previousSeries,
+            ],
+        ];
+    }
+
+    public function checkAlerts(): void
+    {
+        if (!($this->settings()['alerting_enabled'] ?? true)) return;
+
+        $alerts = AnalyticsAlert::query()->where('is_active', true)->get();
+        if ($alerts->isEmpty()) return;
+
+        $today = now()->toDateString();
+        $yesterday = now()->subDay()->toDateString();
+        $lastWeek = now()->subDays(7)->toDateString();
+
+        foreach ($alerts as $alert) {
+            if ($alert->last_triggered_at && $alert->last_triggered_at->diffInHours(now()) < $alert->cooldown_hours) {
+                continue;
+            }
+
+            $actualValue = $this->getMetricValue($alert->metric, $today);
+
+            $shouldTrigger = match ($alert->condition) {
+                'gt' => $actualValue > $alert->threshold,
+                'lt' => $actualValue < $alert->threshold,
+                'gte' => $actualValue >= $alert->threshold,
+                'lte' => $actualValue <= $alert->threshold,
+                'eq' => $actualValue == $alert->threshold,
+                'pct_change_gt' => $this->getMetricPctChange($alert->metric, $today, $yesterday) > $alert->threshold,
+                'pct_change_lt' => $this->getMetricPctChange($alert->metric, $today, $yesterday) < $alert->threshold,
+                default => false,
+            };
+
+            if ($shouldTrigger) {
+                $alert->update(['last_triggered_at' => now()]);
+                DB::table('analytics_alert_logs')->insert([
+                    'alert_id' => $alert->id,
+                    'actual_value' => $actualValue,
+                    'threshold' => $alert->threshold,
+                    'triggered_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+    }
+
+    private function getMetricValue(string $metric, string $date): float
+    {
+        $stat = AnalyticsDailyStat::query()
+            ->where('date', $date)
+            ->where('metric', $metric)
+            ->where('dimension_key', '__all__')
+            ->first();
+        return (float) ($stat->count ?? 0);
+    }
+
+    private function getMetricPctChange(string $metric, string $currentDate, string $previousDate): float
+    {
+        $current = $this->getMetricValue($metric, $currentDate);
+        $previous = $this->getMetricValue($metric, $previousDate);
+        if ($previous == 0) return $current > 0 ? 100 : 0;
+        return round((($current - $previous) / $previous) * 100, 1);
+    }
+
+    public function alertLogs(int $limit = 50): array
+    {
+        return DB::table('analytics_alert_logs')
+            ->join('analytics_alerts', 'analytics_alert_logs.alert_id', '=', 'analytics_alerts.id')
+            ->select('analytics_alert_logs.*', 'analytics_alerts.name', 'analytics_alerts.metric')
+            ->latest('analytics_alert_logs.triggered_at')
+            ->limit($limit)
+            ->get()
+            ->toArray();
+    }
+
     public function dashboard(): array
     {
         return $this->cachedReport('dashboard', 45, function () {
+            $today = now()->toDateString();
+            $todayCount = $this->sumMetric('pageview', now(), now());
+            $todayUniques = $this->getMetricRaw('unique_visitor', $today);
+            $todaySessions = $this->getMetricRaw('session', $today);
+            $todayBounces = $this->getMetricRaw('bounce', $today);
+            $bounceRate = $todaySessions > 0 ? round(($todayBounces / $todaySessions) * 100, 1) : 0;
+
             return [
-                'today' => $this->sumMetric('pageview', now(), now()),
+                'today' => $todayCount,
+                'today_uniques' => $todayUniques,
+                'today_sessions' => $todaySessions,
+                'bounce_rate' => $bounceRate,
                 'chart' => $this->series('pageview', now()->subDays(29), now()),
                 'goals' => $this->topMetric('goal', now(), now(), 6),
                 'live' => $this->liveUsersCount(),
@@ -250,17 +827,45 @@ class InternalAnalyticsService
         });
     }
 
-    public function userActivity(int $userId): array
+    private function getMetricRaw(string $metric, string $date): int
     {
-        $events = AnalyticsEvent::query()
-            ->where('user_id', $userId)
-            ->latest('occurred_at')
-            ->limit(100)
-            ->get();
+        return (int) AnalyticsDailyStat::query()
+            ->where('date', $date)
+            ->where('metric', $metric)
+            ->where('dimension_key', '__all__')
+            ->value('count');
+    }
 
-        return [
-            'user' => $this->userLabel($userId),
-            'events' => $events->map(fn($e) => [
+    public function userActivity(int $userId, array $filters = []): array
+    {
+        $query = AnalyticsEvent::query()
+            ->where('user_id', $userId)
+            ->where('event_type', '!=', 'heartbeat');
+
+        if (!empty($filters['from'])) {
+            $query->where('occurred_at', '>=', Carbon::parse($filters['from']));
+        }
+        if (!empty($filters['to'])) {
+            $query->where('occurred_at', '<=', Carbon::parse($filters['to']));
+        }
+        if (!empty($filters['event_type'])) {
+            $query->where('event_type', $filters['event_type']);
+        }
+        if (!empty($filters['search'])) {
+            $s = '%' . $filters['search'] . '%';
+            $query->where(fn($q) => $q->where('path', 'like', $s)->orWhere('title', 'like', $s));
+        }
+
+        $perPage = min((int) ($filters['per_page'] ?? 100), 500);
+        $page = max(1, (int) ($filters['page'] ?? 1));
+        $total = $query->count();
+
+        $events = $query->latest('occurred_at')
+            ->skip(($page - 1) * $perPage)
+            ->limit($perPage)
+            ->get()
+            ->map(fn($e) => [
+                'id' => $e->id,
                 'type' => $e->event_type,
                 'path' => $e->path,
                 'title' => $e->title,
@@ -268,8 +873,13 @@ class InternalAnalyticsService
                 'full_time' => $e->occurred_at->toDateTimeString(),
                 'ip' => $e->ip_address,
                 'country' => $e->country_name ?: $e->country_code,
+                'city' => $e->city,
                 'device' => $e->device_brand . ' / ' . $e->device_type,
                 'browser' => $e->browser,
+                'platform' => $e->platform,
+                'duration' => $e->session_duration,
+                'scroll' => $e->scroll_depth_pct,
+                'bounce' => $e->is_bounce,
                 'search_engine' => $e->search_engine,
                 'utm' => array_filter([
                     'source' => $e->utm_source,
@@ -277,7 +887,20 @@ class InternalAnalyticsService
                     'campaign' => $e->utm_campaign,
                 ]),
                 'goal' => $e->goal_label,
-            ])->all(),
+                'funnel' => $e->funnel_key ? [
+                    'key' => $e->funnel_key,
+                    'step' => $e->funnel_step,
+                    'step_name' => $e->funnel_step_name,
+                ] : null,
+            ])->all();
+
+        return [
+            'user' => $this->userLabel($userId),
+            'events' => $events,
+            'total' => $total,
+            'per_page' => $perPage,
+            'page' => $page,
+            'last_page' => max(1, (int) ceil($total / $perPage)),
         ];
     }
 
@@ -289,6 +912,10 @@ class InternalAnalyticsService
         $cacheKey = $this->reportCacheKey($section, $filters);
         $cacheTtl = $this->hasRawFilters($filters) ? 15 : 60;
 
+        if (in_array($section, ['live'], true)) {
+            $cacheTtl = 0;
+        }
+
         return match ($section) {
             'overview' => $this->cachedReport('overview:' . $cacheKey, $cacheTtl, fn () => [
                 'filters' => $this->publicFilters($filters),
@@ -299,10 +926,15 @@ class InternalAnalyticsService
                 'live' => $this->liveUsersCount(),
                 'chart' => $this->filteredSeries($filters, 'pageview'),
                 'activity' => $this->eventTypeBreakdown($filters),
+                'today_uniques' => $this->getMetricForDateRange('unique_visitor', $start, $end),
+                'sessions' => $this->getMetricForDateRange('session', $start, $end),
+                'bounce_rate' => $this->bounceRateForRange($start, $end),
+                'avg_duration' => $this->avgDurationForRange($start, $end),
             ]),
             'reports' => $this->cachedReport('reports:' . $cacheKey, $cacheTtl, fn () => [
                 'filters' => $this->publicFilters($filters),
                 'countries' => $this->topEventsDimension($filters, 'country_code', 'country_name', 80),
+                'cities' => $this->topEventsDimension($filters, 'city', 'city', 20),
                 'referrers' => $this->topEventsDimension($filters, 'referrer_type', null, 12, fn ($value) => $this->referrerLabel((string) $value)),
                 'device_types' => $this->topEventsDimension($filters, 'device_type', null, 12, fn ($value) => $this->deviceTypeLabel((string) $value)),
                 'device_brands' => $this->topEventsDimension($filters, 'device_brand', null, 12),
@@ -347,17 +979,190 @@ class InternalAnalyticsService
                 'items' => $this->topEventsDimension($filters, 'path', 'error_message', 30, null, 'error'),
                 'recent' => $this->recentErrors(),
             ]),
+            'funnels' => $this->funnelsReport($start, $end),
+            'sessions' => $this->sessionsReport($start, $end),
+            'journeys' => $this->popularPaths($start, $end),
+            'comparative' => $this->comparativeReport('pageview', $start, $end, Carbon::parse($start)->subDays($start->diffInDays($end) + 1), Carbon::parse($end)->subDays($start->diffInDays($end) + 1)),
+            'cohorts' => ['cohorts' => $this->cohortAnalysis($start)],
+            'raw' => $this->rawData($filters, 50, (int) ($filters['page'] ?? 1)),
+            'alerts' => [
+                'alerts' => AnalyticsAlert::query()->where('is_active', true)->get()->toArray(),
+                'logs' => $this->alertLogs(),
+            ],
             default => [],
         };
+    }
+
+    private function funnelsReport(Carbon $start, Carbon $end): array
+    {
+        $funnels = AnalyticsFunnel::query()->where('is_active', true)->get();
+        return [
+            'funnels' => $funnels->map(fn($f) => [
+                'key' => $f->key,
+                'name' => $f->name,
+                'steps' => is_string($f->steps) ? json_decode($f->steps, true) : ($f->steps ?? []),
+            ]),
+            'report' => $funnels->map(fn($f) => $this->funnelReport($f->key, $start, $end)),
+        ];
+    }
+
+    private function sessionsReport(Carbon $start, Carbon $end): array
+    {
+        $sessions = AnalyticsSession::query()
+            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->selectRaw('COUNT(*) as total, SUM(is_bounce) as bounces, AVG(duration_seconds) as avg_duration, SUM(pageviews_count) as total_pageviews')
+            ->first();
+
+        $total = (int) ($sessions->total ?? 0);
+        $bounces = (int) ($sessions->bounces ?? 0);
+        $avgDuration = (int) ($sessions->avg_duration ?? 0);
+        $totalPv = (int) ($sessions->total_pageviews ?? 0);
+
+        $byDevice = AnalyticsSession::query()
+            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->selectRaw('device_type, COUNT(*) as total, AVG(duration_seconds) as avg_dur, SUM(is_bounce) as bounces')
+            ->whereNotNull('device_type')
+            ->groupBy('device_type')
+            ->get();
+
+        return [
+            'total' => $total,
+            'bounces' => $bounces,
+            'bounce_rate' => $total > 0 ? round(($bounces / $total) * 100, 1) : 0,
+            'avg_duration_seconds' => $avgDuration,
+            'avg_duration_formatted' => gmdate('i:s', $avgDuration),
+            'avg_pageviews_per_session' => $total > 0 ? round($totalPv / $total, 1) : 0,
+            'by_device' => $byDevice,
+        ];
+    }
+
+    private function getMetricForDateRange(string $metric, Carbon $start, Carbon $end): int
+    {
+        return (int) AnalyticsDailyStat::query()
+            ->where('metric', $metric)
+            ->where('dimension_key', '__all__')
+            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->sum('count');
+    }
+
+    private function bounceRateForRange(Carbon $start, Carbon $end): float
+    {
+        $sessions = $this->getMetricForDateRange('session', $start, $end);
+        $bounces = $this->getMetricForDateRange('bounce', $start, $end);
+        return $sessions > 0 ? round(($bounces / $sessions) * 100, 1) : 0;
+    }
+
+    private function avgDurationForRange(Carbon $start, Carbon $end): int
+    {
+        $totalDur = (int) AnalyticsDailyStat::query()
+            ->where('metric', 'session_duration')
+            ->where('dimension_key', '__all__')
+            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->sum('count');
+        $sessions = $this->getMetricForDateRange('session', $start, $end);
+        return $sessions > 0 ? (int) round($totalDur / $sessions) : 0;
+    }
+
+    public function csvExport(string $section, array $filters = []): string
+    {
+        $data = $this->report($section, $filters);
+        $rows = [];
+
+        $headerMap = [
+            'overview' => ['معیار', 'مقدار'],
+            'reports' => ['کلید', 'برچسب', 'تعداد'],
+            'content' => ['صفحه', 'عنوان', 'بازدید'],
+            'search' => ['کلمه جستجو', 'تعداد'],
+            'goals' => ['هدف', 'تعداد'],
+            'users' => ['کاربر', 'بازدید'],
+            'errors' => ['خطا', 'مسیر', 'تعداد'],
+            'sessions' => ['نوع', 'مقدار'],
+            'raw' => ['آی‌دی', 'نوع', 'مسیر', 'عنوان', 'کشور', 'مرورگر', 'دستگاه', 'زمان'],
+        ];
+
+        $headers = $headerMap[$section] ?? ['کلید', 'مقدار'];
+
+        return match ($section) {
+            'overview' => $this->arrayToCsv(array_merge(
+                [['معیار', 'مقدار']],
+                [['بازدید امروز', $data['today'] ?? 0]],
+                [['بازدید ۷ روز', $data['week'] ?? 0]],
+                [['بازدید ۳۰ روز', $data['month'] ?? 0]],
+                [['کاربران زنده', $data['live'] ?? 0]],
+                [['بازدیدکننده یکتا', $data['today_uniques'] ?? 0]],
+                [['جلسات', $data['sessions'] ?? 0]],
+                [['نرخ پرش', ($data['bounce_rate'] ?? 0) . '%']],
+            )),
+            'reports' => $this->arrayToCsv($this->flattenReport($data, ['countries', 'referrers', 'device_types', 'browsers', 'platforms'])),
+            'content' => $this->arrayToCsv($this->flattenReport($data, ['pages', 'products', 'categories', 'sellers'])),
+            'search' => $this->arrayToCsv(($data['keywords'] ?? []), ['برچسب', 'تعداد']),
+            'goals' => $this->arrayToCsv(($data['month'] ?? []), ['هدف', 'تعداد']),
+            'sessions' => $this->arrayToCsv([
+                ['معیار', 'مقدار'],
+                ['کل جلسات', $data['total'] ?? 0],
+                ['نرخ پرش', ($data['bounce_rate'] ?? 0) . '%'],
+                ['مدت متوسط', $data['avg_duration_formatted'] ?? '0:00'],
+                ['میانگین صفحات', $data['avg_pageviews_per_session'] ?? 0],
+            ]),
+            'raw' => $this->eventsToCsv($data['data'] ?? []),
+            default => '',
+        };
+    }
+
+    private function flattenReport(array $data, array $keys): array
+    {
+        $rows = [['بخش', 'برچسب', 'تعداد']];
+        foreach ($keys as $key) {
+            foreach ($data[$key] ?? [] as $item) {
+                $rows[] = [$key, $item['label'] ?? '-', $item['count'] ?? 0];
+            }
+        }
+        return $rows;
+    }
+
+    private function eventsToCsv(array $events): string
+    {
+        $rows = [['آی‌دی', 'نوع', 'مسیر', 'عنوان', 'کشور', 'مرورگر', 'دستگاه', 'زمان']];
+        foreach ($events as $e) {
+            $rows[] = [
+                $e['id'] ?? '',
+                $e['type'] ?? '',
+                $e['path'] ?? '',
+                $e['title'] ?? '',
+                $e['country'] ?? '',
+                $e['browser'] ?? '',
+                $e['device'] ?? '',
+                $e['time'] ?? '',
+            ];
+        }
+        return $this->arrayToCsv($rows);
+    }
+
+    private function arrayToCsv(array $rows, ?array $header = null): string
+    {
+        if (empty($rows)) return '';
+
+        $output = fopen('php://temp', 'r+');
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                fputcsv($output, $row);
+            }
+        }
+        rewind($output);
+        $csv = stream_get_contents($output);
+        fclose($output);
+        return $csv;
     }
 
     public function exportData(): array
     {
         return [
-            'version' => 1,
+            'version' => 2,
             'exported_at' => now()->toDateTimeString(),
             'settings' => $this->settings(),
             'daily_stats' => AnalyticsDailyStat::query()->latest('date')->limit(5000)->get()->toArray(),
+            'funnels' => AnalyticsFunnel::query()->get()->toArray(),
+            'alerts' => AnalyticsAlert::query()->get()->toArray(),
         ];
     }
 
@@ -367,9 +1172,9 @@ class InternalAnalyticsService
 
         if ($type === 'errors') {
             $query->where('event_type', 'error');
-        } elseif ($type === 'all') {
-            // No type filter
-        } else {
+        } elseif ($type === 'sessions') {
+            // Prune sessions
+        } elseif ($type !== 'all') {
             return 0;
         }
 
@@ -380,7 +1185,12 @@ class InternalAnalyticsService
         $count = $query->count();
         $query->delete();
 
-        // Also prune daily stats if type is all and older than days is set
+        if (in_array($type, ['all', 'sessions']) && $olderThanDays !== null) {
+            AnalyticsSession::query()
+                ->where('date', '<', now()->subDays($olderThanDays)->toDateString())
+                ->delete();
+        }
+
         if ($type === 'all' && $olderThanDays !== null) {
             AnalyticsDailyStat::query()
                 ->where('date', '<', now()->subDays($olderThanDays)->toDateString())
@@ -424,14 +1234,49 @@ class InternalAnalyticsService
             }
         });
 
+        if (!empty($payload['funnels'])) {
+            foreach ($payload['funnels'] as $f) {
+                AnalyticsFunnel::query()->updateOrCreate(
+                    ['key' => $f['key']],
+                    ['name' => $f['name'], 'steps' => $f['steps'], 'is_active' => $f['is_active'] ?? true]
+                );
+            }
+        }
+
+        if (!empty($payload['alerts'])) {
+            foreach ($payload['alerts'] as $a) {
+                AnalyticsAlert::query()->updateOrCreate(
+                    ['name' => $a['name'], 'metric' => $a['metric']],
+                    ['condition' => $a['condition'], 'threshold' => $a['threshold']]
+                );
+            }
+        }
+
         return $imported;
     }
 
     private function touchLiveVisitor(AnalyticsEvent $event): void
     {
-        AnalyticsLiveVisitor::query()->updateOrCreate(
-            ['session_id' => $event->session_id],
-            [
+        $existing = AnalyticsLiveVisitor::query()->where('session_id', $event->session_id)->first();
+
+        if ($existing) {
+            $existing->timestamps = false;
+            $existing->updateQuietly([
+                'url' => $event->url,
+                'path' => $event->path,
+                'title' => $event->title,
+                'product_id' => $event->product_id,
+                'country_code' => $event->country_code,
+                'country_name' => $event->country_name,
+                'device_type' => $event->device_type,
+                'device_brand' => $event->device_brand,
+                'ip_address' => $event->ip_address,
+                'user_agent' => $event->user_agent,
+                'last_seen_at' => now(),
+            ]);
+        } else {
+            AnalyticsLiveVisitor::query()->create([
+                'session_id' => $event->session_id,
                 'visitor_hash' => $event->visitor_hash,
                 'user_id' => $event->user_id,
                 'url' => $event->url,
@@ -444,10 +1289,12 @@ class InternalAnalyticsService
                 'device_brand' => $event->device_brand,
                 'ip_address' => $event->ip_address,
                 'user_agent' => $event->user_agent,
-                'first_seen_at' => AnalyticsLiveVisitor::query()->where('session_id', $event->session_id)->value('first_seen_at') ?: now(),
+                'first_seen_at' => now(),
                 'last_seen_at' => now(),
-            ]
-        );
+                'pageviews_count' => 1,
+                'is_bounced' => true,
+            ]);
+        }
     }
 
     private function cleanup(): void
@@ -471,6 +1318,10 @@ class InternalAnalyticsService
     {
         $settings = $this->settings();
         $ttl = max(10, (int) ($settings['report_cache_seconds'] ?? $ttl));
+
+        if ($ttl === 0) {
+            return $callback();
+        }
 
         return Cache::remember(self::CACHE_PREFIX . $key . ':' . now()->format('YmdHi'), $ttl, $callback);
     }
@@ -545,6 +1396,7 @@ class InternalAnalyticsService
             'device_type' => $this->limit((string) ($filters['device_type'] ?? ''), 40),
             'activity' => $this->limit((string) ($filters['activity'] ?? ''), 40),
             'search' => $this->limit((string) ($filters['search'] ?? ''), 190),
+            'page' => max(1, (int) ($filters['page'] ?? 1)),
         ];
     }
 
@@ -578,7 +1430,8 @@ class InternalAnalyticsService
     private function filteredEventsQuery(array $filters, ?string $eventType = null)
     {
         $query = AnalyticsEvent::query()
-            ->whereBetween('occurred_at', [$filters['start'], $filters['end']]);
+            ->whereBetween('occurred_at', [$filters['start'], $filters['end']])
+            ->where('event_type', '!=', 'heartbeat');
 
         if ($eventType) {
             $query->where('event_type', $eventType);
@@ -602,6 +1455,7 @@ class InternalAnalyticsService
                     ->orWhere('search_term', 'like', $search)
                     ->orWhere('goal_label', 'like', $search)
                     ->orWhere('country_name', 'like', $search)
+                    ->orWhere('city', 'like', $search)
                     ->orWhere('device_brand', 'like', $search)
                     ->orWhere('browser', 'like', $search)
                     ->orWhere('platform', 'like', $search);
@@ -763,11 +1617,12 @@ class InternalAnalyticsService
                 'device_brand' => $visitor->device_brand ?: '-',
                 'user_agent' => $visitor->user_agent ?: '-',
                 'last_seen' => $visitor->last_seen_at?->diffForHumans(),
+                'pageviews' => $visitor->pageviews_count,
             ])
             ->all();
     }
 
-    private function addIncrement(array &$increments, string $date, string $metric, string $dimensionKey, ?string $label): void
+    private function addIncrement(array &$increments, string $date, string $metric, string $dimensionKey, ?string $label, ?int $explicitCount = null): void
     {
         $key = "{$date}|{$metric}|{$dimensionKey}";
         if (!isset($increments[$key])) {
@@ -780,7 +1635,7 @@ class InternalAnalyticsService
             ];
         }
 
-        $increments[$key]['count']++;
+        $increments[$key]['count'] += $explicitCount ?? 1;
     }
 
     private function extractPathContext(string $path, string $url): array
@@ -929,6 +1784,7 @@ class InternalAnalyticsService
             'pageview' => 'بازدید صفحه',
             'goal' => 'تحقق هدف',
             'error' => 'خطای کاربر',
+            'heartbeat' => 'ضربان',
         ][$type] ?? $type;
     }
 
@@ -945,42 +1801,50 @@ class InternalAnalyticsService
         return 'desktop';
     }
 
-    private function deviceBrand(string $userAgent): string
+    private function deviceBrand(MobileDetect $detect, string $userAgent): string
     {
-        return match (true) {
-            preg_match('/iPhone|iPad|Macintosh|Mac OS/i', $userAgent) === 1 => 'Apple',
-            preg_match('/Samsung|SM-|GT-/i', $userAgent) === 1 => 'Samsung',
-            preg_match('/Huawei|HONOR/i', $userAgent) === 1 => 'Huawei',
-            preg_match('/Xiaomi|Redmi|Mi /i', $userAgent) === 1 => 'Xiaomi',
-            preg_match('/OPPO/i', $userAgent) === 1 => 'OPPO',
-            preg_match('/Vivo/i', $userAgent) === 1 => 'Vivo',
-            preg_match('/Windows/i', $userAgent) === 1 => 'Windows PC',
-            preg_match('/Linux/i', $userAgent) === 1 => 'Linux PC',
-            default => 'Other',
-        };
+        if ($detect->is('iPhone') || $detect->is('iPad') || $detect->is('Mac')) return 'Apple';
+        if ($detect->is('Samsung')) return 'Samsung';
+        if ($detect->is('Huawei')) return 'Huawei';
+        if ($detect->is('Xiaomi')) return 'Xiaomi';
+        if ($detect->is('OPPO')) return 'OPPO';
+        if ($detect->is('vivo')) return 'Vivo';
+        if ($detect->is('Google')) return 'Google';
+        if ($detect->is('OnePlus')) return 'OnePlus';
+        if ($detect->is('Sony')) return 'Sony';
+        if ($detect->is('LG')) return 'LG';
+        if ($detect->is('Nokia')) return 'Nokia';
+        if ($detect->is('HTC')) return 'HTC';
+        if ($detect->is('Lenovo')) return 'Lenovo';
+        if ($detect->is('Motorola')) return 'Motorola';
+        if ($detect->is('Asus')) return 'Asus';
+        if (preg_match('/Windows/i', $userAgent)) return 'Windows PC';
+        if (preg_match('/Linux/i', $userAgent)) return 'Linux PC';
+        return 'Other';
     }
 
-    private function browser(string $userAgent): string
+    private function browser(MobileDetect $detect, string $userAgent): string
     {
-        return match (true) {
-            str_contains($userAgent, 'Firefox') => 'Firefox',
-            str_contains($userAgent, 'Edg/') => 'Edge',
-            str_contains($userAgent, 'Chrome') => 'Chrome',
-            str_contains($userAgent, 'Safari') => 'Safari',
-            default => 'Other',
-        };
+        if ($detect->is('Edge') || str_contains($userAgent, 'Edg/')) return 'Edge';
+        if ($detect->is('Firefox') || str_contains($userAgent, 'Firefox')) return 'Firefox';
+        if ($detect->is('Opera') || str_contains($userAgent, 'Opera|OPR')) return 'Opera';
+        if ($detect->is('Brave') || str_contains($userAgent, 'Brave')) return 'Brave';
+        if (str_contains($userAgent, 'Chrome') && !str_contains($userAgent, 'Edg/') && !str_contains($userAgent, 'OPR')) return 'Chrome';
+        if ($detect->is('Safari') || str_contains($userAgent, 'Safari')) return 'Safari';
+        if (str_contains($userAgent, 'UCBrowser')) return 'UC Browser';
+        if (str_contains($userAgent, 'SamsungBrowser')) return 'Samsung Internet';
+        return 'Other';
     }
 
-    private function platform(string $userAgent): string
+    private function platform(MobileDetect $detect, string $userAgent): string
     {
-        return match (true) {
-            preg_match('/Windows/i', $userAgent) === 1 => 'Windows',
-            preg_match('/Macintosh|Mac OS/i', $userAgent) === 1 => 'macOS',
-            preg_match('/Android/i', $userAgent) === 1 => 'Android',
-            preg_match('/iPhone|iPad|iOS/i', $userAgent) === 1 => 'iOS',
-            preg_match('/Linux/i', $userAgent) === 1 => 'Linux',
-            default => 'Other',
-        };
+        if ($detect->is('iOS') || preg_match('/iPhone|iPad|iOS/i', $userAgent)) return 'iOS';
+        if ($detect->is('AndroidOS') || preg_match('/Android/i', $userAgent)) return 'Android';
+        if ($detect->is('Windows') || preg_match('/Windows/i', $userAgent)) return 'Windows';
+        if ($detect->is('macOS') || preg_match('/Macintosh|Mac OS/i', $userAgent)) return 'macOS';
+        if ($detect->is('Linux') || preg_match('/Linux/i', $userAgent)) return 'Linux';
+        if ($detect->is('ChromeOS')) return 'ChromeOS';
+        return 'Other';
     }
 
     private function productLabel(string $productId): string
@@ -1016,6 +1880,7 @@ class InternalAnalyticsService
                 'user' => $event->user_id ? $this->userLabel((int) $event->user_id) : 'مهمان',
                 'ip' => $event->ip_address ?: '-',
                 'country' => $event->country_name ?: $event->country_code ?: '-',
+                'city' => $event->city,
                 'device' => trim(($event->device_brand ?: '-') . ' / ' . ($event->device_type ?: '-')),
                 'user_agent' => $event->user_agent ?: '-',
                 'time' => $event->occurred_at?->diffForHumans(),

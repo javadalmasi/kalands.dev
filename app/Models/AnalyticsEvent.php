@@ -13,6 +13,9 @@ class AnalyticsEvent extends Model
         'event_type',
         'goal_key',
         'goal_label',
+        'funnel_key',
+        'funnel_step',
+        'funnel_step_name',
         'product_id',
         'category_key',
         'seller_id',
@@ -31,6 +34,8 @@ class AnalyticsEvent extends Model
         'referrer_type',
         'country_code',
         'country_name',
+        'city',
+        'region',
         'device_type',
         'device_brand',
         'browser',
@@ -42,6 +47,10 @@ class AnalyticsEvent extends Model
         'error_message',
         'error_source',
         'error_line',
+        'scroll_depth_pct',
+        'session_num',
+        'session_duration',
+        'is_bounce',
         'occurred_at',
         'processed_at',
     ];
@@ -49,5 +58,9 @@ class AnalyticsEvent extends Model
     protected $casts = [
         'occurred_at' => 'datetime',
         'processed_at' => 'datetime',
+        'is_bounce' => 'boolean',
+        'funnel_step' => 'integer',
+        'scroll_depth_pct' => 'integer',
+        'session_duration' => 'integer',
     ];
 }

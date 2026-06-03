@@ -87,10 +87,6 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
     };
 
     const svgNs = 'http://www.w3.org/2000/svg';
-    const mapViewBox = {
-        world: { height: 340 },
-        iran: { height: 340 }
-    };
 
     const getMapMode = (rows) => {
         const codes = [...new Set((rows || [])
@@ -106,16 +102,9 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
 
     const getMapData = (mode) => {
         if (mode === 'iran') {
-            return {
-                chart: iranMap,
-                mapKey: 'ir'
-            };
+            return { chart: iranMap, mapKey: 'ir' };
         }
-
-        return {
-            chart: worldMap,
-            mapKey: 'custom/world'
-        };
+        return { chart: worldMap, mapKey: 'custom/world' };
     };
 
     let liveMapMode = '2d';
@@ -143,10 +132,7 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                 hoverColor: '#67e8f9',
                 labelColor: '#a7f3d0',
                 colorStops: [
-                    [0, '#164e63'],
-                    [0.35, '#0891b2'],
-                    [0.7, '#22d3ee'],
-                    [1, '#a7f3d0']
+                    [0, '#164e63'], [0.35, '#0891b2'], [0.7, '#22d3ee'], [1, '#a7f3d0']
                 ]
             }
             : {
@@ -155,54 +141,25 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                 hoverColor: '#0e7490',
                 labelColor: '#064e3b',
                 colorStops: [
-                    [0, '#e0f2fe'],
-                    [0.35, '#7dd3fc'],
-                    [0.7, '#0ea5e9'],
-                    [1, '#075985']
+                    [0, '#e0f2fe'], [0.35, '#7dd3fc'], [0.7, '#0ea5e9'], [1, '#075985']
                 ]
             };
 
         Highcharts.mapChart(chartHost, {
-            chart: {
-                map: mapData.chart,
-                backgroundColor: 'transparent',
-                style: { fontFamily: 'inherit' },
-                animation: true
-            },
+            chart: { map: mapData.chart, backgroundColor: 'transparent', style: { fontFamily: 'inherit' }, animation: true },
             title: { text: '' },
             credits: { enabled: false },
             exporting: { enabled: false },
             legend: { enabled: false },
-            mapNavigation: {
-                enabled: true,
-                buttonOptions: {
-                    verticalAlign: 'bottom'
-                }
-            },
-            mapView: {
-                projection: {
-                    name: projection
-                },
-                insetOptions: {
-                    borderColor: 'rgba(16, 185, 129, 0.2)'
-                }
-            },
-            colorAxis: {
-                min: 0,
-                stops: isGlobe ? globePalette.colorStops : [
-                    [0, '#ecfdf5'], // emerald 50
-                    [0.35, '#6ee7b7'], // emerald 300
-                    [0.7, '#10b981'], // emerald 500
-                    [1, '#047857'] // emerald 700
-                ]
-            },
-            tooltip: {
-                useHTML: true,
-                formatter() {
-                    const value = this.point?.value || 0;
-                    return `<span>${escapeHtml(this.point?.name || this.point?.['hc-key'] || title)}</span><br><strong>${number(value)}</strong>`;
-                }
-            },
+            mapNavigation: { enabled: true, buttonOptions: { verticalAlign: 'bottom' } },
+            mapView: { projection: { name: projection }, insetOptions: { borderColor: 'rgba(16, 185, 129, 0.2)' } },
+            colorAxis: { min: 0, stops: isGlobe ? globePalette.colorStops : [
+                [0, '#ecfdf5'], [0.35, '#6ee7b7'], [0.7, '#10b981'], [1, '#047857']
+            ]},
+            tooltip: { useHTML: true, formatter() {
+                const value = this.point?.value || 0;
+                return `<span>${escapeHtml(this.point?.name || this.point?.['hc-key'] || title)}</span><br><strong>${number(value)}</strong>`;
+            }},
             series: [{
                 name: title,
                 data: seriesData,
@@ -210,21 +167,10 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                 borderColor: isGlobe ? globePalette.borderColor : '#ffffff',
                 borderWidth: isGlobe ? 0.9 : 0.6,
                 nullColor: isGlobe ? globePalette.nullColor : '#e5e7eb',
-                states: {
-                    hover: { color: isGlobe ? globePalette.hoverColor : '#34d399' }
-                },
-                dataLabels: {
-                    enabled: isGlobe,
-                    formatter() {
-                        return this.point.value > 0 ? number(this.point.value) : '';
-                    },
-                    style: {
-                        fontSize: '9px',
-                        fontWeight: 'bold',
-                        textOutline: 'none',
-                        color: isGlobe ? globePalette.labelColor : '#047857'
-                    }
-                }
+                states: { hover: { color: isGlobe ? globePalette.hoverColor : '#34d399' } },
+                dataLabels: { enabled: isGlobe, formatter() {
+                    return this.point.value > 0 ? number(this.point.value) : '';
+                }, style: { fontSize: '9px', fontWeight: 'bold', textOutline: 'none', color: isGlobe ? globePalette.labelColor : '#047857' } }
             }]
         });
     };
@@ -271,7 +217,7 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             bar.setAttribute('y', ih - barH);
             bar.setAttribute('width', barW);
             bar.setAttribute('height', barH);
-            bar.setAttribute('fill', '#10b981'); // Emerald 500
+            bar.setAttribute('fill', '#10b981');
             bar.setAttribute('opacity', '0.7');
             bar.style.cursor = 'pointer';
             bar.addEventListener('mouseenter', (e) => {
@@ -321,17 +267,99 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
         }
     };
 
+    const renderCompareChart = (container, currentSeries, previousSeries) => {
+        if (!container) return;
+        const current = Object.entries(currentSeries || {});
+        const previous = Object.entries(previousSeries || {});
+        if (!current.length && !previous.length) { container.innerHTML = empty; return; }
+        container.innerHTML = '';
+        const svg = document.createElementNS(svgNs, 'svg');
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '250');
+        svg.setAttribute('viewBox', '0 0 800 250');
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        container.appendChild(svg);
+
+        const pad = { top: 10, right: 10, bottom: 30, left: 50 };
+        const w = 800 - pad.left - pad.right;
+        const h = 250 - pad.top - pad.bottom;
+
+        const allDates = [...new Set([...current, ...previous].map(([d]) => d))].sort();
+        const curMap = Object.fromEntries(current);
+        const prevMap = Object.fromEntries(previous);
+        const maxVal = Math.max(...allDates.map(d => Math.max(curMap[d] || 0, prevMap[d] || 0)), 1);
+        const step = Math.max(1, Math.ceil(allDates.length / 12));
+
+        const g = document.createElementNS(svgNs, 'g');
+        g.setAttribute('transform', `translate(${pad.left},${pad.top})`);
+        svg.appendChild(g);
+
+        const yTicks = 5;
+        for (let i = 0; i <= yTicks; i++) {
+            const v = Math.round((maxVal / yTicks) * i);
+            const y = h - (v / maxVal) * h;
+            const line = document.createElementNS(svgNs, 'line');
+            line.setAttribute('x1', '0'); line.setAttribute('y1', y);
+            line.setAttribute('x2', w); line.setAttribute('y2', y);
+            line.setAttribute('stroke', '#e5e7eb'); line.setAttribute('stroke-width', '0.5');
+            g.appendChild(line);
+            const txt = document.createElementNS(svgNs, 'text');
+            txt.setAttribute('x', '-8'); txt.setAttribute('y', y + 3.5);
+            txt.setAttribute('text-anchor', 'end'); txt.setAttribute('font-size', '10');
+            txt.setAttribute('fill', '#94a3b8'); txt.textContent = number(v);
+            g.appendChild(txt);
+        }
+
+        const band = w / allDates.length;
+        allDates.forEach((d, i) => {
+            const cx = band * i + band / 2;
+            const cv = curMap[d] || 0;
+            const pv = prevMap[d] || 0;
+            const cy = h - (cv / maxVal) * h;
+            const py = h - (pv / maxVal) * h;
+
+            if (cv > 0) {
+                const cDot = document.createElementNS(svgNs, 'circle');
+                cDot.setAttribute('cx', cx); cDot.setAttribute('cy', cy);
+                cDot.setAttribute('r', '4'); cDot.setAttribute('fill', '#10b981');
+                cDot.setAttribute('opacity', '0.8');
+                cDot.title = `${d}: ${number(cv)}`;
+                g.appendChild(cDot);
+            }
+            if (pv > 0) {
+                const pDot = document.createElementNS(svgNs, 'circle');
+                pDot.setAttribute('cx', cx); pDot.setAttribute('cy', py);
+                pDot.setAttribute('r', '3'); pDot.setAttribute('fill', '#94a3b8');
+                pDot.setAttribute('opacity', '0.5');
+                pDot.title = `${d}: ${number(pv)}`;
+                g.appendChild(pDot);
+            }
+
+            if (i % step === 0 || i === allDates.length - 1) {
+                const txt = document.createElementNS(svgNs, 'text');
+                txt.setAttribute('x', cx); txt.setAttribute('y', h + 18);
+                txt.setAttribute('text-anchor', 'middle'); txt.setAttribute('font-size', '9');
+                txt.setAttribute('fill', '#94a3b8');
+                txt.textContent = d.length > 7 ? d.slice(5) : d;
+                g.appendChild(txt);
+            }
+        });
+
+        const legend = document.createElement('div');
+        legend.className = 'flex items-center gap-6 mt-2 text-xs text-slate/70';
+        legend.innerHTML = '<span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-success opacity-80"></span> فعلی</span><span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-slate opacity-50"></span> قبلی</span>';
+        container.appendChild(legend);
+    };
+
     const renderWorldMap = (container, rows, modeLabel, isLive = false) => {
         if (!container) return;
         const items = (rows || []).filter((row) => row.code || row.key);
         container.innerHTML = '';
 
         if (isLive) {
-            // Full size map for live view
             const mapDiv = document.createElement('div');
             mapDiv.className = 'w-full h-full overflow-hidden';
             container.appendChild(mapDiv);
-
             const projection = (liveMapMode === '3d') ? 'Orthographic' : 'Miller';
             renderHighchartsMap(mapDiv, items, modeLabel, projection);
             return;
@@ -379,11 +407,24 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             const weekEl = root.querySelector('[data-stat="week"]');
             const monthEl = root.querySelector('[data-stat="month"]');
             const liveEl = root.querySelector('[data-stat="live"]');
+            const uniquesEl = root.querySelector('[data-stat="today-uniques"]');
+            const sessionsEl = root.querySelector('[data-stat="today-sessions"]');
+            const bounceEl = root.querySelector('[data-stat="bounce-rate"]');
+            const durationEl = root.querySelector('[data-stat="avg-duration"]');
 
             if (todayEl) todayEl.textContent = number(data.today);
             if (weekEl) weekEl.textContent = number(data.week);
             if (monthEl) monthEl.textContent = number(data.month);
             if (liveEl) liveEl.textContent = number(data.live);
+            if (uniquesEl) uniquesEl.textContent = number(data.today_uniques);
+            if (sessionsEl) sessionsEl.textContent = number(data.sessions);
+            if (bounceEl) bounceEl.textContent = (data.bounce_rate || 0) + '%';
+            if (durationEl) {
+                const sec = data.avg_duration || 0;
+                const m = Math.floor(sec / 60);
+                const s = sec % 60;
+                durationEl.textContent = m + ':' + String(s).padStart(2, '0');
+            }
 
             renderChart(root.querySelector('[data-chart="overview"]'), data.chart);
 
@@ -486,9 +527,9 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
                             <span class="px-2 py-1 rounded bg-success/10 text-success font-bold text-[10px]">${user.last_seen}</span>
+                            <span class="px-2 py-1 rounded bg-info/10 text-info font-bold text-[10px]">${user.pageviews || 1} PV</span>
                         </div>
                     </div>
-
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-slate/5">
                         <div class="flex items-center gap-2">
                             <span class="material-icons text-success/40 text-sm">person</span>
@@ -554,13 +595,20 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
         dialog.showModal();
 
         const url = root.dataset.userActivityUrl.replace(':id', userId);
-        fetchJson(url).then(data => {
+        const activityUrl = new URL(url, window.location.origin);
+        activityUrl.searchParams.set('per_page', '200');
+
+        fetchJson(activityUrl.toString()).then(data => {
             if (!data.events || !data.events.length) {
                 content.innerHTML = '<p class="text-center py-10 opacity-50">هیچ فعالیتی ثبت نشده است.</p>';
                 return;
             }
 
             content.innerHTML = `
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-xs text-slate/60">${number(data.total)} رویداد | صفحه ${data.page} از ${data.last_page}</p>
+                    <a href="${url}" target="_blank" class="text-xs text-success">مشاهده همه</a>
+                </div>
                 <div class="space-y-4">
                     ${data.events.map(e => `
                         <div class="p-3 rounded-xl border border-slate/10 bg-slate/5 space-y-3 relative overflow-hidden">
@@ -593,7 +641,7 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                                 </div>
                                 <div>
                                     <p class="text-[9px] text-slate/40 mb-0.5">مکان</p>
-                                    <p class="text-[10px] font-medium">${escapeHtml(e.country)}</p>
+                                    <p class="text-[10px] font-medium">${escapeHtml(e.country)}${e.city ? ' / ' + escapeHtml(e.city) : ''}</p>
                                 </div>
                                 <div>
                                     <p class="text-[9px] text-slate/40 mb-0.5">دستگاه</p>
@@ -605,8 +653,15 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                                 </div>
                             </div>
 
-                            ${e.search_engine || Object.keys(e.utm || {}).length || e.goal ? `
+                            ${e.duration ? `<div class="text-[10px] text-slate/40">مدت: ${Math.floor(e.duration / 60)}:${String(e.duration % 60).padStart(2, '0')} | اسکرول: ${e.scroll || 0}%</div>` : ''}
+
+                            ${e.search_engine || Object.keys(e.utm || {}).length || e.goal || e.funnel ? `
                                 <div class="flex flex-wrap gap-2 pt-2">
+                                    ${e.funnel ? `
+                                        <div class="px-2 py-1 rounded bg-purple-500/5 border border-purple-500/10 text-purple-500 text-[9px] flex items-center gap-1">
+                                            <span class="font-bold">قیف:</span> ${escapeHtml(e.funnel.key)} > ${escapeHtml(e.funnel.step_name)}
+                                        </div>
+                                    ` : ''}
                                     ${e.search_engine ? `
                                         <div class="px-2 py-1 rounded bg-blue-500/5 border border-blue-500/10 text-blue-500 text-[9px] flex items-center gap-1">
                                             <span class="material-icons text-[10px]">search</span>
@@ -630,6 +685,199 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                     `).join('')}
                 </div>
             `;
+        });
+    };
+
+    const loadFunnels = () => {
+        fetchJson(sectionUrl('funnels')).then((data) => {
+            const container = root.querySelector('[data-list="funnels"]');
+            if (!container) return;
+            if (!data.funnels || !data.funnels.length) {
+                container.innerHTML = '<p class="text-center py-10 opacity-50">قیفی تعریف نشده. یک قیف جدید بسازید.</p>';
+                return;
+            }
+            container.innerHTML = data.funnels.map((f, fi) => {
+                const report = data.report && data.report[fi];
+                const steps = report && report.steps ? report.steps : f.steps.map((s, si) => ({
+                    step: si + 1,
+                    name: s.name,
+                    entered: 0,
+                    dropoff: 0,
+                    dropoff_pct: 0,
+                    conversion_pct: 0
+                }));
+
+                return `
+                    <div class="rounded-xl border border-slate/10 bg-slate/5 p-4 space-y-3">
+                        <div class="flex items-center justify-between gap-4">
+                            <h4 class="font-bold text-slate">${escapeHtml(f.name)} <span class="text-[10px] text-slate/40 font-normal">(${escapeHtml(f.key)})</span></h4>
+                            <form action="${root.dataset.funnelDeleteUrl ? root.dataset.funnelDeleteUrl.replace(':key', f.key) : '#'}" method="POST" onsubmit="return confirm('حذف شود؟')">
+                                <input type="hidden" name="_token" value="${document.querySelector('meta[name=\'csrf-token\']')?.getAttribute('content') || ''}">
+                                <button class="text-danger/60 hover:text-danger text-xs">حذف</button>
+                            </form>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex text-[10px] text-slate/50 font-bold px-1">
+                                <span class="w-8">#</span>
+                                <span class="flex-1">مرحله</span>
+                                <span class="w-20 text-center">ورود</span>
+                                <span class="w-20 text-center">ریزش</span>
+                                <span class="w-16 text-center">نرخ</span>
+                            </div>
+                            ${steps.map((s, si) => {
+                                const pct = s.conversion_pct || (si === 0 ? 100 : 0);
+                                const barColor = pct > 50 ? 'bg-success' : (pct > 20 ? 'bg-amber-500' : 'bg-danger');
+                                return `
+                                    <div class="flex items-center gap-2 text-xs">
+                                        <span class="w-8 text-slate/40 font-bold">${s.step || (si + 1)}</span>
+                                        <span class="flex-1 truncate">${escapeHtml(s.name)}</span>
+                                        <span class="w-20 text-center font-bold">${number(s.entered || 0)}</span>
+                                        <span class="w-20 text-center text-danger">${number(s.dropoff || 0)} (${s.dropoff_pct || 0}%)</span>
+                                        <span class="w-16 text-center font-bold ${pct > 50 ? 'text-success' : 'text-danger'}">${pct}%</span>
+                                        <div class="w-20 h-1.5 bg-slate/10 rounded-full overflow-hidden">
+                                            <div class="${barColor} h-full" style="width:${pct}%"></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        });
+    };
+
+    const loadSessions = () => {
+        fetchJson(sectionUrl('sessions')).then((data) => {
+            if (!data) return;
+            const total = root.querySelector('[data-session-total]');
+            const bounce = root.querySelector('[data-session-bounce]');
+            const duration = root.querySelector('[data-session-duration]');
+            const ppv = root.querySelector('[data-session-ppv]');
+            const deviceList = root.querySelector('[data-list="sessions-by-device"]');
+
+            if (total) total.textContent = number(data.total);
+            if (bounce) bounce.textContent = (data.bounce_rate || 0) + '%';
+            if (duration) duration.textContent = data.avg_duration_formatted || '0:00';
+            if (ppv) ppv.textContent = data.avg_pageviews_per_session || '0';
+
+            if (deviceList && data.by_device && data.by_device.length) {
+                deviceList.innerHTML = data.by_device.map((d) => `
+                    <div class="flex items-center justify-between text-xs border-b border-slate/5 pb-2">
+                        <span class="font-bold">${escapeHtml(d.device_type || 'نامشخص')}</span>
+                        <span>${number(d.total)} جلسه | ${(Number(d.avg_dur) > 0 ? Math.round(Number(d.avg_dur) / 60) : 0)} دقیقه | ${d.bounces} پرش</span>
+                    </div>
+                `).join('');
+            } else if (deviceList) {
+                deviceList.innerHTML = empty;
+            }
+        });
+    };
+
+    const loadCohort = () => {
+        fetchJson(sectionUrl('cohorts')).then((data) => {
+            const container = root.querySelector('[data-cohort-table]');
+            if (!container) return;
+            const cohorts = data.cohorts || [];
+            if (!cohorts.length) {
+                container.innerHTML = '<p class="text-center py-10 opacity-50">داده کافی برای تحلیل هم‌گروه وجود ندارد. نیاز به بازدیدکنندگان بازگشتی است.</p>';
+                return;
+            }
+
+            const periods = cohorts[0].periods.map(p => p.period);
+            let html = '<table class="w-full text-xs text-center"><thead class="bg-slate/5"><tr><th class="p-2 font-bold">هم‌گروه</th><th class="p-2 font-bold">تعداد</th>';
+            periods.forEach(p => { html += `<th class="p-2 font-bold">${p.slice(5)}</th>`; });
+            html += '</tr></thead><tbody>';
+
+            cohorts.forEach(c => {
+                html += `<tr class="border-b border-slate/5 hover:bg-slate/5"><td class="p-2 font-bold">${c.cohort}</td><td class="p-2">${number(c.total)}</td>`;
+                c.periods.forEach(p => {
+                    const color = p.retention_pct > 50 ? 'text-success' : (p.retention_pct > 20 ? 'text-amber-500' : 'text-danger');
+                    html += `<td class="p-2 ${color} font-bold">${p.retention_pct}%</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        });
+    };
+
+    const loadCompare = () => {
+        fetchJson(sectionUrl('comparative')).then((data) => {
+            if (!data) return;
+            const currentPeriod = root.querySelector('[data-compare-current-period]');
+            const previousPeriod = root.querySelector('[data-compare-previous-period]');
+            const currentEl = root.querySelector('[data-compare-current]');
+            const previousEl = root.querySelector('[data-compare-previous]');
+            const changeEl = root.querySelector('[data-compare-change]');
+
+            if (currentPeriod) currentPeriod.textContent = `${data.current?.start || '...'} تا ${data.current?.end || '...'}`;
+            if (previousPeriod) previousPeriod.textContent = `${data.previous?.start || '...'} تا ${data.previous?.end || '...'}`;
+            if (currentEl) currentEl.textContent = number(data.current?.total || 0);
+            if (previousEl) previousEl.textContent = number(data.previous?.total || 0);
+            if (changeEl) {
+                const dir = data.change_direction === 'up' ? '▲' : '▼';
+                const cls = data.change >= 0 ? 'text-success' : 'text-danger';
+                changeEl.innerHTML = `<span class="${cls}">${dir} ${Math.abs(data.change)}%</span>`;
+            }
+
+            renderCompareChart(root.querySelector('[data-chart="compare"]'), data.series?.current, data.series?.previous);
+        });
+    };
+
+    const loadRawEvents = (page = 1) => {
+        const url = new URL(sectionUrl('raw'), window.location.origin);
+        url.searchParams.set('page', String(page));
+
+        const searchInput = root.querySelector('[data-raw-filter="search"]');
+        const typeInput = root.querySelector('[data-raw-filter="event_type"]');
+        const sessionInput = root.querySelector('[data-raw-filter="session_id"]');
+
+        if (searchInput?.value) url.searchParams.set('search', searchInput.value);
+        if (typeInput?.value) url.searchParams.set('event_type', typeInput.value);
+        if (sessionInput?.value) url.searchParams.set('session_id', sessionInput.value);
+
+        fetchJson(url.toString()).then((data) => {
+            const container = root.querySelector('[data-list="raw-events"]');
+            const pagination = root.querySelector('[data-raw-pagination]');
+            if (!container) return;
+
+            if (!data.data || !data.data.length) {
+                container.innerHTML = empty;
+                if (pagination) pagination.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = data.data.map(e => `
+                <div class="flex items-center justify-between text-[11px] border-b border-slate/5 py-2 gap-4 ${e.type === 'error' ? 'bg-danger/5' : ''}">
+                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${e.type === 'goal' ? 'bg-success/10 text-success' : (e.type === 'error' ? 'bg-danger/10 text-danger' : 'bg-slate/10 text-slate/70')} shrink-0">
+                            ${e.type === 'goal' ? 'هدف' : (e.type === 'error' ? 'خطا' : 'بازدید')}
+                        </span>
+                        <span class="truncate" title="${escapeHtml(e.path)}">${escapeHtml(e.path || '-')}</span>
+                    </div>
+                    <div class="flex items-center gap-3 shrink-0 text-slate/50">
+                        <span>${escapeHtml(e.country || '-')}</span>
+                        <span>${escapeHtml(e.browser || '-')}</span>
+                        <span class="admin-ltr text-[10px]">${e.time ? e.time.slice(5, 16) : '-'}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            if (pagination) {
+                const last = data.last_page || 1;
+                const cur = data.page || 1;
+                let phtml = '<div class="flex items-center gap-2">';
+                for (let i = 1; i <= last && i <= 10; i++) {
+                    phtml += `<button class="px-3 py-1 rounded text-xs font-bold ${i === cur ? 'bg-success text-white' : 'bg-slate/10 hover:bg-slate/20'}" data-raw-page="${i}">${i}</button>`;
+                }
+                phtml += '</div>';
+                pagination.innerHTML = phtml;
+                pagination.querySelectorAll('[data-raw-page]').forEach(btn => {
+                    btn.onclick = () => loadRawEvents(parseInt(btn.dataset.rawPage));
+                });
+            }
         });
     };
 
@@ -688,7 +936,6 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                     return a.key === 'error' ? { ...a, isNegative: true } : a;
                 }));
 
-                // Unified behavior: Always use live-style map for reports tab if container found
                 const reportsMapContainer = root.querySelector('[data-map="reports"]');
                 if (reportsMapContainer) {
                     renderWorldMap(reportsMapContainer, data.map, 'reports', true);
@@ -699,7 +946,12 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
         'tab-search': loadSearch,
         'tab-goals': loadGoals,
         'tab-users': loadUsers,
-        'tab-errors': loadErrors
+        'tab-errors': loadErrors,
+        'tab-funnels': loadFunnels,
+        'tab-sessions': loadSessions,
+        'tab-cohort': loadCohort,
+        'tab-compare': loadCompare,
+        'tab-raw': () => loadRawEvents(1),
     };
 
     if (dashboardRoot) {
@@ -765,13 +1017,14 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                 }
             });
 
-            // Reload whichever map is currently visible
             const activeTab = document.querySelector('.analytics-tab-content:not(.hidden)')?.id;
             if (activeTab === 'tab-live' || activeTab === 'tab-reports') {
                 loaders[activeTab]?.();
             }
         };
     });
+
+    root.querySelector('[data-raw-search]')?.addEventListener('click', () => loadRawEvents(1));
 
     setInterval(() => {
         if (!document.getElementById('tab-live')?.classList.contains('hidden')) {
