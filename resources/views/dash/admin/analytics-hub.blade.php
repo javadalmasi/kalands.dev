@@ -48,6 +48,10 @@
                 <span class="material-icons text-base">settings</span>
                 <span>تنظیمات</span>
             </button>
+            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-2" data-tab-target="tab-help">
+                <span class="material-icons text-base">help_outline</span>
+                <span>راهنما</span>
+            </button>
         </div>
     </div>
 
@@ -632,6 +636,112 @@
                 </div>
             </form>
 
+        </div>
+    </div>
+
+        </div>
+    </div>
+
+    <div id="tab-help" class="tab-content hidden">
+        <div class="flex gap-6 items-start">
+            <div class="flex-1 min-w-0">
+                <div class="admin-card space-y-6">
+                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
+                        <span class="material-icons text-2xl text-primary">help_outline</span>
+                        <h2 class="font-bold text-slate text-lg">راهنمای کامل ماژول آنالیزور</h2>
+                    </div>
+
+                    <div class="space-y-8 text-sm text-slate leading-7">
+                        <section id="doc-intro">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">info</span>
+                                معرفی ماژول
+                            </h3>
+                            <p>ماژول آنالیزور، سامانه گزارش حرفه‌ای بازدیدها و رفتار کاربران در پلتفرم kalands.ir است. این ماژول با ثبت رویدادهای صفحه‌ای، اهداف (Goals)، کلیک‌های افیلیت و خطاهای سمت کاربر، تحلیل کامل‌تری از عملکرد سایت ارائه می‌دهد.</p>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-tracking">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">code</span>
+                                اسکریپت رهگیری
+                            </h3>
+                            <p>اسکریپت رهگیری به صورت خودکار در تمامی صفحات سایت بارگذاری می‌شود و رویدادهای زیر را ثبت می‌کند:</p>
+                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
+                                <li><b>Pageview:</b> شمارش بازدید هر صفحه</li>
+                                <li><b>Goal:</b> ثبت تحقق اهداف تعریف شده (کلیک روی دکمه، ارسال فرم و ...)</li>
+                                <li><b>Error:</b> ثبت خطاهای جاوااسکریپت سمت کاربر</li>
+                            </ul>
+                            <p class="mt-3">اسکریپت با استفاده از <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">fetch</code> سبک ارسال داده می‌کند و تاثیر منفی بر سرعت صفحه ندارد.</p>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-goals">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">touch_app</span>
+                                اهداف (Goals)
+                            </h3>
+                            <p>اهداف برای ثبت رویدادهای مهم سایت تعریف می‌شوند. در این پلتفرم اهداف زیر به صورت پیش‌فرض فعال هستند:</p>
+                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
+                                <li><b>کلیک دیجی‌کالا:</b> هر کلیک روی لینک‌های افیلیت دیجی‌کالا</li>
+                                <li><b>کلیک باسلام:</b> هر کلیک روی لینک‌های افیلیت باسلام</li>
+                            </ul>
+                            <p class="mt-3">تانش اهداف با مقایسه روزانه با روز قبل نمایش داده می‌شود.</p>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-live">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">sensors</span>
+                                کاربران زنده
+                            </h3>
+                            <p>این بخش بازدیدکنندگان فعال در چند دقیقه اخیر را و به صورت خودکار هر ۳۰ ثانیه به‌روز می‌شود. روی نقشه زنده می‌توانید mکان تقریبی کاربران فعال را مشاهده کنید.</p>
+                            <p class="mt-3">پنجره زمانی کاربران زنده قابل تنظیم است (پیش‌فرض ۵ دقیقه).</p>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-retention">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">schedule</span>
+                                نگهداری داده‌ها
+                            </h3>
+                            <p>برای مدیریت مصرف فضای دیتابیس، می‌توانید دوره نگهداری داده‌های خام و آمار تجمیعی را تنظیم کنید:</p>
+                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
+                                <li><b>رویداد خام:</b> داده‌های اولیه هر بازدید (پیش‌فرض ۹۰ روز)</li>
+                                <li><b>آمار تجمیعی:</b> گزارش‌های دوره‌ای محاسبه شده (پیش‌فرض ۳۶۵ روز)</li>
+                            </ul>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-export">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">download</span>
+                                خروجی و ورودی داده‌ها
+                            </h3>
+                            <p>امکان خروجی گرفتن از تنظیمات و آمار تجمیعی به صورت JSON و درون‌ریزی مجدد آن‌ها فراهم است. این قابلیت برای migrate داده‌ها بین محیط‌های توسعه و تولید مفید است.</p>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="hidden lg:block w-64 shrink-0">
+                <div class="admin-card !p-4 sticky top-4">
+                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
+                    <nav class="space-y-1">
+                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
+                        <a href="#doc-tracking" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">اسکریپت رهگیری</a>
+                        <a href="#doc-goals" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">اهداف</a>
+                        <a href="#doc-live" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">کاربران زنده</a>
+                        <a href="#doc-retention" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">نگهداری داده‌ها</a>
+                        <a href="#doc-export" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">خروجی و ورودی</a>
+                    </nav>
+                </div>
+            </aside>
         </div>
     </div>
 
