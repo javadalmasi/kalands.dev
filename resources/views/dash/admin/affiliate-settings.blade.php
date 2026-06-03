@@ -335,11 +335,9 @@
                                 <td class="p-3 text-center font-mono text-xs opacity-60">go/{{ $link->slug }}</td>
                                 <td class="p-3 text-center font-bold">{{ number_format($link->click_count ?? 0) }}</td>
                                 <td class="p-3 text-center">
-                                    <button type="button" onclick="this.closest('form').submit()" class="group relative inline-flex items-center justify-center w-8 h-8 rounded-lg border border-danger/20 bg-danger/5 text-danger/60 hover:bg-danger hover:text-white hover:border-danger transition-all duration-200" title="حذف">
-                                        <span class="material-icons text-sm group-hover:scale-110 transition-transform">delete</span>
-                                    </button>
-                                    <form action="{{ route('dash.admin.affiliate.links.delete', ['authkey' => $authkey, 'link' => $link->id]) }}" method="POST" class="hidden" onsubmit="return confirm('آیا از حذف این لینک مطمئن هستید؟')">
+                                    <form action="{{ route('dash.admin.affiliate.links.delete', ['authkey' => $authkey, 'link' => $link->id]) }}" method="POST" data-admin-confirm="آیا از حذف این لینک مطمئن هستید؟">
                                         @csrf @method('DELETE')
+                                        <button class="admin-btn admin-btn-danger !p-1.5" title="حذف"><span class="material-icons !text-base">delete</span></button>
                                     </form>
                                 </td>
                             </tr>
