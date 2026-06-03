@@ -214,8 +214,12 @@
                         <div class="flex flex-col items-center justify-center py-10 opacity-30">
                             <span class="material-icons !text-5xl mb-2">analytics</span>
                             <p class="text-xs font-bold italic">داده‌ای ثبت نشده است</p>
-</div>
-     @endpush
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="tab-help" class="tab-content hidden">
         <div class="flex gap-6 items-start">
@@ -303,4 +307,7 @@
         </div>
     </div>
 
+    @push('scripts')
+        @vite('resources/js/admin-visitor-intelligence.js')
+    @endpush
 </x-layouts.admin-dashboard>
