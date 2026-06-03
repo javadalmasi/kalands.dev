@@ -441,6 +441,20 @@
                             </h3>
                             <p>می‌توانید User-Agent دلخواه را وارد کنید تا سیستم تشخیص آن را بررسی کند.</p>
                         </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-security">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">security</span>
+                                نکات امنیتی
+                            </h3>
+                            <ul class="list-disc list-inside space-y-1 mr-4">
+                                <li>تغییر الگوهای Regex می‌تواند رفتار سایت را به هوشمندترین ربات‌ها تغییر دهد</li>
+                                <li>ASNهای معتبر باید از سرویس‌های معتبر (IPinfo، BGPView) گرفته شوند</li>
+                                <li>همیشه قبل از تغییر ASNها، از لیست‌های معتبر اطمینان حاصل کنید</li>
+                            </ul>
+                        </section>
                     </div>
                 </div>
             </div>
