@@ -32,6 +32,10 @@
                 <span class="material-icons text-base">inventory_2</span>
                 <span>مشاهده آیتم‌ها</span>
             </button>
+            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
+                <span class="material-icons text-base">help_outline</span>
+                <span>راهنما</span>
+            </button>
         </div>
     </div>
 
@@ -403,6 +407,89 @@
                     <p class="text-xs text-slate/60">درایور <strong>{{ $drivers[$currentDriver] ?? $currentDriver }}</strong> از مرور آیتم‌های کش پشتیبانی نمی‌کند. می‌توانید از تب پاکسازی کش برای حذف تمام آیتم‌ها استفاده کنید.</p>
                 </div>
             @endif
+        </div>
+    </div>
+
+    <div id="tab-help" class="tab-content hidden">
+        <div class="flex gap-6 items-start">
+            <div class="flex-1 min-w-0">
+                <div class="admin-card space-y-6">
+                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
+                        <span class="material-icons text-2xl text-primary">help_outline</span>
+                        <h2 class="font-bold text-slate text-lg">راهنمای کامل ماژول Object Cache</h2>
+                    </div>
+
+                    <div class="space-y-8 text-sm text-slate leading-7">
+                        <section id="doc-drivers">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">storage</span>
+                                درایورهای Object Cache
+                            </h3>
+                            <p>Object Cache سطح برنامه برای کش کردن داده‌های PHP/Laravel است. می‌توانید درایور مناسب را انتخاب کنید.</p>
+                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
+                                <h4 class="font-bold text-slate mb-2">درایورهای موجود</h4>
+                                <ul class="list-disc list-inside space-y-1 mr-4">
+                                    <li><b>File:</b> مناسب برای محیط توسعه، نیازی به سرویس جانبی ندارد</li>
+                                    <li><b>Redis:</b> پرسرعت، مناسب برای تولید، نیاز به سرور Redis دارد</li>
+                                    <li><b>Memcached:</b> پرسرعت، مناسب برای تولید، نیاز به سرور Memcached دارد</li>
+                                    <li><b>Database:</b> کش در دیتابیس، مناسب برای بارهای کم</li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-redis-config">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">dns</span>
+                                تنظیمات Redis
+                            </h3>
+                            <p>در صورت انتخاب Redis به عنوان درایور، می‌توانید تنظیمات اتصال را پیکربندی کنید.</p>
+                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
+                                <h4 class="font-bold text-slate mb-2">گزینه‌های اتصال</h4>
+                                <ul class="list-disc list-inside space-y-1 mr-4">
+                                    <li><b>TCP:</b> اتصال از طریق پورت (پیش‌فرض: ۱۲۷.۰.۰.۱:۶۳۷۹)</li>
+                                    <li><b>Unix Socket:</b> اتصال از طریق فایل سوکت برای سرعت بالاتر</li>
+                                    <li><b>رمز عبور:</b> برای اتصال به سرورهای رمزدار</li>
+                                    <li><b>دیتابیس:</b> انتخاب دیتابیس Redis (پیش‌فرض: ۱)</li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-test">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">network_check</span>
+                                تست اتصال
+                            </h3>
+                            <p>این بخش برای بررسی صحت تنظیمات وضعیت اتصال به درایور فعال را نمایش می‌دهد.</p>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-purge">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">cleaning_services</span>
+                                پاکسازی کش
+                            </h3>
+                            <p>با این عملیات تمام آیتم‌های ذخیره شده در object cache حذف می‌شوند. پس از پاکسازی، سیستم ممکن است کمی کندتر عمل کند.</p>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="hidden lg:block w-64 shrink-0">
+                <div class="admin-card !p-4 sticky top-4">
+                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
+                    <nav class="space-y-1">
+                        <a href="#doc-drivers" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">درایورهای Object Cache</a>
+                        <a href="#doc-redis-config" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">تنظیمات Redis</a>
+                        <a href="#doc-test" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">تست اتصال</a>
+                        <a href="#doc-purge" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">پاکسازی کش</a>
+                    </nav>
+                </div>
+            </aside>
         </div>
     </div>
 
