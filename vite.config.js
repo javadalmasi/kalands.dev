@@ -39,6 +39,7 @@ export default defineConfig({
                 'resources/js/admin-admins.js',
                 'resources/js/admin-users.js',
                 'resources/js/admin-roles-edit.js',
+                'resources/js/admin-datepicker.js',
                 'resources/js/admin-affiliate-settings.js',
                 'resources/js/admin-faq-hub.js',
                 'resources/js/admin-object-cache-hub.js',

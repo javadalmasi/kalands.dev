@@ -61,7 +61,7 @@
 @endphp
 
 <x-layouts.app :title="$title" :clean="true" entryPoint="resources/js/admin-app.js">
-    @vite(['resources/js/admin-file-manager.js', 'resources/js/admin-rich-editor-global.js', 'resources/js/admin-search.js'])
+    @vite(['resources/js/admin-datepicker.js', 'resources/js/admin-file-manager.js', 'resources/js/admin-rich-editor-global.js', 'resources/js/admin-search.js'])
 
     <div id="admin-shell" class="admin-shell">
         <aside id="admin-sidebar" class="admin-sidebar fixed inset-y-0 right-0 z-40 translate-x-full flex flex-col p-4 transition-transform duration-300">
