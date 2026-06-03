@@ -14,7 +14,12 @@
                     </div>
                     <div class="grid grid-cols-1 gap-2" data-sellers-list>
                         @foreach ($data['data']['product']['variants'] as $variant)
-                            <div class="group cursor-pointer rounded-squircle border border-slate-100 bg-slate-50/50 p-3 transition-all duration-300 hover:border-primary/30 hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 dark:border-white/5 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:shadow-none" data-seller-item data-seller-name="{{ mb_strtolower($variant['seller']['title']) }}" data-seller-price="{{ $variant['price']['selling_price'] ?? 0 }}" data-seller-link="{{ ProductController::AffiliateLinkGenerator('digikala', $data['data']['product']['id']) }}" role="link" tabindex="0">
+                            <div class="group cursor-pointer rounded-squircle border border-slate-100 bg-slate-50/50 p-3 transition-all duration-300 hover:border-primary/30 hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 dark:border-white/5 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:shadow-none js-special-link"
+                                 data-seller-item data-seller-name="{{ mb_strtolower($variant['seller']['title']) }}"
+                                 data-seller-price="{{ $variant['price']['selling_price'] ?? 0 }}"
+                                 data-seller-link="{{ ProductController::AffiliateLinkGenerator('digikala', $data['data']['product']['id'], $data['data']['product']['title_fa']) }}"
+                                 data-human-href="{{ ProductController::GetSpecialLink('digikala', $data['data']['product']['id'], $data['data']['product']['title_fa']) }}"
+                                 role="link" tabindex="0">
                                 <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                                     <div class="min-w-0 md:w-[32%]">
                                         <div class="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-700 dark:text-white">
@@ -100,7 +105,12 @@
                     </select>
                 </div>
                 <div class="grid grid-cols-1 gap-2" data-sellers-list>
-                    <div class="group cursor-pointer rounded-squircle border border-slate-100 bg-slate-50/50 p-3 transition-all duration-300 hover:border-primary/30 hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 dark:border-white/5 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:shadow-none" data-seller-item data-seller-name="{{ mb_strtolower(ProductController::RemoveEmoji($data['vendor']['owner']['vendor']['title'])) }}" data-seller-price="{{ $data['price'] ?? 0 }}" data-seller-link="{{ config('app.url') . '/go/b' . base_convert($data['id'], 10, 36) }}" role="link" tabindex="0">
+                    <div class="group cursor-pointer rounded-squircle border border-slate-100 bg-slate-50/50 p-3 transition-all duration-300 hover:border-primary/30 hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 dark:border-white/5 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:shadow-none js-special-link"
+                         data-seller-item data-seller-name="{{ mb_strtolower(ProductController::RemoveEmoji($data['vendor']['owner']['vendor']['title'])) }}"
+                         data-seller-price="{{ $data['price'] ?? 0 }}"
+                         data-seller-link="{{ ProductController::AffiliateLinkGenerator('basalam', $data['id'], $data['title']) }}"
+                         data-human-href="{{ ProductController::GetSpecialLink('basalam', $data['id'], $data['title']) }}"
+                         role="link" tabindex="0">
                         <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                             <div class="min-w-0 md:w-[32%]">
                                 <div class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-white">
@@ -122,7 +132,12 @@
                             @endif
                         </div>
                     </div>
-                    <div class="group cursor-pointer rounded-squircle border border-slate-100 bg-slate-50/50 p-3 transition-all duration-300 hover:border-primary/30 hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 dark:border-white/5 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:shadow-none" data-seller-item data-seller-name="دیجی‌کالا" data-seller-price="{{ $data['price'] ?? 0 }}" data-seller-link="{{ ProductController::AffiliateLinkGenerator('basalam', null, $data['title']) }}" role="link" tabindex="0">
+                    <div class="group cursor-pointer rounded-squircle border border-slate-100 bg-slate-50/50 p-3 transition-all duration-300 hover:border-primary/30 hover:bg-white hover:shadow-lg hover:shadow-slate-200/50 dark:border-white/5 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:shadow-none js-special-link"
+                         data-seller-item data-seller-name="دیجی‌کالا"
+                         data-seller-price="{{ $data['price'] ?? 0 }}"
+                         data-seller-link="{{ ProductController::AffiliateLinkGenerator('digikala', null, $data['title']) }}"
+                         data-human-href="{{ ProductController::GetSpecialLink('digikala', null, $data['title']) }}"
+                         role="link" tabindex="0">
                         <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                             <div class="min-w-0 md:w-[32%]">
                                 <div class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-white">

@@ -260,7 +260,10 @@ class ProductController extends Controller
                     array_shift($breadcrumb);
                 }
 
-
+                // 2. Remove the last item which is the product title
+                if (count($breadcrumb) > 0) {
+                    array_pop($breadcrumb);
+                }
 
                 if (!empty($breadcrumb)) {
                     ProcessProductCategoriesJob::dispatch(
@@ -325,7 +328,6 @@ class ProductController extends Controller
     }
 
 
-    // Config Functions
     public static function ImgProfile($url, $w, $h, $q, $webp, $CleanURl = null, $Store = "digikala")
     {
         $cdn = config('services.cdn.images');
@@ -357,22 +359,16 @@ class ProductController extends Controller
     public static function GetSpecialLink($shop, $id, $title = null)
     {
         if ($shop == "digikala") {
-            if ($id) {
-                return config('app.url') . '/go/d' . base_convert($id, 10, 36);
+            if ($id && is_numeric($id)) {
+                return config('app.url') . '/go/d' . $id;
             }
-            if ($title) {
-                $b64 = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($title));
-                return config('app.url') . '/go/ds_' . $b64;
-            }
+            return '#';
         }
         if ($shop == "basalam") {
-            if ($id) {
-                return config('app.url') . '/go/b' . base_convert($id, 10, 36);
+            if ($id && is_numeric($id)) {
+                return config('app.url') . '/go/b' . $id;
             }
-            if ($title) {
-                $b64 = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($title));
-                return config('app.url') . '/go/bs_' . $b64;
-            }
+            return '#';
         }
         return '#';
     }

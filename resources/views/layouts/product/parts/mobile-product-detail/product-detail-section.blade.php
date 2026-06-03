@@ -77,9 +77,10 @@
             <div class="mb-4 font-semibold text-slate dark:text-white md:text-lg">{{$data['data']['product']['title_fa']}}</div>
             <div class="mb-2 grid grid-cols-4 gap-2 text-sm md:text-base">
                 <div class="col-span-3 grid grid-cols-3 gap-2">
-                    <a href="{{ProductController::AffiliateLinkGenerator("digikala",$data['data']['product']['id'])}}"
+                    <a href="{{ProductController::AffiliateLinkGenerator("digikala",$data['data']['product']['id'], $data['data']['product']['title_fa'])}}"
                        target="_blank" data-analytics-goal="tr_dk" data-product-id="{{ $data['data']['product']['id'] }}"
-                       class="inline-flex h-9 items-center justify-center gap-1 rounded-squircle border border-slate bg-white px-2 text-slate transition-colors hover:border-slate hover:text-slate dark:border-white/10 dark:bg-slate dark:text-slate-200 dark:hover:border-slate dark:hover:text-slate">
+                       data-human-href="{{ProductController::GetSpecialLink("digikala", $data['data']['product']['id'], $data['data']['product']['title_fa'])}}"
+                       class="inline-flex h-9 items-center justify-center gap-1 rounded-squircle border border-slate bg-white px-2 text-slate transition-colors hover:border-primary hover:text-primary dark:border-white/10 dark:bg-slate dark:text-slate-200 dark:hover:border-primary dark:hover:text-primary js-special-link">
                         <svg class="h-4 w-4"><use xlink:href="#id"/></svg>
                         <span class="text-[11px] font-medium">{{$data['data']['product']['id']}}</span>
                     </a>
@@ -109,23 +110,19 @@
                 <div class="my-4 h-px w-full bg-slate dark:bg-white/5"></div>
                 <div class="mb-6 space-y-4">
                     <div class="text-sm font-medium text-slate dark:text-white md:text-base">رنگ های موجود</div>
-                    <fieldset class="flex flex-wrap items-center gap-2">
-                        <legend class="sr-only">Color</legend>
+                    <div class="flex flex-wrap items-center gap-2">
                         @foreach ($data['data']['product']['colors'] as $colors)
-                            <div>
-                                <input checked="checked" type="radio" name="color" value="color-1" id="color-1" class="peer hidden dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" />
-                                <label for="color-1"
-                                       class="relative block cursor-pointer rounded-squircle border border-slate bg-white px-2.5 py-2 shadow-base transition-colors hover:border-primary dark:border-white/10 dark:bg-slate dark:hover:border-primary">
-                                    <a class="flex items-center gap-x-2"
-                                       href="{{ProductController::AffiliateLinkGenerator("digikala",$data['data']['product']['id'])}}"
-                                       target="_blank" data-analytics-goal="tr_dk" data-product-id="{{ $data['data']['product']['id'] }}">
-                                        <div class="h-5 w-5 rounded-full border-2 border-slate shadow-base dark:border-white/30 product-color-chip" data-color-value="{{$colors['hex_code']}}"></div>
-                                        <p class="text-sm text-slate dark:text-slate-200 md:text-base">{{$colors['title']}}</p>
-                                    </a>
-                                </label>
-                            </div>
+                            <a class="relative block cursor-pointer rounded-squircle border border-slate bg-white px-2.5 py-2 shadow-base transition-colors hover:border-primary dark:border-white/10 dark:bg-slate dark:hover:border-primary js-special-link"
+                               href="{{ProductController::AffiliateLinkGenerator("digikala", $data['data']['product']['id'], $data['data']['product']['title_fa'])}}"
+                               data-human-href="{{ProductController::GetSpecialLink("digikala", $data['data']['product']['id'], $data['data']['product']['title_fa'])}}"
+                               target="_blank" data-analytics-goal="tr_dk" data-product-id="{{ $data['data']['product']['id'] }}">
+                                <div class="flex items-center gap-x-2">
+                                    <div class="h-5 w-5 rounded-full border-2 border-slate shadow-base dark:border-white/30 product-color-chip" data-color-value="{{$colors['hex_code']}}"></div>
+                                    <p class="text-sm text-slate dark:text-slate-200 md:text-base">{{$colors['title']}}</p>
+                                </div>
+                            </a>
                         @endforeach
-                    </fieldset>
+                    </div>
                 </div>
             @endif
         </div>
@@ -206,9 +203,10 @@
             <div class="mb-4 font-semibold text-slate dark:text-white md:text-lg">{{$data['title']}}</div>
             <div class="mb-2 grid grid-cols-4 gap-2 text-sm md:text-base">
                 <div class="col-span-3 grid grid-cols-3 gap-2">
-                    <a href="{{ProductController::AffiliateLinkGenerator("basalam",null,$data['title'])}}"
+                    <a href="{{ProductController::AffiliateLinkGenerator("basalam", $data['id'], $data['title'])}}"
                        target="_blank" data-analytics-goal="tr_bs" data-product-id="{{ $data['id'] }}"
-                       class="inline-flex h-9 items-center justify-center gap-1 rounded-squircle border border-slate bg-white px-2 text-slate transition-colors hover:border-slate hover:text-slate dark:border-white/10 dark:bg-slate dark:text-slate-200 dark:hover:border-slate dark:hover:text-slate">
+                       data-human-href="{{ProductController::GetSpecialLink("basalam", $data['id'], $data['title'])}}"
+                       class="inline-flex h-9 items-center justify-center gap-1 rounded-squircle border border-slate bg-white px-2 text-slate transition-colors hover:border-primary hover:text-primary dark:border-white/10 dark:bg-slate dark:text-slate-200 dark:hover:border-primary dark:hover:text-primary js-special-link">
                         <svg class="h-4 w-4"><use xlink:href="#id"/></svg>
                         <span class="text-[11px] font-medium">{{$data['id']}}</span>
                     </a>
@@ -219,7 +217,11 @@
                         </span>
                     @endif
                     @if ($data['review_count'] != 0)
-                        <a href="{{ProductController::AffiliateLinkGenerator("basalam",null,$data['title'])}}" data-analytics-goal="tr_bs" data-product-id="{{ $data['id'] }}" class="inline-flex h-9 items-center justify-center gap-1 rounded-squircle border border-slate bg-white px-2 text-slate transition-colors hover:border-slate hover:text-slate dark:border-white/10 dark:bg-slate dark:text-slate-200 dark:hover:border-slate dark:hover:text-slate">
+                        <a href="{{ProductController::AffiliateLinkGenerator("basalam", $data['id'], $data['title'])}}" 
+                           target="_blank"
+                           data-human-href="{{ProductController::GetSpecialLink("basalam", $data['id'], $data['title'])}}"
+                           data-analytics-goal="tr_bs" data-product-id="{{ $data['id'] }}" 
+                           class="inline-flex h-9 items-center justify-center gap-1 rounded-squircle border border-slate bg-white px-2 text-slate transition-colors hover:border-primary hover:text-primary dark:border-white/10 dark:bg-slate dark:text-slate-200 dark:hover:border-primary dark:hover:text-primary js-special-link">
                             <svg class="h-4 w-4"><use xlink:href="#comments-icon"/></svg>
                             <span class="text-[11px] font-medium">{{$data['review_count']}}</span>
                         </a>
@@ -234,27 +236,25 @@
                 </button>
             </div>
 
-            @if (isset($data['data']['product']['colors']) && !empty($data['data']['product']['colors']))
+            @if (isset($data['variants']['properties']) && $data['variants']['properties'][0]['property']['type'] == "color")
                 <div class="my-4 h-px w-full bg-slate dark:bg-white/5"></div>
                 <div class="mb-6 space-y-4">
                     <div class="text-sm font-medium text-slate dark:text-white md:text-base">رنگ های موجود</div>
-                    <fieldset class="flex flex-wrap items-center gap-2">
-                        <legend class="sr-only">Color</legend>
-                        @foreach ($data['data']['product']['colors'] as $colors)
-                            <div>
-                                <input checked="checked" type="radio" name="color" value="color-1" id="color-1" class="peer hidden dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" />
-                                <label for="color-1"
-                                       class="relative block cursor-pointer rounded-squircle border border-slate bg-white px-2.5 py-2 shadow-base transition-colors hover:border-primary dark:border-white/10 dark:bg-slate dark:hover:border-primary">
-                                    <a class="flex items-center gap-x-2"
-                                       href="{{ProductController::AffiliateLinkGenerator("digikala",$data['data']['product']['id'])}}"
-                                       target="_blank">
-                                        <div class="h-5 w-5 rounded-full border-2 border-slate shadow-base dark:border-white/30 product-color-chip" data-color-value="{{$colors['hex_code']}}"></div>
-                                        <p class="text-sm text-slate dark:text-slate-200 md:text-base">{{$colors['title']}}</p>
-                                    </a>
-                                </label>
-                            </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        @foreach ($data['variants']['properties'] as $colors)
+                            @if($colors['property']['type'] == "color")
+                            <a class="relative block cursor-pointer rounded-squircle border border-slate bg-white px-2.5 py-2 shadow-base transition-colors hover:border-primary dark:border-white/10 dark:bg-slate dark:hover:border-primary js-special-link"
+                               href="{{ProductController::AffiliateLinkGenerator("basalam", $data['id'], $data['title'])}}"
+                               data-human-href="{{ProductController::GetSpecialLink("basalam", $data['id'], $data['title'])}}"
+                               target="_blank">
+                                <div class="flex items-center gap-x-2">
+                                    <div class="h-5 w-5 rounded-full border-2 border-slate shadow-base dark:border-white/30 product-color-chip" data-color-value="{{$colors['value']['value']}}"></div>
+                                    <p class="text-sm text-slate dark:text-slate-200 md:text-base">{{$colors['value']['title']}}</p>
+                                </div>
+                            </a>
+                            @endif
                         @endforeach
-                    </fieldset>
+                    </div>
                 </div>
             @endif
         </div>

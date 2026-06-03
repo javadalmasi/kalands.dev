@@ -334,16 +334,17 @@ window.copyToClipboardSocialShareMobile = (button) => {
 
     const initSellerCardLinks = function () {
         document.querySelectorAll("[data-seller-item][data-seller-link]").forEach(function (item) {
-            const link = item.getAttribute("data-seller-link");
-            if (!link) return;
-
             item.addEventListener("click", function () {
+                const link = item.getAttribute("data-seller-link") || item.getAttribute("href");
+                if (!link || link === "#") return;
                 window.open(link, "_blank", "noopener");
             });
 
             item.addEventListener("keydown", function (event) {
                 if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
+                    const link = item.getAttribute("data-seller-link") || item.getAttribute("href");
+                    if (!link || link === "#") return;
                     window.open(link, "_blank", "noopener");
                 }
             });

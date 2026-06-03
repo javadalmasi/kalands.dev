@@ -119,10 +119,13 @@
                                 <h2 class="text-sm font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">{{$data['data']['product']['title_en']}}</h2>
                             @endif
                             <div class="flex flex-wrap items-center gap-3">
-                                <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 text-xs font-medium text-slate-500 dark:bg-white/5 dark:text-slate-400">
+                                <a href="{{ProductController::AffiliateLinkGenerator("digikala", $data['data']['product']['id'], $data['data']['product']['title_fa'])}}"
+                                   target="_blank" rel="nofollow" referrerpolicy="no-referrer"
+                                   data-human-href="{{ProductController::GetSpecialLink("digikala", $data['data']['product']['id'], $data['data']['product']['title_fa'])}}"
+                                   class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 text-xs font-medium text-slate-500 hover:text-primary transition-colors dark:bg-white/5 dark:text-slate-400 js-special-link">
                                     <svg class="h-4 w-4"><use xlink:href="#id"/></svg>
                                     <span>شناسه: {{$data['data']['product']['id']}}</span>
-                                </div>
+                                </a>
                                 @if ($data['data']['product']['rating']['rate'] != 0)
                                 <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 dark:bg-slate-800 text-xs font-bold text-primary">
                                     <svg class="h-4 w-4"><use xlink:href="#like"/></svg>
@@ -153,13 +156,15 @@
                                     <p class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-widest border-r-4 border-primary pr-2">انتخاب رنگ</p>
                                     <div class="flex flex-wrap gap-2">
                                         @foreach ($data['data']['product']['colors'] as $colors)
-                                            <label class="relative group cursor-pointer">
-                                                <input type="radio" name="color" class="peer sr-only dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" @if($loop->first) checked @endif>
-                                                <div class="flex items-center gap-2 px-3 py-2 rounded-full border border-slate-200 bg-white transition-all peer-checked:border-primary peer-checked:ring-4 peer-checked:ring-primary/10 dark:border-white/10 dark:bg-slate-800">
+                                            <a href="{{ProductController::AffiliateLinkGenerator("digikala", $data['data']['product']['id'], $data['data']['product']['title_fa'])}}"
+                                               target="_blank" rel="nofollow" referrerpolicy="no-referrer"
+                                               data-human-href="{{ProductController::GetSpecialLink("digikala", $data['data']['product']['id'], $data['data']['product']['title_fa'])}}"
+                                               class="relative group cursor-pointer js-special-link">
+                                                <div class="flex items-center gap-2 px-3 py-2 rounded-full border border-slate-200 bg-white transition-all hover:border-primary dark:border-white/10 dark:bg-slate-800">
                                                     <span class="h-5 w-5 rounded-full border border-black/10" style="background-color: {{$colors['hex_code']}}"></span>
                                                     <span class="text-xs font-bold text-slate-600 dark:text-slate-300">{{$colors['title']}}</span>
                                                 </div>
-                                            </label>
+                                            </a>
                                         @endforeach
                                     </div>
                                 </div>
@@ -342,10 +347,13 @@
                     <div class="grid flex-grow grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-6">
                             <div class="flex flex-wrap items-center gap-3">
-                                <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 text-xs font-medium text-slate-500 dark:bg-white/5 dark:text-slate-400">
+                                <a href="{{ProductController::AffiliateLinkGenerator("basalam", $data['id'], $data['title'])}}"
+                                   target="_blank" rel="nofollow" referrerpolicy="no-referrer"
+                                   data-human-href="{{ProductController::GetSpecialLink("basalam", $data['id'], $data['title'])}}"
+                                   class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 text-xs font-medium text-slate-500 hover:text-primary transition-colors dark:bg-white/5 dark:text-slate-400 js-special-link">
                                     <svg class="h-4 w-4"><use xlink:href="#id"/></svg>
                                     <span>شناسه: {{$data['id']}}</span>
-                                </div>
+                                </a>
                                 @if ($data['rating'] != 0)
                                 <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 dark:bg-slate-800 text-xs font-bold text-primary">
                                     <svg class="h-4 w-4"><use xlink:href="#like"/></svg>
@@ -377,13 +385,15 @@
                                     <div class="flex flex-wrap gap-2">
                                         @foreach ($data['variants']['properties'] as $colors)
                                             @if($colors['property']['type'] == "color")
-                                            <label class="relative group cursor-pointer">
-                                                <input type="radio" name="color" class="peer sr-only dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" @if($loop->first) checked @endif>
-                                                <div class="flex items-center gap-2 px-3 py-2 rounded-full border border-slate-200 bg-white transition-all peer-checked:border-primary peer-checked:ring-4 peer-checked:ring-primary/10 dark:border-white/10 dark:bg-slate-800">
+                                            <a href="{{ProductController::AffiliateLinkGenerator("basalam", $data['id'], $data['title'])}}"
+                                               target="_blank" rel="nofollow" referrerpolicy="no-referrer"
+                                               data-human-href="{{ProductController::GetSpecialLink("basalam", $data['id'], $data['title'])}}"
+                                               class="relative group cursor-pointer js-special-link">
+                                                <div class="flex items-center gap-2 px-3 py-2 rounded-full border border-slate-200 bg-white transition-all hover:border-primary dark:border-white/10 dark:bg-slate-800">
                                                     <span class="h-5 w-5 rounded-full border border-black/10" style="background-color: {{$colors['value']['value']}}"></span>
                                                     <span class="text-xs font-bold text-slate-600 dark:text-slate-300">{{$colors['value']['title']}}</span>
                                                 </div>
-                                            </label>
+                                            </a>
                                             @endif
                                         @endforeach
                                     </div>
@@ -418,8 +428,8 @@
 
                                 <div class="space-y-3">
                                     <a target="_blank" rel="nofollow" referrerpolicy="no-referrer"
-                                       href="{{ProductController::GetBaseLink("basalam",null,$data['title'])}}"
-                                       data-human-href="{{ProductController::GetSpecialLink("basalam",null,$data['title'])}}"
+                                       href="{{ProductController::GetBaseLink("basalam", $data['id'], $data['title'])}}"
+                                       data-human-href="{{ProductController::GetSpecialLink("basalam", $data['id'], $data['title'])}}"
                                        data-analytics-goal="tr_atc" data-store="basalam"
                                        data-product-id="{{ $data['id'] }}"
                                        class="btn-primary w-full shadow-lg shadow-primary/30 py-4 text-base js-special-link">

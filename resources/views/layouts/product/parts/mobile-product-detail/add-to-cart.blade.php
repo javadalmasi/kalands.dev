@@ -56,12 +56,12 @@
             <div class="flex items-center justify-between gap-x-4">
                 <div class="flex grow">
                     <a class="btn-primary w-full shadow-lg shadow-primary/30 py-3.5 text-sm js-special-link"
-                       href="{{ProductController::GetBaseLink("basalam",null,$data['title'])}}"
-                       data-human-href="{{ProductController::GetSpecialLink("basalam",null,$data['title'])}}"
+                       href="{{ProductController::GetBaseLink("basalam", $data['id'], $data['title'])}}"
+                       data-human-href="{{ProductController::GetSpecialLink("basalam", $data['id'], $data['title'])}}"
                        target="_blank"
                        rel="nofollow"
                        referrerpolicy="no-referrer"
-                    >افزودن به سبد خرید</a>
+                   >افزودن به سبد خرید</a>
                 </div>
                 <div class="space-y-1">
 
