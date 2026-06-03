@@ -333,11 +333,14 @@ class ProductController extends Controller
         $cdn = config('services.cdn.images');
 
         if ($Store == "digikala") {
-            $MainLink = ['dkstatics-public.digikala.com', 'dkstatics-public-2.digikala.com', 'dkstatics-private.digikala.com'];
-            $ReplacedLink = [$cdn . '/klnd/01/', $cdn . '/klnd/02/', $cdn . '/klnd/04/'];
+            $url = str_replace(
+                ['https://dkstatics-public.digikala.com/digikala-products/', 'https://dkstatics-public-2.digikala.com/digikala-products/', 'https://dkstatics-private.digikala.com/digikala-products/', 'https://dkstatics-public.digikala.com/digikala-content-creation-requests/', 'https://dkstatics-public-2.digikala.com/digikala-content-creation-requests/', 'https://dkstatics-private.digikala.com/digikala-content-creation-requests/'],
+                ['https://' . $cdn . '/klnd/01/', 'https://' . $cdn . '/klnd/02/', 'https://' . $cdn . '/klnd/04/', 'https://' . $cdn . '/klnd/05/', 'https://' . $cdn . '/klnd/05/', 'https://' . $cdn . '/klnd/05/'],
+                $url
+            );
             $part_url = parse_url($url);
-            $hostname = str_replace($MainLink, $ReplacedLink, $part_url["host"] ?? '');
-            $path = str_replace('/digikala-products/', '', $part_url["path"] ?? '');
+            $hostname = $part_url["host"] ?? '';
+            $path = $part_url["path"] ?? '';
 
             if ($CleanURl == true) {
                 return 'https://' . $hostname . $path;
@@ -397,18 +400,18 @@ class ProductController extends Controller
 
         $MainLink = [
             'www.digikala.com', '/product/dkp-', '/search',
-            'dkstatics-public.digikala.com\/digikala-products\/', 'dkstatics-public-2.digikala.com\/digikala-products\/', 'dkstatics-private.digikala.com\/digikala-products\/',
+            'dkstatics-public.digikala.com\/digikala-products\/', 'dkstatics-public-2.digikala.com\/digikala-products\/', 'dkstatics-private.digikala.com\/digikala-products\/', 'dkstatics-public.digikala.com\/digikala-content-creation-requests\/',
             'دیجیکالا', 'دیجی کالا', 'دیجی‌کالا',
-            'dkstatics-public.digikala.com/digikala-products/', 'dkstatics-public-2.digikala.com/digikala-products/', 'dkstatics-private.digikala.com/digikala-products/',
+            'dkstatics-public.digikala.com/digikala-products/', 'dkstatics-public-2.digikala.com/digikala-products/', 'dkstatics-private.digikala.com/digikala-products/', 'dkstatics-public.digikala.com/digikala-content-creation-requests/',
             'statics.basalam.com\/public\/users\/', 'statics.basalam.com/public/users/',
             'باسلام',
             'quality,q_90', 'quality,q_80'
         ];
         $ReplacedLink = [
             'www.kalands.ir', '/product/', '/result',
-            $cdn . '\/klnd\/01', $cdn . '\/klnd\/02', $cdn . '\/klnd\/04',
+            $cdn . '\/klnd\/01', $cdn . '\/klnd\/02', $cdn . '\/klnd\/04', $cdn . '\/klnd\/05',
             'کالندز', 'کالندز', 'کالندز',
-            $cdn . '/klnd/01', $cdn . '/klnd/02', $cdn . '/klnd/04',
+            $cdn . '/klnd/01', $cdn . '/klnd/02', $cdn . '/klnd/04', $cdn . '/klnd/05',
             $cdn . '\/klnd\/03', $cdn . '/klnd/03',
             'کالندز',
             'quality,q_90/format,webp', 'quality,q_80/format,webp'
