@@ -45,6 +45,10 @@
                 <span class="material-icons text-base">psychology</span>
                 <span>تنظیمات هوش مصنوعی</span>
             </button>
+            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
+                <span class="material-icons text-base">help_outline</span>
+                <span>راهنما</span>
+            </button>
         </div>
     </div>
 
@@ -210,373 +214,93 @@
                         <div class="flex flex-col items-center justify-center py-10 opacity-30">
                             <span class="material-icons !text-5xl mb-2">analytics</span>
                             <p class="text-xs font-bold italic">داده‌ای ثبت نشده است</p>
-                        </div>
-                    @endif
+</div>
+     @endpush
+
+    <div id="tab-help" class="tab-content hidden">
+        <div class="flex gap-6 items-start">
+            <div class="flex-1 min-w-0">
+                <div class="admin-card space-y-6">
+                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
+                        <span class="material-icons text-2xl text-primary">help_outline</span>
+                        <h2 class="font-bold text-slate text-lg">راهنمای کامل مدیریت دسته‌بندی‌ها</h2>
+                    </div>
+
+                    <div class="space-y-8 text-sm text-slate leading-7">
+                        <section id="doc-intro">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">info</span>
+                                معرفی ماژول
+                            </h3>
+                            <p>ماژول مدیریت دسته‌بندی، سامانه یکپارچه مدیریت درخت دسته‌بندی محصولات و نگاشت هوشمند بین فروشگاه‌های دیجی‌کالا، باسلام و اسنپ‌شاپ در پلتفرم kalands.ir است.</p>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-stores">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">storefront</span>
+                                فروشگاه‌ها
+                            </h3>
+                            <p>سه فروشگاه اصلی در این ماژول مدیریت می‌شوند:</p>
+                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
+                                <li><b>دیجی‌کالا:</b> دسته‌بندی مرجع که دیگر فروشگاه‌ها به آن نگاشت می‌شوند</li>
+                                <li><b>باسلام:</b> دسته‌بندی باسلام که می‌تواند به دیجی‌کالا متصل شود</li>
+                                <li><b>اسنپ‌شاپ:</b> دسته‌بندی اسنپ‌شاپ که می‌تواند به دیجی‌کالا متصل شود</li>
+                            </ul>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-mapping">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">link</span>
+                                نگاشت هوشمند
+                            </h3>
+                            <p>نگاشت هوشمند بین دسته‌بندی‌ها با استفاده از بردارهای بیانیه (Vector Embeddings) انجام می‌شود. در تنظیمات می‌توانید موتور وکتور را انتخاب کنید:</p>
+                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
+                                <li><b>موتور داخلی (N-gram):</b> بدون نیاز به سرویس خارجی، سرعت بالا</li>
+                                <li><b>موتور خارجی (LLM API):</b> دقت بالاتر با هزینه وابسته به API</li>
+                            </ul>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-operations">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">settings_suggest</span>
+                                عملیات و ایمپورت
+                            </h3>
+                            <p>برای ایمپورت دسته‌بندی اسنپ‌شاپ، خروجی JSON وب‌سرویس را در فرم ایمپورت قرار دهید. سیستم به صورت خودکار ساختار درختی را استخراج و وکتورایز می‌کند.</p>
+                            <p class="mt-3">همچنین می‌توانید نگاشت هوشمند سراسری را اجرا کنید تا تمام دسته‌بندی‌های باسلام و اسنپ‌شاپ با دیجی‌کالا مقایسه شوند.</p>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-linked">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">link</span>
+                                موارد لینک شده
+                            </h3>
+                            <p>در این بخش می‌توانید تمامی نگاشت‌های ایجاد شده را مشاهده کنید. نمایش درصد شباهت و وضعیت دستی/خودکار نگاشت‌ها امکان‌پذیر است.</p>
+                        </section>
+                    </div>
                 </div>
             </div>
+
+            <aside class="hidden lg:block w-64 shrink-0">
+                <div class="admin-card !p-4 sticky top-4">
+                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
+                    <nav class="space-y-1">
+                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
+                        <a href="#doc-stores" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">فروشگاه‌ها</a>
+                        <a href="#doc-mapping" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">نگاشت هوشمند</a>
+                        <a href="#doc-operations" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">عملیات و ایمپورت</a>
+                        <a href="#doc-linked" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">موارد لینک شده</a>
+                    </nav>
+                </div>
+            </aside>
         </div>
     </div>
 
-    <!-- Snapp Import Modal -->
-    <dialog id="snapp-import-modal" class="admin-dialog w-[min(100vw-32px,700px)]">
-        <div class="admin-dialog-body">
-            <div class="admin-dialog-head">
-                <h3 class="admin-dialog-title flex items-center gap-2">
-                    <span class="material-icons text-primary">cloud_upload</span>
-                    <span>ایمپورت داده‌های اسنپ‌شاپ</span>
-                </h3>
-                <button type="button" onclick="this.closest('dialog').close()" class="admin-toggle"><span class="material-icons">close</span></button>
-            </div>
-
-            <div class="space-y-4 py-6">
-                <p class="text-xs text-slate-500 leading-6">محتوای JSON دریافتی از وب‌سرویس اسنپ‌شاپ را در کادر زیر قرار دهید. سیستم به صورت خودکار سلسله مراتب دسته‌بندی را استخراج و وکتورایز می‌کند.</p>
-                <textarea id="snapp-json-input" class="admin-input w-full h-64 font-mono text-[10px] !p-4" placeholder='{"status":true, "data": { "menus": [...] } }' spellcheck="false"></textarea>
-            </div>
-
-            <div class="admin-dialog-actions">
-                <button onclick="this.closest('dialog').close()" class="admin-btn admin-btn-secondary">انصراف</button>
-                <button onclick="submitSnappImport()" id="snapp-submit-btn" class="admin-btn admin-btn-primary px-8">شروع عملیات ایمپورت</button>
-            </div>
-        </div>
-    </dialog>
-
-    <!-- Details Modal -->
-    <dialog id="details-modal" class="admin-dialog w-[min(100vw-32px,600px)]">
-        <div class="admin-dialog-body">
-            <div class="admin-dialog-head">
-                <h3 class="admin-dialog-title flex items-center gap-2">
-                    <span class="material-icons text-primary">analytics</span>
-                    <span>جزئیات وکتور و شباهت</span>
-                </h3>
-                <button type="button" onclick="this.closest('dialog').close()" class="admin-toggle"><span class="material-icons">close</span></button>
-            </div>
-            <div id="details-content" class="space-y-6 py-6"></div>
-        </div>
-    </dialog>
-
-    <!-- Edit Title Modal -->
-    <dialog id="edit-category-modal" class="admin-dialog w-[min(100vw-32px,500px)]">
-        <div class="admin-dialog-body">
-            <div class="admin-dialog-head">
-                <h3 class="admin-dialog-title flex items-center gap-2">
-                    <span class="material-icons text-primary">edit</span>
-                    <span>ویرایش نام دسته‌بندی</span>
-                </h3>
-                <button type="button" onclick="this.closest('dialog').close()" class="admin-toggle"><span class="material-icons">close</span></button>
-            </div>
-
-            <div class="space-y-4 py-6">
-                <div>
-                    <label class="block text-xs font-bold mb-2">نام جدید</label>
-                    <input type="text" id="edit-category-title-input" class="admin-input w-full !h-12 !rounded-xl" placeholder="نام جدید را وارد کنید...">
-                </div>
-            </div>
-
-            <div class="admin-dialog-actions pt-2">
-                <button onclick="this.closest('dialog').close()" class="admin-btn admin-btn-secondary">انصراف</button>
-                <button onclick="submitCategoryUpdate()" id="update-category-btn" class="admin-btn admin-btn-primary px-8">بروزرسانی نام</button>
-            </div>
-        </div>
-    </dialog>
-
-    <!-- Mapping Modal -->
-    <dialog id="mapping-modal" class="admin-dialog w-[min(100vw-32px,550px)]">
-        <div class="admin-dialog-body">
-            <div class="admin-dialog-head">
-                <h3 class="admin-dialog-title flex items-center gap-2">
-                    <span class="material-icons text-primary">link</span>
-                    <span>نگاشت دستی دسته‌بندی</span>
-                </h3>
-                <button type="button" onclick="this.closest('dialog').close()" class="admin-toggle"><span class="material-icons">close</span></button>
-            </div>
-            <div class="space-y-6 py-6">
-                <div class="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5">
-                    <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">دسته‌بندی مبدا</label>
-                    <div id="modal-basalam-title" class="font-black text-slate-700 dark:text-white text-lg"></div>
-                </div>
-                <div class="space-y-2">
-                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300">انتخاب دسته‌بندی معادل در دیجی‌کالا (مقصد)</label>
-                    <select id="modal-digikala-select" class="admin-input w-full !h-12 !rounded-xl"></select>
-                </div>
-            </div>
-            <div class="admin-dialog-actions pt-2">
-                <button onclick="this.closest('dialog').close()" class="admin-btn admin-btn-secondary">انصراف</button>
-                <button onclick="saveManualMapping()" class="admin-btn admin-btn-primary px-8">ذخیره نگاشت</button>
-            </div>
-        </div>
-    </dialog>
-
-    @push('scripts')
-    <script>
-        (function() {
-            let categoriesData = { digikala: [], basalam: [], snappshop: [], mappings: [], digikala_flat: [] };
-
-            const myAdminAlert = (msg) => {
-                if (window.adminAlert) window.adminAlert(msg);
-                else alert(msg);
-            };
-
-            window.toggleEngineSettings = function() {
-                const engine = document.getElementById('vector_engine').value;
-                document.getElementById('external-engine-settings').classList.toggle('hidden', engine !== 'external');
-            };
-
-            window.loadData = async function() {
-                try {
-                    const response = await fetch('{{ route('dash.admin.categories.tree', ['authkey' => $authkey]) }}');
-                    categoriesData = await response.json();
-                    renderTrees();
-                    populateSelect();
-                    loadLinkedData();
-                } catch (e) { myAdminAlert('خطا در بارگذاری داده‌ها'); }
-            };
-
-            window.loadLinkedData = async function() {
-                const container = document.getElementById('linked-content');
-                try {
-                    const response = await fetch('{{ route('dash.admin.categories.linked', ['authkey' => $authkey]) }}');
-                    const data = await response.json();
-
-                    container.innerHTML = data.linked.map(item => `
-                        <div class="admin-card !bg-slate-50/50 dark:!bg-white/5 p-5 border border-slate-100 dark:border-white/5 relative overflow-hidden group hover:border-primary/30 transition-all">
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-600 flex items-center justify-center">
-                                    <span class="material-icons">category</span>
-                                </div>
-                                <div class="min-w-0">
-                                    <div class="text-[10px] font-black text-orange-500 uppercase tracking-tighter mb-0.5">Digikala Reference</div>
-                                    <div class="font-black text-slate-800 dark:text-white truncate">${item.digikala.title}</div>
-                                </div>
-                            </div>
-                            <div class="space-y-2 border-t border-slate-200/50 dark:border-white/5 pt-4">
-                                ${item.links.map(link => `
-                                    <div class="flex items-center justify-between p-2.5 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-white/5">
-                                        <div class="flex items-center gap-2 min-w-0">
-                                            <span class="text-[8px] bg-slate-100 dark:bg-white/10 px-1.5 py-0.5 rounded text-slate-500 uppercase font-black">${link.category.store}</span>
-                                            <span class="font-bold text-xs truncate">${link.category.title}</span>
-                                        </div>
-                                        <div class="flex items-center gap-1.5 shrink-0">
-                                            <span class="text-[9px] font-black ${link.confidence > 0.8 ? 'text-emerald-500' : 'text-amber-500'}">${Math.round(link.confidence * 100)}%</span>
-                                            ${link.is_manual ? '<span class="material-icons text-[10px] text-blue-500" title="Manual Mapping">verified</span>' : ''}
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `).join('') || '<div class="col-span-full py-20 text-center opacity-20"><span class="material-icons !text-6xl">link_off</span><p class="font-bold">هیچ نگاشتی ثبت نشده است</p></div>';
-                } catch (e) { container.innerHTML = '<p class="text-red-500 text-center col-span-full">خطا در بارگذاری نگاشت‌ها</p>'; }
-            };
-
-            window.startAutoSync = async function() {
-                const btn = document.getElementById('sync-all-btn');
-                if (!await adminConfirm('آیا مایلید تمامی دسته‌بندی‌های باسلام و اسنپ‌شاپ را مجدداً به صورت هوشمند با دیجی‌کالا مقایسه و لینک کنید؟')) return;
-
-                btn.disabled = true;
-                btn.innerHTML = '<span class="animate-spin material-icons text-sm">bolt</span> در حال پردازش...';
-
-                try {
-                    const response = await fetch('{{ route('dash.admin.categories.sync_all', ['authkey' => $authkey]) }}', {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
-                    });
-                    const res = await response.json();
-                    if (res.ok) {
-                        myAdminAlert(`عملیات با موفقیت پایان یافت. تعداد ${res.count} نگاشت جدید ایجاد یا بروزرسانی شد.`);
-                        loadData();
-                    }
-                } catch (e) { myAdminAlert('خطا در اجرای همگام‌سازی'); }
-
-                btn.disabled = false;
-                btn.innerHTML = '<i class="material-icons !text-lg">bolt</i><span>نگاشت هوشمند سراسری</span>';
-            };
-
-            function renderTrees() {
-                renderTree('digikala-tree', categoriesData.digikala, 'digikala');
-                renderTree('basalam-tree', categoriesData.basalam, 'basalam');
-                renderTree('snappshop-tree', categoriesData.snappshop, 'snappshop');
-            }
-
-            function renderTree(containerId, items, store) {
-                const container = document.getElementById(containerId);
-                container.innerHTML = items.length ? items.map(item => renderNode(item, store)).join('') : `
-                    <div class="flex flex-col items-center justify-center py-20 opacity-20"><i class="material-icons !text-6xl mb-4">search_off</i><p class="font-bold">داده‌ای یافت نشد</p></div>
-                `;
-            }
-
-            window.toggleNode = function(event, el) {
-                event.stopPropagation();
-                el.closest('.tree-node').classList.toggle('tree-node-expanded');
-            };
-
-            function renderNode(node, store, depth = 0) {
-                const hasChildren = node.children && node.children.length > 0;
-            const mapping = (store === 'basalam' || store === 'snappshop') ? categoriesData.mappings.find(m => m.source_category_id === node.id) : null;
-                const mappedTo = mapping ? categoriesData.digikala_flat.find(d => d.id === mapping.digikala_category_id) : null;
-
-                return `
-                    <div class="tree-node">
-                        <div class="tree-node-header flex items-center gap-2 p-2.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-all group cursor-pointer"
-                             onclick="showDetails(${node.id})">
-                            <div onclick="toggleNode(event, this)" class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-primary transition-colors">
-                                ${hasChildren ? '<span class="material-icons expand-icon text-xs">chevron_left</span>' : ''}
-                            </div>
-                            <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-primary transition-colors">
-                                <span class="material-icons text-sm">${hasChildren ? 'folder' : 'label'}</span>
-                            </div>
-                            <div class="flex-grow min-w-0" style="margin-right: ${depth * 20}px">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-bold text-sm text-slate-700 dark:text-slate-200 truncate">${node.title}</span>
-                                    <span class="text-[9px] font-black bg-slate-200/50 dark:bg-white/10 px-2 py-0.5 rounded-full text-slate-500">${node.product_count}</span>
-                                    ${node.vector_source === 'external' ? `<span class="material-icons text-[10px] text-blue-500">auto_awesome</span>` : ''}
-                                </div>
-                                ${mappedTo ? `
-                                    <div class="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mt-1 font-bold">
-                                        <span class="material-icons text-[12px]">link</span>
-                                        <span>${mappedTo.title}</span>
-                                        <span class="px-1.5 py-0.5 bg-emerald-500/10 rounded text-[8px]">${Math.round(mapping.confidence * 100)}%</span>
-                                    </div>
-                                ` : ''}
-                            </div>
-                            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="event.stopPropagation(); showDetails(${node.id})" class="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-400 hover:text-blue-500" title="جزئیات وکتور"><span class="material-icons text-xs">visibility</span></button>
-                            <button onclick="event.stopPropagation(); openEditModal(${node.id}, '${node.title}')" class="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-400 hover:text-amber-500" title="ویرایش نام"><span class="material-icons text-xs">edit</span></button>
-                            ${(store === 'basalam' || store === 'snappshop') ? `<button onclick="event.stopPropagation(); openMappingModal(${node.id}, '${node.title}')" class="w-7 h-7 flex items-center justify-center rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-400 hover:text-primary" title="تنظیم نگاشت"><span class="material-icons text-xs">link</span></button>` : ''}
-                            </div>
-                        </div>
-                        <div class="tree-node-children">${hasChildren ? node.children.map(child => renderNode(child, store, depth + 1)).join('') : ''}</div>
-                    </div>
-                `;
-            }
-
-            window.showDetails = async function(id) {
-                const content = document.getElementById('details-content');
-                content.innerHTML = '<div class="flex justify-center p-10"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>';
-                document.getElementById('details-modal').showModal();
-                try {
-                    const url = '{{ route('dash.admin.categories.details', ['authkey' => $authkey, 'category' => ':id']) }}'.replace(':id', id);
-                    const response = await fetch(url);
-                    const data = await response.json();
-                    content.innerHTML = `
-                        <div class="space-y-6">
-                            <div class="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl flex items-center justify-between">
-                                <div><h4 class="text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">مدل وکتور</h4><div class="font-bold text-sm text-blue-600">${data.category.vector_source} (${data.category.vector_model || 'N/A'})</div></div>
-                            </div>
-                            <div><h4 class="text-xs font-bold text-slate-400 mb-3 uppercase flex items-center gap-2"><span class="material-icons text-sm text-primary">auto_awesome</span>بردار تولید شده</h4><pre class="p-4 bg-slate-900 text-emerald-400 rounded-2xl text-[10px] font-mono h-40 overflow-y-auto custom-scrollbar">${JSON.stringify(data.category.vector, null, 2)}</pre></div>
-                            <div><h4 class="text-xs font-bold text-slate-400 mb-3 uppercase flex items-center gap-2"><span class="material-icons text-sm text-primary">compare_arrows</span>مشابهت در سایر فروشگاه‌ها</h4><div class="space-y-2">${data.similar.map(item => `<div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5"><div class="flex items-center gap-2"><span class="text-[8px] bg-slate-200 dark:bg-white/10 px-1.5 py-0.5 rounded text-slate-500 uppercase font-black">${item.store}</span><span class="font-bold text-sm">${item.title}</span></div><div class="flex items-center gap-2"><div class="w-24 h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden"><div class="h-full bg-primary" style="width: ${item.score}%"></div></div><span class="text-[10px] font-black text-primary">${item.score}%</span></div></div>`).join('') || '<p class="text-center py-4 text-slate-400 text-xs italic">موردی یافت نشد</p>'}</div></div>
-                        </div>
-                    `;
-                } catch (e) { content.innerHTML = '<p class="text-red-500 p-10 text-center">خطا در بارگذاری جزئیات</p>'; }
-            };
-
-            window.testAi = async function() {
-                const text = document.getElementById('ai-test-input').value;
-                const btn = document.getElementById('ai-test-btn');
-                const result = document.getElementById('ai-test-result');
-                if (!text) return;
-                btn.disabled = true;
-                result.classList.remove('hidden');
-                result.innerHTML = 'در حال پردازش...';
-                try {
-                    const response = await fetch('{{ route('dash.admin.categories.ai_test', ['authkey' => $authkey]) }}', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                        body: JSON.stringify({ text })
-                    });
-                    result.innerHTML = JSON.stringify(await response.json(), null, 2);
-                } catch (e) { result.innerHTML = 'خطا در برقراری ارتباط'; }
-                btn.disabled = false;
-            };
-
-            window.submitSnappImport = async function() {
-                const jsonInput = document.getElementById('snapp-json-input');
-                const btn = document.getElementById('snapp-submit-btn');
-                const json = jsonInput.value.trim();
-
-                if (!json) { myAdminAlert('لطفا محتوای JSON را وارد کنید.'); return; }
-
-                btn.disabled = true;
-                btn.innerHTML = '<span class="animate-spin material-icons text-sm">sync</span> در حال پردازش...';
-
-                try {
-                    const response = await fetch('{{ route('dash.admin.categories.import.snapp', ['authkey' => $authkey]) }}', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                        body: json
-                    });
-                    const res = await response.json();
-                    if (res.ok) {
-                        myAdminAlert('ایمپورت با موفقیت انجام شد.');
-                        document.getElementById('snapp-import-modal').close();
-                        jsonInput.value = '';
-                        loadData();
-                    } else {
-                        myAdminAlert('خطا در پردازش داده‌ها: ' + (res.message || 'نامشخص'));
-                    }
-                } catch (e) { myAdminAlert('خطا در برقراری ارتباط با سرور'); }
-
-                btn.disabled = false;
-                btn.innerHTML = 'شروع عملیات ایمپورت';
-            };
-
-            let currentEditId = null;
-            window.openEditModal = function(id, title) {
-                currentEditId = id;
-                const input = document.getElementById('edit-category-title-input');
-                input.value = title;
-                document.getElementById('edit-category-modal').showModal();
-                input.focus();
-            };
-
-            window.submitCategoryUpdate = async function() {
-                const title = document.getElementById('edit-category-title-input').value.trim();
-                const btn = document.getElementById('update-category-btn');
-                if (!title) return;
-
-                btn.disabled = true;
-                try {
-                    const url = '{{ route('dash.admin.categories.update', ['authkey' => $authkey, 'category' => ':id']) }}'.replace(':id', currentEditId);
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                        body: JSON.stringify({ title })
-                    });
-                    if ((await response.json()).ok) {
-                        document.getElementById('edit-category-modal').close();
-                        loadData();
-                    }
-                } catch (e) { myAdminAlert('خطا در بروزرسانی نام'); }
-                btn.disabled = false;
-            };
-
-            function populateSelect() {
-                const select = document.getElementById('modal-digikala-select');
-                select.innerHTML = '<option value="">انتخاب دسته‌بندی مقصد در دیجی‌کالا...</option>' + categoriesData.digikala_flat.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
-            }
-
-            let currentBasalamId = null;
-            window.openMappingModal = function(id, title) {
-                currentBasalamId = id;
-                document.getElementById('modal-basalam-title').textContent = title;
-                const mapping = categoriesData.mappings.find(m => m.source_category_id === id);
-                document.getElementById('modal-digikala-select').value = mapping ? mapping.digikala_category_id : "";
-                document.getElementById('mapping-modal').showModal();
-            };
-
-            window.saveManualMapping = async function() {
-                const dkId = document.getElementById('modal-digikala-select').value;
-                if (!dkId) { myAdminAlert('لطفا مقصد را انتخاب کنید.'); return; }
-                try {
-                    const response = await fetch('{{ route('dash.admin.categories.map', ['authkey' => $authkey]) }}', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                        body: JSON.stringify({ basalam_category_id: currentBasalamId, digikala_category_id: dkId })
-                    });
-                    if ((await response.json()).ok) { document.getElementById('mapping-modal').close(); loadData(); }
-                } catch (e) { myAdminAlert('خطا در ذخیره'); }
-            };
-
-            document.addEventListener('DOMContentLoaded', loadData);
-        })();
-    </script>
-    @endpush
 </x-layouts.admin-dashboard>
