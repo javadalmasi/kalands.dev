@@ -24,6 +24,10 @@
                     <span class="bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-[10px]">{{ $recentLogs->count() }}</span>
                 @endif
             </button>
+            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
+                <span class="material-icons text-base">help_outline</span>
+                <span>راهنما</span>
+            </button>
         </div>
     </div>
 
@@ -115,6 +119,57 @@
                     </table>
                 </div>
             @endif
+        </div>
+    </div>
+
+    <div id="tab-help" class="tab-content hidden">
+        <div class="flex gap-6 items-start">
+            <div class="flex-1 min-w-0">
+                <div class="admin-card space-y-6">
+                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
+                        <span class="material-icons text-2xl text-primary">help_outline</span>
+                        <h2 class="font-bold text-slate text-lg">راهنمای کامل ماژول دستورات Artisan</h2>
+                    </div>
+
+                    <div class="space-y-8 text-sm text-slate leading-7">
+                        <section id="doc-commands">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">terminal</span>
+                                دستورات
+                            </h3>
+                            <p>در این بخش دستورات Artisan قابل اجرا توسط مدیریت سایت لیست شده‌اند. هر دستور شامل توضیح مختصر و آیکون شناسایی است.</p>
+                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
+                                <h4 class="font-bold text-slate mb-2">نکات ایمنی</h4>
+                                <ul class="list-disc list-inside space-y-1 mr-4">
+                                    <li>دستورات خطرناک دارای پیام هشدار هستند</li>
+                                    <li>تمام اجراها در لاگ ذخیره می‌شوند</li>
+                                    <li>فقط ادمین‌های مجاز می‌توانند دستورات را اجرا کنند</li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-logs">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">history</span>
+                                آخرین اجراها
+                            </h3>
+                            <p>تاریخچه ۱۵ اجرای آخر به همراه مجری و خروجی نمایش داده می‌شود.</p>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="hidden lg:block w-64 shrink-0">
+                <div class="admin-card !p-4 sticky top-4">
+                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
+                    <nav class="space-y-1">
+                        <a href="#doc-commands" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">دستورات</a>
+                        <a href="#doc-logs" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">آخرین اجراها</a>
+                    </nav>
+                </div>
+            </aside>
         </div>
     </div>
 
