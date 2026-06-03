@@ -365,6 +365,11 @@ class ProductController extends Controller
             if ($id && is_numeric($id)) {
                 return config('app.url') . '/go/d' . $id;
             }
+            if ($title) {
+                $b64 = base64_encode($title);
+                $b64 = str_replace(['+', '/', '='], ['-', '_', ''], $b64);
+                return config('app.url') . '/go/ds_' . $b64;
+            }
             return '#';
         }
         if ($shop == "basalam") {
@@ -379,7 +384,10 @@ class ProductController extends Controller
     public static function GetBaseLink($shop, $id, $title = null)
     {
         if ($shop == "digikala" && isset($title)) {
-            return config('app.url') . '/product/' . $id . '/' . str_slug_persian($title);
+            if ($id) {
+                return config('app.url') . '/product/' . $id . '/' . str_slug_persian($title);
+            }
+            return config('app.url') . '/result/?q=' . urlencode($title) . '&sort=22';
         }
         return '#';
     }
