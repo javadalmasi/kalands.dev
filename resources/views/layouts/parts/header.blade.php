@@ -1,6 +1,15 @@
 @php
-    $userDashKey = session('dashboard.user.authkey') ?? auth()->user()?->dashboard_authkey;
-    $userDashAvailable = auth()->check() && !empty($userDashKey);
+    $adminGuard = auth()->guard('admin');
+    $webGuard = auth()->guard('web');
+    $isAdmin = $adminGuard->check();
+    $isUser = $webGuard->check();
+    $isLoggedIn = $isAdmin || $isUser;
+    $currentUser = $isAdmin ? $adminGuard->user() : ($isUser ? $webGuard->user() : null);
+    $currentGuard = $isAdmin ? 'admin' : ($isUser ? 'web' : null);
+    $adminDashKey = session('dashboard.admin.authkey') ?? ($isAdmin ? $currentUser?->dashboard_authkey : null);
+    $adminDashAvailable = $isAdmin && !empty($adminDashKey);
+    $userDashKey = session('dashboard.user.authkey') ?? ($isUser ? $currentUser?->dashboard_authkey : null);
+    $userDashAvailable = $isUser && !empty($userDashKey);
     $megaMenuConfig = app(\App\Repositories\SettingsRepository::class)->get('megamenu.config', []);
     $visitorPattern = app(\App\Services\VisitorIntelligenceService::class)->getConfig()['robots_pattern'] ?? '';
 @endphp
@@ -60,40 +69,50 @@
                     
                     <div class="h-8 w-px bg-slate-200 dark:bg-white/10"></div>
 
-                    @if(auth()->check())
+                    @if($isLoggedIn)
                         <div class="relative">
                             <button class="flex items-center gap-2 group" data-dropdown-toggle="dropdownAccountDesktop">
                                 <div class="h-10 w-10 overflow-hidden rounded-full border-2 border-white shadow-sm dark:border-slate-800">
                                     <img src="{{ asset('assets/images/user.png') }}" class="h-full w-full object-cover" alt="user">
                                 </div>
                                 <div class="hidden xl:block text-right">
-                                    <p class="text-xs font-bold text-slate-700 dark:text-white">{{ auth()->user()->name }}</p>
-                                    <p class="text-[10px] text-slate-400 uppercase tracking-tighter">حساب کاربری</p>
+                                    <p class="text-xs font-bold text-slate-700 dark:text-white">{{ $currentUser->name }}</p>
+                                    <p class="text-[10px] text-slate-400 uppercase tracking-tighter">@if($isAdmin)پنل مدیریت@elseحساب کاربری@endif</p>
                                 </div>
                             </button>
                             <div class="z-10 !ml-5 hidden w-64 overflow-hidden rounded-squircle border border-slate-100 bg-white shadow-2xl dark:border-white/5 dark:bg-slate-900" id="dropdownAccountDesktop">
                                 <div class="p-4 bg-slate-50 dark:bg-white/5 flex items-center gap-3">
                                     <img src="{{ asset('assets/images/user.png') }}" class="h-12 w-12 rounded-full" alt="user">
                                     <div>
-                                        <p class="text-sm font-black text-slate-800 dark:text-white">{{ auth()->user()->name }}</p>
-                                        <p class="text-xs text-slate-500">{{ auth()->user()->email }}</p>
+                                        <p class="text-sm font-black text-slate-800 dark:text-white">{{ $currentUser->name }}</p>
+                                        <p class="text-xs text-slate-500">{{ $currentUser->email }}</p>
                                     </div>
                                 </div>
                                 <ul class="p-2 space-y-1">
-                                    <li>
-                                        <a class="flex items-center gap-3 rounded-squircle px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-slate-300 transition-all"
-                                           href="{{ $userDashAvailable ? route('dash.user.index', ['authkey' => $userDashKey]) : route('index') }}">
-                                            <svg class="h-5 w-5"><use xlink:href="#user"/></svg>
-                                            <span>پنل کاربری</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="flex items-center gap-3 rounded-squircle px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-slate-300 transition-all"
-                                           href="{{ $userDashAvailable ? route('dash.user.likes', ['authkey' => $userDashKey]) : route('index') }}">
-                                            <svg class="h-5 w-5"><use xlink:href="#heart"/></svg>
-                                            <span>علاقه‌مندی‌ها</span>
-                                        </a>
-                                    </li>
+                                    @if($isAdmin)
+                                        <li>
+                                            <a class="flex items-center gap-3 rounded-squircle px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-slate-300 transition-all"
+                                               href="{{ $adminDashAvailable ? route('dash.admin.index', ['authkey' => $adminDashKey]) : route('index') }}">
+                                                <svg class="h-5 w-5"><use xlink:href="#user"/></svg>
+                                                <span>پنل مدیریت</span>
+                                            </a>
+                                        </li>
+                                    @else
+                                        <li>
+                                            <a class="flex items-center gap-3 rounded-squircle px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-slate-300 transition-all"
+                                               href="{{ $userDashAvailable ? route('dash.user.index', ['authkey' => $userDashKey]) : route('index') }}">
+                                                <svg class="h-5 w-5"><use xlink:href="#user"/></svg>
+                                                <span>پنل کاربری</span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="flex items-center gap-3 rounded-squircle px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-primary/5 hover:text-primary dark:text-slate-300 transition-all"
+                                               href="{{ $userDashAvailable ? route('dash.user.likes', ['authkey' => $userDashKey]) : route('index') }}">
+                                                <svg class="h-5 w-5"><use xlink:href="#heart"/></svg>
+                                                <span>علاقه‌مندی‌ها</span>
+                                            </a>
+                                        </li>
+                                    @endif
                                     <li class="pt-2 mt-2 border-t border-slate-100 dark:border-white/5">
                                         <form action="{{ route('auth.logout') }}" method="POST">
                                             @csrf
@@ -124,8 +143,8 @@
                 <a href="{{route('index')}}">
                     <img src="{{ asset('/assets/images/logo.svg') }}" class="h-7 w-auto" alt="logo">
                 </a>
-                @if(auth()->check())
-                    <a href="{{ $userDashAvailable ? route('dash.user.index', ['authkey' => $userDashKey]) : route('index') }}" class="p-2 text-slate-600 dark:text-white">
+                @if($isLoggedIn)
+                    <a href="{{ $isAdmin && $adminDashAvailable ? route('dash.admin.index', ['authkey' => $adminDashKey]) : ($userDashAvailable ? route('dash.user.index', ['authkey' => $userDashKey]) : route('index')) }}" class="p-2 text-slate-600 dark:text-white">
                         <svg class="h-6 w-6"><use xlink:href="#user"/></svg>
                     </a>
                 @else
@@ -191,9 +210,9 @@
                     <img src="{{ asset('assets/images/user.png') }}" class="h-full w-full object-cover" alt="user">
                 </div>
                 <div>
-                    @if(auth()->check())
-                        <p class="text-xs font-bold text-slate-700 dark:text-white">{{ auth()->user()->name }}</p>
-                        <p class="text-[10px] text-slate-400">خوش آمدید</p>
+                    @if($isLoggedIn)
+                        <p class="text-xs font-bold text-slate-700 dark:text-white">{{ $currentUser->name }}</p>
+                        <p class="text-[10px] text-slate-400">@if($isAdmin)پنل مدیریت@elseخوش آمدید@endif</p>
                     @else
                         <p class="text-xs font-bold text-slate-700 dark:text-white">کاربر مهمان</p>
                         <p class="text-[10px] text-slate-400">وارد حساب خود شوید</p>
