@@ -121,7 +121,7 @@
                         <span class="material-icons">brightness_7</span>
                     </button>
 
-                    <div>
+                    <div class="hidden lg:block">
                         <h1 class="text-base font-semibold text-slate lg:text-lg">{{ $title }}</h1>
                         <p class="text-xs text-slate">مسیر: <span class="admin-breadcrumb">{{ request()->path() }}</span></p>
                     </div>
