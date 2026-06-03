@@ -19,6 +19,10 @@
                 <span class="material-icons text-base">science</span>
                 <span>تست User-Agent</span>
             </button>
+            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
+                <span class="material-icons text-base">help_outline</span>
+                <span>راهنما</span>
+            </button>
         </div>
     </div>
 
@@ -393,7 +397,70 @@
         </form>
     </div>
 
+    <div id="tab-help" class="tab-content hidden">
+        <div class="flex gap-6 items-start">
+            <div class="flex-1 min-w-0">
+                <div class="admin-card space-y-6">
+                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
+                        <span class="material-icons text-2xl text-primary">help_outline</span>
+                        <h2 class="font-bold text-slate text-lg">راهنمای کامل ماژول هوشمندی بازدیدکنندگان</h2>
+                    </div>
+
+                    <div class="space-y-8 text-sm text-slate leading-7">
+                        <section id="doc-robot-detection">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">smart_toy</span>
+                                تشخیص ربات و خزنده‌ها
+                            </h3>
+                            <p>سیستم تشخیص ربات بازدیدکنندگان بر اساس دو روش کار می‌کند: الگوهای Regex و ASNهای معتبر.</p>
+                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
+                                <h4 class="font-bold text-slate mb-2">روش‌های تشخیص</h4>
+                                <ul class="list-disc list-inside space-y-1 mr-4">
+                                    <li><b>الگوهای Regex:</b> User-Agent را علیه الگوهای تعریف شده بررسی می‌کند</li>
+                                    <li><b>ASNها:</b> IPهای معتبر سامانه‌های بزرگ (گوگل، مایکروسافت، ...) را بر اساس شماره ASN تشخیص می‌دهد</li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-asn">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">lan</span>
+                                بررسی ASNها
+                            </h3>
+                            <p>ASNهای معتبر می‌توانند به صورت دسته‌جمعی از سرویس‌های IPinfo یا Whois دریافت شوند.</p>
+                        </section>
+
+                        <hr class="border-slate/10">
+
+                        <section id="doc-test">
+                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
+                                <span class="material-icons text-primary text-lg">science</span>
+                                تست User-Agent
+                            </h3>
+                            <p>می‌توانید User-Agent دلخواه را وارد کنید تا سیستم تشخیص آن را بررسی کند.</p>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="hidden lg:block w-64 shrink-0">
+                <div class="admin-card !p-4 sticky top-4">
+                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
+                    <nav class="space-y-1">
+                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
+                        <a href="#doc-robot-detection" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">تشخیص ربات</a>
+                        <a href="#doc-asn" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">بررسی ASNها</a>
+                        <a href="#doc-test" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">تست User-Agent</a>
+                        <a href="#doc-security" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">نکات امنیتی</a>
+                    </nav>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+</x-layouts.admin-dashboard>
     @push('scripts')
         @vite('resources/js/admin-visitor-intelligence.js')
     @endpush
-</x-layouts.admin-dashboard>
