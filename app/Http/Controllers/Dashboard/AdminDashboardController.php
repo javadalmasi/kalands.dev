@@ -4,47 +4,55 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTicketMessageRequest;
+use App\Jobs\Sitemap\ProcessSitemapChunkJob;
 use App\Mail\GenericTemplateMail;
 use App\Models\Admin;
+use App\Models\AffiliateDailyStat;
 use App\Models\AffiliateLink;
+use App\Models\AiUsageLog;
+use App\Models\ArtisanExecutionLog;
+use App\Models\Category;
+use App\Models\CategoryMapping;
 use App\Models\Comment;
 use App\Models\ContactMessage;
 use App\Models\Faq;
-use App\Models\ArtisanExecutionLog;
-use App\Models\QueueExecutionLog;
 use App\Models\Permission;
+use App\Models\Product;
+use App\Models\QueueExecutionLog;
 use App\Models\Role;
+use App\Models\SitemapRunLog;
 use App\Models\Ticket;
 use App\Models\TicketCategory;
 use App\Models\User;
 use App\Repositories\SettingsRepository;
-use App\Services\Admin\FileManagerStorageService;
 use App\Services\ActivityLogger;
+use App\Services\Admin\FileManagerStorageService;
 use App\Services\Auth\PasswordHashService;
+use App\Services\CategoryMappingService;
+use App\Services\CategoryService;
+use App\Services\CategoryVectorService;
 use App\Services\Communication\ChannelSettingsResolver;
 use App\Services\EmailTemplateService;
 use App\Services\GeoIPService;
-use App\Services\VisitorIntelligenceService;
 use App\Services\InternalAnalyticsService;
 use App\Services\Slider\HomeCategoryBannerStorage;
 use App\Services\Slider\HomeItemsPayloadStorage;
 use App\Services\Slider\SliderStorage;
-use App\Services\CategoryService;
-use App\Services\CategoryMappingService;
-use App\Models\Category;
-use App\Models\CategoryMapping;
+use App\Services\VisitorIntelligenceService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class AdminDashboardController extends Controller
@@ -52,6 +60,7 @@ class AdminDashboardController extends Controller
     public function visitorIntelligenceHub(VisitorIntelligenceService $service)
     {
         $config = $service->getConfig();
+
         return view('dash.admin.visitor-intelligence-hub', compact('config'));
     }
 
@@ -67,8 +76,9 @@ class AdminDashboardController extends Controller
         $isRobot = false;
         if ($pattern) {
             try {
-                $isRobot = (bool) preg_match('/' . $pattern . '/i', $data['user_agent']);
-            } catch (\Throwable $e) {}
+                $isRobot = (bool) preg_match('/'.$pattern.'/i', $data['user_agent']);
+            } catch (\Throwable $e) {
+            }
         }
 
         return response()->json([
@@ -200,14 +210,15 @@ class AdminDashboardController extends Controller
             });
 
         if ($request->ajax()) {
-            $users = $usersQuery->latest()->limit(10)->get()->map(function($u) {
+            $users = $usersQuery->latest()->limit(10)->get()->map(function ($u) {
                 return [
                     'id' => $u->id,
                     'name' => $u->name,
                     'email' => $u->email,
-                    'phone' => $u->phone
+                    'phone' => $u->phone,
                 ];
             });
+
             return response()->json(['data' => $users]);
         }
 
@@ -215,7 +226,7 @@ class AdminDashboardController extends Controller
             ->when($sort === 'oldest', fn ($query) => $query->oldest())
             ->when($sort === 'name_asc', fn ($query) => $query->orderBy('first_name')->orderBy('last_name'))
             ->when($sort === 'name_desc', fn ($query) => $query->orderByDesc('first_name')->orderByDesc('last_name'))
-            ->when(!in_array($sort, ['oldest', 'name_asc', 'name_desc'], true), fn ($query) => $query->latest())
+            ->when(! in_array($sort, ['oldest', 'name_asc', 'name_desc'], true), fn ($query) => $query->latest())
             ->paginate(20);
 
         return view('dash.admin.users', compact('users', 'q', 'sort'));
@@ -252,7 +263,7 @@ class AdminDashboardController extends Controller
             'is_active' => (bool) $data['is_active'],
         ]);
 
-        if (!empty($data['roles'])) {
+        if (! empty($data['roles'])) {
             $user->syncRoles($data['roles']);
         }
 
@@ -411,7 +422,7 @@ class AdminDashboardController extends Controller
             'is_active' => true,
         ]);
 
-        if (!empty($data['roles'])) {
+        if (! empty($data['roles'])) {
             $admin->syncRoles($data['roles']);
         }
 
@@ -422,7 +433,7 @@ class AdminDashboardController extends Controller
 
     public function updateAdmin(string $authkey, Request $request, Admin $admin, ActivityLogger $activityLogger): RedirectResponse
     {
-        if (auth('admin')->id() === $admin->id && !auth('admin')->user()->hasPermission('roles.full')) {
+        if (auth('admin')->id() === $admin->id && ! auth('admin')->user()->hasPermission('roles.full')) {
             return back()->withErrors('امکان ویرایش این بخش برای ادمین فعلی محدود شده است.');
         }
 
@@ -460,12 +471,14 @@ class AdminDashboardController extends Controller
     public function roles()
     {
         $roles = Role::withCount(['admins', 'users'])->get();
+
         return view('dash.admin.roles', compact('roles'));
     }
 
     public function createRole()
     {
         $permissions = Permission::all()->groupBy('module');
+
         return view('dash.admin.roles-edit', compact('permissions'));
     }
 
@@ -483,7 +496,7 @@ class AdminDashboardController extends Controller
             'label' => $data['label'],
         ]);
 
-        if (!empty($data['permissions'])) {
+        if (! empty($data['permissions'])) {
             $role->permissions()->sync($data['permissions']);
         }
 
@@ -497,13 +510,14 @@ class AdminDashboardController extends Controller
     {
         $permissions = Permission::all()->groupBy('module');
         $rolePermissions = $role->permissions->pluck('id')->toArray();
+
         return view('dash.admin.roles-edit', compact('role', 'permissions', 'rolePermissions'));
     }
 
     public function updateRole(string $authkey, Request $request, Role $role, ActivityLogger $activityLogger): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'max:100', 'unique:roles,name,' . $role->id],
+            'name' => ['required', 'max:100', 'unique:roles,name,'.$role->id],
             'label' => ['required', 'max:100'],
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['exists:permissions,id'],
@@ -558,7 +572,7 @@ class AdminDashboardController extends Controller
         $lastRuns = QueueExecutionLog::query()->latest('executed_at')->limit(100)->get();
 
         $driverStatus = [
-            'database' => \Illuminate\Support\Facades\Schema::hasTable('jobs'),
+            'database' => Schema::hasTable('jobs'),
             'redis' => extension_loaded('redis'),
         ];
 
@@ -609,6 +623,7 @@ class AdminDashboardController extends Controller
     public function smtpGeneral(SettingsRepository $settingsRepository)
     {
         $settings = $settingsRepository->get('smtp.general', []);
+
         return view('dash.admin.smtp-general', compact('settings'));
     }
 
@@ -633,6 +648,7 @@ class AdminDashboardController extends Controller
     public function smtpTransactional(SettingsRepository $settingsRepository)
     {
         $settings = $settingsRepository->get('smtp.transactional', []);
+
         return view('dash.admin.smtp-transactional', compact('settings'));
     }
 
@@ -657,6 +673,7 @@ class AdminDashboardController extends Controller
     public function smsConfig(SettingsRepository $settingsRepository)
     {
         $settings = $settingsRepository->get('sms.melipayamak', []);
+
         return view('dash.admin.sms-config', compact('settings'));
     }
 
@@ -831,6 +848,14 @@ class AdminDashboardController extends Controller
                 'permission' => 'dashboard.view',
                 'category' => 'data',
             ],
+            [
+                'key' => 'sitemap',
+                'label' => 'مدیریت سایت مپ',
+                'description' => 'تولید خودکار sitemap.xml با پشتیبانی از ایندکس چندبخشی، فشرده‌سازی gzip و پردازش افزایشی',
+                'icon' => 'map',
+                'permission' => 'dashboard.view',
+                'category' => 'technical',
+            ],
         ];
 
         $settings = [
@@ -862,7 +887,7 @@ class AdminDashboardController extends Controller
             $fileExplorer = $fileManager->browse('');
         }
 
-        $modules = collect($modules)->filter(function($m) {
+        $modules = collect($modules)->filter(function ($m) {
             return auth('admin')->user()->hasPermission($m['permission']);
         })->values()->toArray();
 
@@ -909,12 +934,13 @@ class AdminDashboardController extends Controller
             'visitor_intelligence' => ['label' => 'هوشمندی بازدیدکنندگان', 'description' => 'مدیریت الگوهای تشخیص ربات، خزنده‌ها و ASNهای معتبر', 'icon' => 'psychology', 'permission' => 'geoip.full'],
             'artisan_commands' => ['label' => 'دستورات Artisan', 'description' => 'اجرای دستورات کاربردی Artisan مانند پاکسازی کش، اجرای migration و ...', 'icon' => 'terminal', 'permission' => 'dashboard.view'],
             'categories' => ['label' => 'مدیریت دسته‌بندی‌ها', 'description' => 'مدیریت درخت دسته‌بندی محصولات و نگاشت هوشمند', 'icon' => 'category', 'permission' => 'dashboard.view'],
+            'sitemap' => ['label' => 'مدیریت سایت مپ', 'description' => 'تولید خودکار sitemap.xml با پشتیبانی از ایندکس چندبخشی، فشرده‌سازی gzip و پردازش افزایشی', 'icon' => 'map', 'permission' => 'dashboard.view'],
         ];
 
         abort_unless(isset($modules[$moduleKey]), 404);
 
         if (isset($modules[$moduleKey]['permission'])) {
-            if (!auth('admin')->user()->hasPermission($modules[$moduleKey]['permission'])) {
+            if (! auth('admin')->user()->hasPermission($modules[$moduleKey]['permission'])) {
                 abort(403, 'شما دسترسی لازم برای مشاهده این ماژول را ندارید.');
             }
         }
@@ -1032,7 +1058,7 @@ class AdminDashboardController extends Controller
         }
 
         if ($moduleKey === 'visitor_intelligence') {
-            return $this->visitorIntelligenceHub(app(\App\Services\VisitorIntelligenceService::class));
+            return $this->visitorIntelligenceHub(app(VisitorIntelligenceService::class));
         }
 
         if ($moduleKey === 'artisan_commands') {
@@ -1041,6 +1067,10 @@ class AdminDashboardController extends Controller
 
         if ($moduleKey === 'categories') {
             return $this->categoriesHub($request);
+        }
+
+        if ($moduleKey === 'sitemap') {
+            return $this->sitemapHub();
         }
 
         return view('dash.admin.module-settings', [
@@ -1071,6 +1101,7 @@ class AdminDashboardController extends Controller
         $settings = $settingsRepository->get('file_manager.storage', ['enabled' => true, 'root_path' => 'uploads']);
         $service = new FileManagerStorageService($settings);
         $service->createDirectory((string) ($data['path'] ?? ''), (string) $data['name']);
+
         return response()->json(['ok' => true]);
     }
 
@@ -1131,6 +1162,7 @@ class AdminDashboardController extends Controller
     public function syncAllCategories(CategoryMappingService $mappingService): JsonResponse
     {
         $count = $mappingService->syncAll();
+
         return response()->json(['ok' => true, 'count' => $count]);
     }
 
@@ -1138,15 +1170,16 @@ class AdminDashboardController extends Controller
     {
         $mappings = CategoryMapping::with(['digikalaCategory', 'sourceCategory'])->get();
 
-        $linked = $mappings->groupBy('digikala_category_id')->map(function($group) {
+        $linked = $mappings->groupBy('digikala_category_id')->map(function ($group) {
             $dk = $group->first()->digikalaCategory;
+
             return [
                 'digikala' => $dk,
-                'links' => $group->map(fn($m) => [
+                'links' => $group->map(fn ($m) => [
                     'category' => $m->sourceCategory,
                     'confidence' => $m->confidence,
-                    'is_manual' => $m->is_manual
-                ])
+                    'is_manual' => $m->is_manual,
+                ]),
             ];
         })->values();
 
@@ -1206,7 +1239,6 @@ class AdminDashboardController extends Controller
 
         return response()->json(['ok' => true, 'path' => $newPath]);
     }
-
 
     public function saveSmsConfig(Request $request, SettingsRepository $settingsRepository, ActivityLogger $activityLogger): RedirectResponse
     {
@@ -1323,6 +1355,7 @@ class AdminDashboardController extends Controller
             'phone' => ['nullable', 'regex:/^09[0-9]{9}$/'],
         ]);
         $settingsRepository->set('communication.test_defaults', $data);
+
         return back()->with('message', 'مقادیر پیش‌فرض تست ذخیره شد.');
     }
 
@@ -1334,9 +1367,11 @@ class AdminDashboardController extends Controller
             $mailable = new GenericTemplateMail('تست SMTP عمومی', '<p>ارسال آزمایشی SMTP عمومی موفق بود.</p>');
             $mailable->shouldQueue = false;
             Mail::mailer('smtp')->to($data['to'])->send($mailable);
+
             return response()->json(['ok' => true, 'message' => 'ایمیل تست SMTP عمومی ارسال شد.']);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('SMTP General Test Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('SMTP General Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
             return response()->json(['ok' => false, 'error' => 'ارسال ایمیل تست با خطا مواجه شد.'], 500);
         }
     }
@@ -1349,9 +1384,11 @@ class AdminDashboardController extends Controller
             $mailable = new GenericTemplateMail('تست SMTP تراکنشی', '<p>ارسال آزمایشی SMTP تراکنشی موفق بود.</p>');
             $mailable->shouldQueue = false;
             Mail::mailer('smtp')->to($data['to'])->send($mailable);
+
             return response()->json(['ok' => true, 'message' => 'ایمیل تست SMTP تراکنشی ارسال شد.']);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('SMTP Transactional Test Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('SMTP Transactional Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
             return response()->json(['ok' => false, 'error' => 'ارسال ایمیل تست با خطا مواجه شد.'], 500);
         }
     }
@@ -1365,7 +1402,7 @@ class AdminDashboardController extends Controller
         try {
             $config = $channelSettingsResolver->resolveSms();
             $token = $config['api_token'] ?? null;
-            if (!$token) {
+            if (! $token) {
                 throw new \Exception('توکن پیامک تنظیم نشده است.');
             }
             $endpoint = rtrim((string) ($config['endpoint'] ?? 'https://console.melipayamak.com/api/send/otp'), '/');
@@ -1376,12 +1413,13 @@ class AdminDashboardController extends Controller
             ]);
 
             if ($response->failed()) {
-                throw new \Exception('خطا در فراخوانی وب‌سرویس: ' . $response->body());
+                throw new \Exception('خطا در فراخوانی وب‌سرویس: '.$response->body());
             }
 
             return response()->json(['ok' => true, 'message' => 'پیامک تست ارسال شد.']);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('SMS Test Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('SMS Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
             return response()->json(['ok' => false, 'error' => 'ارسال پیامک تست با خطا مواجه شد.'], 500);
         }
     }
@@ -1410,6 +1448,7 @@ class AdminDashboardController extends Controller
         ]);
         $settingsRepository->set('email.templates.layout', $data);
         $activityLogger->log('settings.email.templates.layout.update', auth('admin')->user(), 'بروزرسانی هدر و فوتر تمپلیت ایمیل');
+
         return back()->with('message', 'هدر/فوتر ایمیل ذخیره شد.');
     }
 
@@ -1432,6 +1471,7 @@ class AdminDashboardController extends Controller
     {
         abort_unless($emailTemplateService->has($key), 404);
         $preview = $emailTemplateService->render($key, $emailTemplateService->sampleVariables($key));
+
         return response($preview['html']);
     }
 
@@ -1440,13 +1480,13 @@ class AdminDashboardController extends Controller
         return redirect()->route('dash.admin.modules.show', [
             'authkey' => request()->route('authkey'),
             'moduleKey' => 'comments',
-            'tab' => 'tab-moderation'
+            'tab' => 'tab-moderation',
         ]);
     }
 
     public function setCommentStatus(string $authkey, Comment $comment, string $status, ActivityLogger $activityLogger): RedirectResponse
     {
-        if (!in_array($status, [Comment::STATUS_APPROVED, Comment::STATUS_REJECTED, Comment::STATUS_SPAM], true)) {
+        if (! in_array($status, [Comment::STATUS_APPROVED, Comment::STATUS_REJECTED, Comment::STATUS_SPAM], true)) {
             abort(422);
         }
 
@@ -1515,7 +1555,7 @@ class AdminDashboardController extends Controller
 
     public function toggleTicketCategory(string $authkey, TicketCategory $category, ActivityLogger $activityLogger): RedirectResponse
     {
-        $category->update(['is_active' => !$category->is_active]);
+        $category->update(['is_active' => ! $category->is_active]);
         $activityLogger->log('admin.ticket.category.toggle', auth('admin')->user(), 'تغییر وضعیت دسته‌بندی تیکت', [
             'category_id' => $category->id,
             'is_active' => $category->is_active,
@@ -1529,6 +1569,7 @@ class AdminDashboardController extends Controller
         $ticket->load(['user', 'category', 'messages.user', 'messages.admin']);
         $blockedUsers = $settingsRepository->get('tickets.blocked_users', []);
         $isUserBlocked = in_array($ticket->user_id, $blockedUsers);
+
         return view('dash.admin.ticket-show', compact('ticket', 'isUserBlocked'));
     }
 
@@ -1572,7 +1613,7 @@ class AdminDashboardController extends Controller
             ->when(in_array($status, ['open', 'answered', 'closed', 'spam'], true), fn ($query) => $query->where('status', $status))
             ->when($sort === 'latest', fn ($query) => $query->latest())
             ->when($sort === 'oldest', fn ($query) => $query->oldest())
-            ->when(!in_array($sort, ['latest', 'oldest'], true), fn ($query) => $query->oldest())
+            ->when(! in_array($sort, ['latest', 'oldest'], true), fn ($query) => $query->oldest())
             ->paginate(20, ['*'], 'tickets_page')
             ->withQueryString();
 
@@ -1653,6 +1694,7 @@ class AdminDashboardController extends Controller
         ]);
 
         $activityLogger->log('admin.faq.create', auth('admin')->user(), 'ایجاد آیتم سوالات متداول', ['faq_id' => $faq->id]);
+
         return back()->with('message', 'سوال متداول جدید ایجاد شد.');
     }
 
@@ -1691,6 +1733,7 @@ class AdminDashboardController extends Controller
         ]);
 
         $activityLogger->log('admin.faq.update', auth('admin')->user(), 'ویرایش آیتم سوالات متداول', ['faq_id' => $faq->id]);
+
         return back()->with('message', 'سوال متداول بروزرسانی شد.');
     }
 
@@ -1722,8 +1765,9 @@ class AdminDashboardController extends Controller
 
     public function toggleFaq(string $authkey, Faq $faq, ActivityLogger $activityLogger): RedirectResponse
     {
-        $faq->update(['is_active' => !$faq->is_active]);
+        $faq->update(['is_active' => ! $faq->is_active]);
         $activityLogger->log('admin.faq.toggle', auth('admin')->user(), 'تغییر وضعیت آیتم سوالات متداول', ['faq_id' => $faq->id, 'is_active' => $faq->is_active]);
+
         return back()->with('message', 'وضعیت سوال متداول تغییر کرد.');
     }
 
@@ -1732,6 +1776,7 @@ class AdminDashboardController extends Controller
         $faqId = $faq->id;
         $faq->delete();
         $activityLogger->log('admin.faq.delete', auth('admin')->user(), 'حذف آیتم سوالات متداول', ['faq_id' => $faqId]);
+
         return back()->with('message', 'سوال متداول حذف شد.');
     }
 
@@ -1745,16 +1790,16 @@ class AdminDashboardController extends Controller
         $blockedUsers = $settingsRepository->get('tickets.blocked_users', []);
 
         if ($data['action'] === 'block') {
-            if (!in_array($data['user_id'], $blockedUsers)) {
+            if (! in_array($data['user_id'], $blockedUsers)) {
                 $blockedUsers[] = $data['user_id'];
             }
         } else {
-            $blockedUsers = array_values(array_filter($blockedUsers, fn($id) => $id != $data['user_id']));
+            $blockedUsers = array_values(array_filter($blockedUsers, fn ($id) => $id != $data['user_id']));
         }
 
         $settingsRepository->set('tickets.blocked_users', $blockedUsers);
 
-        $activityLogger->log('admin.ticket.user.' . $data['action'], auth('admin')->user(), ($data['action'] === 'block' ? 'مسدود' : 'آزاد') . ' کردن کاربر از ارسال تیکت', [
+        $activityLogger->log('admin.ticket.user.'.$data['action'], auth('admin')->user(), ($data['action'] === 'block' ? 'مسدود' : 'آزاد').' کردن کاربر از ارسال تیکت', [
             'user_id' => $data['user_id'],
         ]);
 
@@ -1795,7 +1840,7 @@ class AdminDashboardController extends Controller
             ->when($read === 'unread', fn ($query) => $query->where('is_read', false))
             ->when($sort === 'oldest', fn ($query) => $query->oldest())
             ->when($sort === 'subject', fn ($query) => $query->orderBy('subject'))
-            ->when(!in_array($sort, ['oldest', 'subject'], true), fn ($query) => $query->latest())
+            ->when(! in_array($sort, ['oldest', 'subject'], true), fn ($query) => $query->latest())
             ->paginate(15)
             ->withQueryString();
 
@@ -1836,7 +1881,7 @@ class AdminDashboardController extends Controller
         return redirect()->route('dash.admin.modules.show', [
             'authkey' => request()->route('authkey'),
             'moduleKey' => 'contact',
-            'tab' => 'tab-messages'
+            'tab' => 'tab-messages',
         ]);
     }
 
@@ -1917,7 +1962,7 @@ class AdminDashboardController extends Controller
         return redirect()->route('dash.admin.modules.show', [
             'authkey' => request()->route('authkey'),
             'moduleKey' => 'contact',
-            'tab' => 'tab-settings'
+            'tab' => 'tab-settings',
         ]);
     }
 
@@ -1970,7 +2015,7 @@ class AdminDashboardController extends Controller
             })
             ->when($sort === 'oldest', fn ($query) => $query->oldest())
             ->when($sort === 'status', fn ($query) => $query->orderBy('status')->latest())
-            ->when(!in_array($sort, ['oldest', 'status'], true), fn ($query) => $query->latest())
+            ->when(! in_array($sort, ['oldest', 'status'], true), fn ($query) => $query->latest())
             ->paginate(30, ['*'], 'comments_page')
             ->withQueryString();
 
@@ -1981,7 +2026,7 @@ class AdminDashboardController extends Controller
 
         // Report logic: count comments per product
         $reports = Comment::query()
-            ->select('product_id', \Illuminate\Support\Facades\DB::raw('count(*) as comments_count'))
+            ->select('product_id', DB::raw('count(*) as comments_count'))
             ->groupBy('product_id')
             ->with('product')
             ->orderByDesc('comments_count')
@@ -2026,7 +2071,7 @@ class AdminDashboardController extends Controller
         $links = AffiliateLink::query()
             ->when($q, function ($query) use ($q) {
                 $query->where('product_id', 'like', "%{$q}%")
-                      ->orWhere('slug', 'like', "%{$q}%");
+                    ->orWhere('slug', 'like', "%{$q}%");
             })
             ->when($store !== 'all', fn ($query) => $query->where('store', $store))
             ->when($sort === 'oldest', fn ($query) => $query->oldest())
@@ -2040,30 +2085,30 @@ class AdminDashboardController extends Controller
         $endDate = $request->input('end_date', now()->toDateString());
         $groupBy = $request->input('group_by', 'day'); // day, week, month
 
-        $statsQuery = \App\Models\AffiliateDailyStat::query()
+        $statsQuery = AffiliateDailyStat::query()
             ->whereBetween('date', [$startDate, $endDate])
             ->orderBy('date');
 
         if ($groupBy === 'month') {
             $dailyStats = $statsQuery->get()
-                ->groupBy(fn($s) => $s->date->format('Y-m'))
-                ->map(fn($group) => [
+                ->groupBy(fn ($s) => $s->date->format('Y-m'))
+                ->map(fn ($group) => [
                     'date' => $group->first()->date->format('Y-m'),
                     'basalam' => $group->where('store', 'basalam')->sum('clicks'),
                     'digikala' => $group->where('store', 'digikala')->sum('clicks'),
                 ]);
         } elseif ($groupBy === 'week') {
             $dailyStats = $statsQuery->get()
-                ->groupBy(fn($s) => $s->date->format('Y-W'))
-                ->map(fn($group) => [
-                    'date' => 'هفته ' . $group->first()->date->format('W') . ' (' . $group->first()->date->format('Y') . ')',
+                ->groupBy(fn ($s) => $s->date->format('Y-W'))
+                ->map(fn ($group) => [
+                    'date' => 'هفته '.$group->first()->date->format('W').' ('.$group->first()->date->format('Y').')',
                     'basalam' => $group->where('store', 'basalam')->sum('clicks'),
                     'digikala' => $group->where('store', 'digikala')->sum('clicks'),
                 ]);
         } else {
-             $dailyStats = $statsQuery->get()
-                ->groupBy(fn($s) => $s->date->toDateString())
-                ->map(fn($group) => [
+            $dailyStats = $statsQuery->get()
+                ->groupBy(fn ($s) => $s->date->toDateString())
+                ->map(fn ($group) => [
                     'date' => $group->first()->date->toDateString(),
                     'basalam' => $group->where('store', 'basalam')->sum('clicks'),
                     'digikala' => $group->where('store', 'digikala')->sum('clicks'),
@@ -2093,7 +2138,7 @@ class AdminDashboardController extends Controller
         $settings = $settingsRepository->get($key, []);
 
         return response()->json($settings, 200, [
-            'Content-Disposition' => 'attachment; filename="affiliate-' . $type . '-settings.json"',
+            'Content-Disposition' => 'attachment; filename="affiliate-'.$type.'-settings.json"',
         ]);
     }
 
@@ -2113,7 +2158,7 @@ class AdminDashboardController extends Controller
         $key = ($type === 'basalam') ? 'affiliate.basalam' : 'affiliate.general';
         $settingsRepository->set($key, $data, $type === 'basalam');
 
-        $activityLogger->log('settings.affiliate.import', auth('admin')->user(), 'وارد کردن تنظیمات افیلیت ' . $type);
+        $activityLogger->log('settings.affiliate.import', auth('admin')->user(), 'وارد کردن تنظیمات افیلیت '.$type);
 
         return back()->with('message', 'تنظیمات با موفقیت وارد شد.');
     }
@@ -2144,11 +2189,11 @@ class AdminDashboardController extends Controller
     public function exportAffiliateLinks(string $authkey)
     {
         $links = AffiliateLink::all();
-        $stats = \App\Models\AffiliateDailyStat::all();
+        $stats = AffiliateDailyStat::all();
 
         return response()->json([
             'links' => $links,
-            'daily_stats' => $stats
+            'daily_stats' => $stats,
         ], 200, [
             'Content-Disposition' => 'attachment; filename="affiliate-links-and-stats-backup.json"',
         ]);
@@ -2178,7 +2223,7 @@ class AdminDashboardController extends Controller
             AffiliateLink::query()->updateOrCreate(
                 ['product_id' => $item['product_id'], 'store' => $item['store'] ?? 'basalam'],
                 [
-                    'slug' => $item['slug'] ?? ('b' . base_convert($item['product_id'], 10, 36)),
+                    'slug' => $item['slug'] ?? ('b'.base_convert($item['product_id'], 10, 36)),
                     'link' => $item['link'] ?? '',
                     'click_count' => $item['click_count'] ?? 0,
                     'status' => $item['status'] ?? 'active',
@@ -2187,8 +2232,10 @@ class AdminDashboardController extends Controller
         }
 
         foreach ($stats as $stat) {
-            if (!isset($stat['date']) || !isset($stat['store'])) continue;
-            \App\Models\AffiliateDailyStat::query()->updateOrCreate(
+            if (! isset($stat['date']) || ! isset($stat['store'])) {
+                continue;
+            }
+            AffiliateDailyStat::query()->updateOrCreate(
                 ['date' => $stat['date'], 'store' => $stat['store']],
                 ['clicks' => $stat['clicks'] ?? 0]
             );
@@ -2206,9 +2253,9 @@ class AdminDashboardController extends Controller
         $store = (string) $request->input('store', 'all');
         $status = (string) $request->input('status', 'all');
 
-        $products = \App\Models\Product::query()
+        $products = Product::query()
             ->when($q, function ($query) use ($q) {
-                $query->where(function($sub) use ($q) {
+                $query->where(function ($sub) use ($q) {
                     $sub->where('id', 'like', "%{$q}%")
                         ->orWhere('title', 'like', "%{$q}%");
                 });
@@ -2233,9 +2280,9 @@ class AdminDashboardController extends Controller
         return view('dash.admin.products.checker', compact('authkey'));
     }
 
-    public function toggleProductStatus(string $authkey, Request $request, \App\Models\Product $product, ActivityLogger $activityLogger): RedirectResponse|JsonResponse
+    public function toggleProductStatus(string $authkey, Request $request, Product $product, ActivityLogger $activityLogger): RedirectResponse|JsonResponse
     {
-        $product->update(['is_active' => !$product->is_active]);
+        $product->update(['is_active' => ! $product->is_active]);
         $activityLogger->log('admin.product.toggle', auth('admin')->user(), 'تغییر وضعیت فعال‌بودن محصول', [
             'product_id' => $product->id,
             'is_active' => $product->is_active,
@@ -2262,9 +2309,9 @@ class AdminDashboardController extends Controller
 
         $ids = $data['product_ids'];
         if ($data['action'] === 'delete') {
-            \App\Models\Product::query()->whereIn('id', $ids)->delete();
+            Product::query()->whereIn('id', $ids)->delete();
         } else {
-            \App\Models\Product::query()->whereIn('id', $ids)->update(['is_active' => $data['action'] === 'activate']);
+            Product::query()->whereIn('id', $ids)->update(['is_active' => $data['action'] === 'activate']);
         }
 
         $activityLogger->log('admin.product.bulk', auth('admin')->user(), 'اقدام گروهی روی محصولات', [
@@ -2277,7 +2324,8 @@ class AdminDashboardController extends Controller
 
     public function getDigikalaIdsForCheck(string $authkey): JsonResponse
     {
-        $ids = \App\Models\Product::where('store', 'digikala')->pluck('id');
+        $ids = Product::where('store', 'digikala')->pluck('id');
+
         return response()->json(['ok' => true, 'ids' => $ids]);
     }
 
@@ -2295,20 +2343,22 @@ class AdminDashboardController extends Controller
         $curlHandles = [];
 
         foreach ($ids as $id) {
-            $product = \App\Models\Product::find($id);
-            if ($product->store !== 'digikala') continue;
+            $product = Product::find($id);
+            if ($product->store !== 'digikala') {
+                continue;
+            }
 
             $ch = curl_init();
             // Using the same backend as in ProductController::DigikalaApi
-            $backend = "89.42.44.25/api/3600";
-            $url = "http://" . $backend . "/v2/product/" . $id . "/";
+            $backend = '89.42.44.25/api/3600';
+            $url = 'http://'.$backend.'/v2/product/'.$id.'/';
 
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, 10);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Host: bws.kalands.ir',
-                'User-Agent: ' . $request->header('user-agent'),
+                'User-Agent: '.$request->header('user-agent'),
             ]);
 
             curl_multi_add_handle($multiCurl, $ch);
@@ -2337,7 +2387,7 @@ class AdminDashboardController extends Controller
             $decoded = json_decode($responseBody, true);
 
             if ($decoded) {
-                $product = \App\Models\Product::find($id);
+                $product = Product::find($id);
                 $isInactive = (bool) ($decoded['data']['product']['is_inactive'] ?? false);
 
                 $updateData = [
@@ -2353,7 +2403,7 @@ class AdminDashboardController extends Controller
 
                 $results[$id] = [
                     'ok' => true,
-                    'is_inactive' => $isInactive
+                    'is_inactive' => $isInactive,
                 ];
             } else {
                 $results[$id] = ['ok' => false];
@@ -2386,12 +2436,12 @@ class AdminDashboardController extends Controller
         $dbFiles = ['GeoLite2-ASN.mmdb', 'GeoLite2-Country.mmdb'];
 
         foreach ($dbFiles as $file) {
-            $path = $geoipPath . '/' . $file;
+            $path = $geoipPath.'/'.$file;
             if (file_exists($path)) {
                 $filesInfo[$file] = [
                     'exists' => true,
-                    'size' => round(filesize($path) / (1024 * 1024), 2) . ' MB',
-                    'updated_at' => date("Y-m-d H:i:s", filemtime($path)),
+                    'size' => round(filesize($path) / (1024 * 1024), 2).' MB',
+                    'updated_at' => date('Y-m-d H:i:s', filemtime($path)),
                 ];
             } else {
                 $filesInfo[$file] = ['exists' => false];
@@ -2406,7 +2456,7 @@ class AdminDashboardController extends Controller
         $result = $geoIPService->updateDatabases();
 
         $activityLogger->log('admin.geoip.update', auth('admin')->user(), 'بروزرسانی دستی دیتابیس GeoIP', [
-            'success' => $result['success']
+            'success' => $result['success'],
         ]);
 
         if ($result['success']) {
@@ -2442,7 +2492,7 @@ class AdminDashboardController extends Controller
 
             return back()->with('message', 'فایل robots.txt با موفقیت ذخیره شد.');
         } catch (\Throwable $e) {
-            return back()->withErrors('خطا در ذخیره فایل: ' . $e->getMessage());
+            return back()->withErrors('خطا در ذخیره فایل: '.$e->getMessage());
         }
     }
 
@@ -2465,6 +2515,7 @@ class AdminDashboardController extends Controller
             $line = trim($line);
             if (empty($line) || str_starts_with($line, '#')) {
                 $results[] = ['line' => $line, 'status' => 'neutral'];
+
                 continue;
             }
 
@@ -2472,6 +2523,7 @@ class AdminDashboardController extends Controller
                 $agentName = trim(substr($line, 11));
                 $currentAgents[] = $agentName;
                 $results[] = ['line' => $line, 'status' => 'neutral'];
+
                 continue;
             }
 
@@ -2501,7 +2553,7 @@ class AdminDashboardController extends Controller
                     $relevantDirectives[] = [
                         'type' => $type,
                         'pathPattern' => $value,
-                        'lineIndex' => $index
+                        'lineIndex' => $index,
                     ];
                     $results[] = ['line' => $line, 'status' => 'pending'];
                 } else {
@@ -2510,16 +2562,16 @@ class AdminDashboardController extends Controller
             } else {
                 $results[] = ['line' => $line, 'status' => 'neutral'];
             }
-            
-            if (isset($lines[$index + 1]) && stripos(trim($lines[$index+1]), 'User-agent:') === 0) {
-                 $currentAgents = [];
+
+            if (isset($lines[$index + 1]) && stripos(trim($lines[$index + 1]), 'User-agent:') === 0) {
+                $currentAgents = [];
             }
         }
 
-        $testPath = '/' . ltrim($data['path'], '/');
+        $testPath = '/'.ltrim($data['path'], '/');
         $finalStatus = 'allowed';
-        
-        usort($relevantDirectives, function($a, $b) {
+
+        usort($relevantDirectives, function ($a, $b) {
             return strlen($b['pathPattern']) - strlen($a['pathPattern']);
         });
 
@@ -2527,11 +2579,11 @@ class AdminDashboardController extends Controller
         foreach ($relevantDirectives as $directive) {
             $pattern = $directive['pathPattern'];
             $regex = str_replace(['/', '*', '$'], ['\/', '.*', '$'], $pattern);
-            if (!str_contains($pattern, '*')) {
-                 $regex = '^' . $regex;
+            if (! str_contains($pattern, '*')) {
+                $regex = '^'.$regex;
             }
-            
-            if (preg_match('/' . $regex . '/', $testPath)) {
+
+            if (preg_match('/'.$regex.'/', $testPath)) {
                 if ($matchedLineIndex === -1) {
                     $matchedLineIndex = $directive['lineIndex'];
                     $finalStatus = $directive['type'] === 'allow' ? 'allowed' : 'disallowed';
@@ -2546,7 +2598,7 @@ class AdminDashboardController extends Controller
             'ok' => true,
             'final_status' => $finalStatus,
             'matched_line' => $matchedLineIndex,
-            'results' => $results
+            'results' => $results,
         ]);
     }
 
@@ -2554,7 +2606,7 @@ class AdminDashboardController extends Controller
     {
         $menuConfig = $settingsRepository->get('megamenu.config');
 
-        if (!$menuConfig) {
+        if (! $menuConfig) {
             $menuConfig = $this->getInitialMegamenuConfig();
             $settingsRepository->set('megamenu.config', $menuConfig);
         }
@@ -2579,7 +2631,7 @@ class AdminDashboardController extends Controller
     {
         $urls = $request->validate([
             'urls' => ['required', 'array'],
-            'urls.*' => ['string']
+            'urls.*' => ['string'],
         ])['urls'];
 
         $results = [];
@@ -2589,7 +2641,7 @@ class AdminDashboardController extends Controller
         foreach ($urls as $index => $url) {
             $fullUrl = $url;
             if (str_starts_with($url, '/')) {
-                $fullUrl = config('app.url') . $url;
+                $fullUrl = config('app.url').$url;
             }
 
             $ch = curl_init();
@@ -2622,7 +2674,7 @@ class AdminDashboardController extends Controller
             $results[] = [
                 'url' => $item['url'],
                 'status' => $httpCode,
-                'ok' => ($httpCode >= 200 && $httpCode < 400)
+                'ok' => ($httpCode >= 200 && $httpCode < 400),
             ];
             curl_multi_remove_handle($multiCurl, $item['handle']);
             curl_close($item['handle']);
@@ -2676,11 +2728,11 @@ class AdminDashboardController extends Controller
         // Publish to JSON for frontend
         try {
             $dir = public_path('assets/error-pages');
-            if (!file_exists($dir)) {
+            if (! file_exists($dir)) {
                 mkdir($dir, 0755, true);
             }
             file_put_contents(
-                $dir . '/config.json',
+                $dir.'/config.json',
                 json_encode([
                     'links' => $data['links'],
                     'settings' => $data['settings'],
@@ -2688,7 +2740,7 @@ class AdminDashboardController extends Controller
                 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
             );
         } catch (\Throwable $e) {
-            Log::error('Error publishing error_pages config: ' . $e->getMessage());
+            Log::error('Error publishing error_pages config: '.$e->getMessage());
         }
 
         $activityLogger->log('admin.error_pages.update', auth('admin')->user(), 'بروزرسانی تنظیمات صفحات خطا');
@@ -2699,14 +2751,18 @@ class AdminDashboardController extends Controller
     private function getInitialMegamenuConfig()
     {
         $jsPath = resource_path('js/menuData.js');
-        if (!file_exists($jsPath)) return [];
+        if (! file_exists($jsPath)) {
+            return [];
+        }
 
         $content = file_get_contents($jsPath);
 
         // Extract the main object
         $start = strpos($content, '{');
         $end = strrpos($content, '}');
-        if ($start === false || $end === false) return [];
+        if ($start === false || $end === false) {
+            return [];
+        }
 
         $jsonStr = substr($content, $start, $end - $start + 1);
 
@@ -2717,7 +2773,7 @@ class AdminDashboardController extends Controller
         $jsonStr = preg_replace('/,\s*([\]\}])/', '$1', $jsonStr);
 
         $data = json_decode($jsonStr, true);
-        if (!$data) {
+        if (! $data) {
             // Fallback to manual extraction if json_decode fails
             preg_match('/"parent_groups":\s*(\[.*?\])\s*,\s*"id_to_title"/s', $content, $groupsMatch);
             $parentGroups = json_decode(preg_replace('/,\s*([\]\}])/', '$1', $groupsMatch[1] ?? '[]'), true);
@@ -2729,7 +2785,7 @@ class AdminDashboardController extends Controller
             $menuDataContent = substr($content, $menuDataStart + 11);
             $lastBrace = strrpos($menuDataContent, '}');
             $menuDataJson = substr($menuDataContent, 0, $lastBrace);
-            $menuData = json_decode(preg_replace('/,\s*([\]\}])/', '$1', $menuDataJson . '}'), true);
+            $menuData = json_decode(preg_replace('/,\s*([\]\}])/', '$1', $menuDataJson.'}'), true);
         } else {
             $parentGroups = $data['parent_groups'] ?? [];
             $idToTitle = $data['id_to_title'] ?? [];
@@ -2757,7 +2813,7 @@ class AdminDashboardController extends Controller
                         'title' => $section['header'] ?? 'بخش جدید',
                         'show_desktop' => true,
                         'show_mobile' => true,
-                        'items' => $items
+                        'items' => $items,
                     ];
                 }
 
@@ -2766,7 +2822,7 @@ class AdminDashboardController extends Controller
                     'title' => $idToTitle[$catId] ?? $catId,
                     'show_desktop' => true,
                     'show_mobile' => true,
-                    'sub_sections' => $subSections
+                    'sub_sections' => $subSections,
                 ];
             }
 
@@ -2774,7 +2830,7 @@ class AdminDashboardController extends Controller
                 'title' => $group['header'] ?? 'گروه جدید',
                 'show_desktop' => true,
                 'show_mobile' => true,
-                'categories' => $categories
+                'categories' => $categories,
             ];
         }
 
@@ -2847,7 +2903,9 @@ class AdminDashboardController extends Controller
         if ($redisExt) {
             try {
                 $redisConn = Redis::connection()->ping() ? true : false;
-            } catch (\Throwable) { $redisConn = false; }
+            } catch (\Throwable) {
+                $redisConn = false;
+            }
         }
         $status['redis'] = ['installed' => $redisExt, 'connected' => $redisConn, 'label' => 'Redis'];
 
@@ -2861,8 +2919,8 @@ class AdminDashboardController extends Controller
 
         // Database
         $table = Config::get('cache.stores.database.table', 'cache');
-        $dbStatus = \Illuminate\Support\Facades\Schema::hasTable($table);
-        $status['database'] = ['installed' => true, 'connected' => $dbStatus, 'label' => 'Database Table (' . $table . ')'];
+        $dbStatus = Schema::hasTable($table);
+        $status['database'] = ['installed' => true, 'connected' => $dbStatus, 'label' => 'Database Table ('.$table.')'];
 
         return $status;
     }
@@ -2921,7 +2979,7 @@ class AdminDashboardController extends Controller
     private function writeEnvFile(string $key, string $value): void
     {
         $path = base_path('.env');
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             return;
         }
 
@@ -2929,7 +2987,7 @@ class AdminDashboardController extends Controller
 
         $escapedValue = str_replace('"', '\\"', $value);
         if (preg_match('/[\s#]/', $value) || $value === '' || preg_match('/^[0-9]/', $value)) {
-            $escapedValue = '"' . $escapedValue . '"';
+            $escapedValue = '"'.$escapedValue.'"';
         }
 
         $pattern = "/^{$key}=.*/m";
@@ -2947,7 +3005,7 @@ class AdminDashboardController extends Controller
     private function rebuildEnvSection(): void
     {
         $path = base_path('.env');
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             return;
         }
 
@@ -2956,8 +3014,8 @@ class AdminDashboardController extends Controller
         $sectionHeader = '# ============================================';
         $sectionTitle = '# DON\'T DELETE - Object Cache Configuration';
 
-        $startMarker = $sectionHeader . "\n" . $sectionTitle . "\n";
-        $endMarker = "\n" . $sectionHeader;
+        $startMarker = $sectionHeader."\n".$sectionTitle."\n";
+        $endMarker = "\n".$sectionHeader;
 
         $sectionVars = [
             'CACHE_STORE', 'CACHE_DRIVER', 'CACHE_PREFIX',
@@ -2976,7 +3034,7 @@ class AdminDashboardController extends Controller
             $value = $existingValues[$var] ?? '';
             $escapedValue = str_replace('"', '\\"', $value);
             if (preg_match('/[\s#]/', $value) || $value === '' || preg_match('/^[0-9]/', $value)) {
-                $escapedValue = '"' . $escapedValue . '"';
+                $escapedValue = '"'.$escapedValue.'"';
             }
             $newSection .= "{$var}={$escapedValue}\n";
         }
@@ -2995,11 +3053,11 @@ class AdminDashboardController extends Controller
             $after = '';
         }
 
-        $content = $before . "\n\n" . $newSection . "\n";
+        $content = $before."\n\n".$newSection."\n";
 
-        $headerPattern = '/^' . preg_quote($sectionHeader, '/') . '$/m';
+        $headerPattern = '/^'.preg_quote($sectionHeader, '/').'$/m';
         $after = preg_replace($headerPattern, '', $after);
-        $varPattern = '/^(' . implode('|', $sectionVars) . ')=.*$/m';
+        $varPattern = '/^('.implode('|', $sectionVars).')=.*$/m';
         $after = preg_replace($varPattern, '', $after);
 
         $content .= trim(preg_replace('/\n{3,}/', "\n\n", $after));
@@ -3009,8 +3067,8 @@ class AdminDashboardController extends Controller
 
     public function testObjectCacheConnection(): JsonResponse
     {
-        $testKey = '_opencode_cache_test_' . Str::random(8);
-        $testValue = 'ok_' . time();
+        $testKey = '_opencode_cache_test_'.Str::random(8);
+        $testValue = 'ok_'.time();
 
         $start = microtime(true);
 
@@ -3027,7 +3085,7 @@ class AdminDashboardController extends Controller
 
             return response()->json(['ok' => false, 'message' => 'داده‌های کش به درستی ذخیره/بازیابی نشدند.']);
         } catch (\Throwable $e) {
-            return response()->json(['ok' => false, 'message' => 'خطا: ' . $e->getMessage()]);
+            return response()->json(['ok' => false, 'message' => 'خطا: '.$e->getMessage()]);
         }
     }
 
@@ -3048,7 +3106,7 @@ class AdminDashboardController extends Controller
 
         Cache::forget($data['key']);
 
-        return back()->with('message', 'آیتم "' . $data['key'] . '" با موفقیت حذف شد.');
+        return back()->with('message', 'آیتم "'.$data['key'].'" با موفقیت حذف شد.');
     }
 
     private function listCacheItems(string $driver): array
@@ -3081,7 +3139,7 @@ class AdminDashboardController extends Controller
     {
         try {
             $prefix = Config::get('cache.prefix', '');
-            $searchPattern = $prefix . $pattern;
+            $searchPattern = $prefix.$pattern;
 
             $keys = Redis::connection()->keys($searchPattern);
 
@@ -3108,10 +3166,10 @@ class AdminDashboardController extends Controller
             $table = Config::get('cache.stores.database.table', 'cache');
             $prefix = Config::get('cache.prefix', '');
 
-            $query = \Illuminate\Support\Facades\DB::table($table);
+            $query = DB::table($table);
 
             if ($search) {
-                $query->where('key', 'like', '%' . $search . '%');
+                $query->where('key', 'like', '%'.$search.'%');
             }
 
             $rows = $query->pluck('key');
@@ -3252,7 +3310,7 @@ class AdminDashboardController extends Controller
         $commands = collect($this->artisanCommandsList());
 
         $matched = $commands->firstWhere('command', $commandKey);
-        if (!$matched) {
+        if (! $matched) {
             return response()->json([
                 'ok' => false,
                 'message' => 'دستور مورد نظر یافت نشد.',
@@ -3261,7 +3319,7 @@ class AdminDashboardController extends Controller
 
         if ($matched['danger'] ?? false) {
             $password = $request->input('password');
-            if (!$password) {
+            if (! $password) {
                 return response()->json([
                     'ok' => false,
                     'message' => 'برای اجرای این دستور، رمز عبور الزامی است.',
@@ -3269,14 +3327,14 @@ class AdminDashboardController extends Controller
             }
 
             $admin = auth('admin')->user();
-            if (!$admin || !$admin->password_hash || !$admin->password_salt) {
+            if (! $admin || ! $admin->password_hash || ! $admin->password_salt) {
                 return response()->json([
                     'ok' => false,
                     'message' => 'اطلاعات حساب کاربری یافت نشد.',
                 ]);
             }
 
-            if (!$passwordHashService->verify($password, $admin->password_salt, $admin->password_hash)) {
+            if (! $passwordHashService->verify($password, $admin->password_salt, $admin->password_hash)) {
                 return response()->json([
                     'ok' => false,
                     'message' => 'رمز عبور وارد شده اشتباه است.',
@@ -3291,7 +3349,7 @@ class AdminDashboardController extends Controller
         try {
             if ($commandKey === 'clear_logs') {
                 $logPath = storage_path('logs');
-                $files = File::glob($logPath . '/*.log');
+                $files = File::glob($logPath.'/*.log');
                 $count = 0;
                 foreach ($files as $file) {
                     if (File::isFile($file)) {
@@ -3346,7 +3404,7 @@ class AdminDashboardController extends Controller
     public function verifyArtisanPassword(Request $request, PasswordHashService $passwordHashService): JsonResponse
     {
         $password = $request->input('password');
-        if (!$password) {
+        if (! $password) {
             return response()->json([
                 'ok' => false,
                 'message' => 'رمز عبور را وارد کنید.',
@@ -3354,14 +3412,14 @@ class AdminDashboardController extends Controller
         }
 
         $admin = auth('admin')->user();
-        if (!$admin || !$admin->password_hash || !$admin->password_salt) {
+        if (! $admin || ! $admin->password_hash || ! $admin->password_salt) {
             return response()->json([
                 'ok' => false,
                 'message' => 'اطلاعات حساب کاربری یافت نشد.',
             ]);
         }
 
-        if (!$passwordHashService->verify($password, $admin->password_salt, $admin->password_hash)) {
+        if (! $passwordHashService->verify($password, $admin->password_salt, $admin->password_hash)) {
             return response()->json([
                 'ok' => false,
                 'message' => 'رمز عبور وارد شده اشتباه است.',
@@ -3467,14 +3525,16 @@ class AdminDashboardController extends Controller
         ]);
 
         $htaccessPath = public_path('.htaccess');
-        if (!file_exists($htaccessPath)) {
+        if (! file_exists($htaccessPath)) {
             return back()->withErrors('فایل .htaccess یافت نشد.');
         }
 
         // Backup
         $backupDir = storage_path('app/backups/htaccess');
-        if (!file_exists($backupDir)) mkdir($backupDir, 0755, true);
-        copy($htaccessPath, $backupDir . '/.htaccess_backup_' . date('Ymd_His'));
+        if (! file_exists($backupDir)) {
+            mkdir($backupDir, 0755, true);
+        }
+        copy($htaccessPath, $backupDir.'/.htaccess_backup_'.date('Ymd_His'));
 
         $content = file_get_contents($htaccessPath);
 
@@ -3482,22 +3542,30 @@ class AdminDashboardController extends Controller
 
         $cacheLookup = $request->boolean('cache_lookup') ? 'on' : 'off';
         if ($request->boolean('cache_lookup')) {
-            if ($request->boolean('cache_lookup_esi')) $cacheLookup .= ' esi';
-            if ($request->boolean('cache_lookup_crawler')) $cacheLookup .= ' crawler';
+            if ($request->boolean('cache_lookup_esi')) {
+                $cacheLookup .= ' esi';
+            }
+            if ($request->boolean('cache_lookup_crawler')) {
+                $cacheLookup .= ' crawler';
+            }
         }
-        $newLines[] = "    CacheLookup " . $cacheLookup;
+        $newLines[] = '    CacheLookup '.$cacheLookup;
 
-        $newLines[] = "    LSPHP_ProcessGroup " . ($request->boolean('process_group') ? "on" : "off");
-        $newLines[] = "    LSPHP_Workers " . $data['workers'];
-        $newLines[] = "    QuicEnable " . ($request->boolean('quic') ? "on" : "off");
+        $newLines[] = '    LSPHP_ProcessGroup '.($request->boolean('process_group') ? 'on' : 'off');
+        $newLines[] = '    LSPHP_Workers '.$data['workers'];
+        $newLines[] = '    QuicEnable '.($request->boolean('quic') ? 'on' : 'off');
 
         $spdy = 'off';
-        if ($data['spdy'] === 'http2') $spdy = 'http2';
-        elseif ($data['spdy'] === 'http3') $spdy = 'http3';
-        elseif ($data['spdy'] === 'http3_http2') $spdy = 'http3 http2';
-        $newLines[] = "    SpdyEnabled " . $spdy;
+        if ($data['spdy'] === 'http2') {
+            $spdy = 'http2';
+        } elseif ($data['spdy'] === 'http3') {
+            $spdy = 'http3';
+        } elseif ($data['spdy'] === 'http3_http2') {
+            $spdy = 'http3 http2';
+        }
+        $newLines[] = '    SpdyEnabled '.$spdy;
 
-        $configBlock = "# --- LITESPEED OPTIMIZATION START ---\n" . implode("\n", $newLines) . "\n# --- LITESPEED OPTIMIZATION END ---";
+        $configBlock = "# --- LITESPEED OPTIMIZATION START ---\n".implode("\n", $newLines)."\n# --- LITESPEED OPTIMIZATION END ---";
 
         // Check if our block already exists
         if (str_contains($content, '# --- LITESPEED OPTIMIZATION START ---')) {
@@ -3505,9 +3573,9 @@ class AdminDashboardController extends Controller
         } else {
             // Try to insert after <IfModule litespeed> or at the beginning
             if (str_contains($content, '<IfModule litespeed>')) {
-                $content = preg_replace('/<IfModule litespeed>\s*/', "<IfModule litespeed>\n" . $configBlock . "\n", $content);
+                $content = preg_replace('/<IfModule litespeed>\s*/', "<IfModule litespeed>\n".$configBlock."\n", $content);
             } else {
-                $content = "<IfModule litespeed>\n" . $configBlock . "\n</IfModule>\n\n" . $content;
+                $content = "<IfModule litespeed>\n".$configBlock."\n</IfModule>\n\n".$content;
             }
         }
 
@@ -3521,10 +3589,12 @@ class AdminDashboardController extends Controller
     public function downloadHtaccessBackup(Request $request)
     {
         $backupDir = storage_path('app/backups/htaccess');
-        $files = glob($backupDir . '/*');
-        if (empty($files)) return back()->withErrors('بکاپی یافت نشد.');
+        $files = glob($backupDir.'/*');
+        if (empty($files)) {
+            return back()->withErrors('بکاپی یافت نشد.');
+        }
 
-        usort($files, fn($a, $b) => filemtime($b) - filemtime($a));
+        usort($files, fn ($a, $b) => filemtime($b) - filemtime($a));
 
         return response()->download($files[0]);
     }
@@ -3532,14 +3602,14 @@ class AdminDashboardController extends Controller
     public function categoriesHub(Request $request)
     {
         $authkey = request()->route('authkey');
-        $settings = app(\App\Repositories\SettingsRepository::class)->get('categories.settings', [
+        $settings = app(SettingsRepository::class)->get('categories.settings', [
             'vector_engine' => 'local',
             'external_model' => 'gemma-4',
             'api_endpoint' => '',
             'api_key' => '',
         ]);
 
-        $aiUsage = \App\Models\AiUsageLog::query()
+        $aiUsage = AiUsageLog::query()
             ->selectRaw('DATE(created_at) as date, SUM(tokens_used) as tokens, COUNT(*) as requests')
             ->groupBy('date')
             ->orderByDesc('date')
@@ -3549,7 +3619,7 @@ class AdminDashboardController extends Controller
         return view('dash.admin.categories-hub', compact('authkey', 'settings', 'aiUsage'));
     }
 
-    public function saveCategorySettings(Request $request, \App\Repositories\SettingsRepository $settingsRepository): RedirectResponse
+    public function saveCategorySettings(Request $request, SettingsRepository $settingsRepository): RedirectResponse
     {
         $data = $request->validate([
             'vector_engine' => ['required', 'in:local,external'],
@@ -3581,11 +3651,11 @@ class AdminDashboardController extends Controller
             'basalam' => $basalam,
             'snappshop' => $snappshop,
             'digikala_flat' => $digikalaFlat,
-            'mappings' => $mappings
+            'mappings' => $mappings,
         ]);
     }
 
-    public function getCategoryDetails(string $authkey, Category $category, \App\Services\CategoryVectorService $vectorService): JsonResponse
+    public function getCategoryDetails(string $authkey, Category $category, CategoryVectorService $vectorService): JsonResponse
     {
         try {
             $similar = $vectorService->findSimilar($category);
@@ -3596,7 +3666,7 @@ class AdminDashboardController extends Controller
             ]);
         } catch (\Throwable $e) {
             return response()->json([
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -3613,9 +3683,10 @@ class AdminDashboardController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function testAiEmbedding(Request $request, \App\Services\CategoryVectorService $vectorService): JsonResponse
+    public function testAiEmbedding(Request $request, CategoryVectorService $vectorService): JsonResponse
     {
         $data = $request->validate(['text' => ['required', 'string', 'max:500']]);
+
         return response()->json($vectorService->testEmbedding($data['text']));
     }
 
@@ -3631,7 +3702,7 @@ class AdminDashboardController extends Controller
             [
                 'digikala_category_id' => $data['digikala_category_id'],
                 'confidence' => 1.0,
-                'is_manual' => true
+                'is_manual' => true,
             ]
         );
 
@@ -3647,5 +3718,214 @@ class AdminDashboardController extends Controller
         $category->update(['title' => $data['title']]);
 
         return response()->json(['ok' => true]);
+    }
+
+    public function sitemapHub()
+    {
+        $isRunning = (bool) Cache::get('sitemap:running', false);
+        $currentRun = SitemapRunLog::query()->where('status', 'running')->latest('id')->first();
+        $lastRuns = SitemapRunLog::query()->latest('id')->limit(50)->get();
+        $lastCompletedRun = SitemapRunLog::query()->where('status', 'completed')->latest('id')->first();
+        $lastFailedRun = SitemapRunLog::query()->where('status', 'failed')->latest('id')->first();
+        $totalRuns = SitemapRunLog::query()->count();
+        $totalRunsCompleted = SitemapRunLog::query()->where('status', 'completed')->count();
+
+        $lastCompletedForce = SitemapRunLog::query()
+            ->where('status', 'completed')
+            ->where('force_mode', true)
+            ->whereNotNull('completed_at')
+            ->latest('id')
+            ->first();
+        $lastCompletedIncremental = SitemapRunLog::query()
+            ->where('status', 'completed')
+            ->where('force_mode', false)
+            ->whereNotNull('completed_at')
+            ->latest('id')
+            ->first();
+
+        $forceDuration = null;
+        if ($lastCompletedForce && $lastCompletedForce->started_at && $lastCompletedForce->completed_at) {
+            $forceDuration = $lastCompletedForce->started_at->diffInSeconds($lastCompletedForce->completed_at);
+        }
+        $incrementalDuration = null;
+        if ($lastCompletedIncremental && $lastCompletedIncremental->started_at && $lastCompletedIncremental->completed_at) {
+            $incrementalDuration = $lastCompletedIncremental->started_at->diffInSeconds($lastCompletedIncremental->completed_at);
+        }
+
+        $completedRuns = SitemapRunLog::query()
+            ->where('status', 'completed')
+            ->whereNotNull('completed_at')
+            ->where('processed_products', '>', 0)
+            ->latest('id')
+            ->limit(10)
+            ->get();
+
+        $speeds = [];
+        foreach ($completedRuns as $run) {
+            $secs = $run->started_at?->diffInSeconds($run->completed_at);
+            if ($secs && $secs > 0 && $run->processed_products > 0) {
+                $speeds[] = $run->processed_products / $secs;
+            }
+        }
+        $avgSpeed = !empty($speeds) ? round(array_sum($speeds) / count($speeds), 2) : null;
+
+        $totalActive = Product::query()->where('is_active', true)->count();
+        $pendingProducts = Product::query()
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('sitemapped_at')
+                  ->orWhereColumn('updated_at', '>', 'sitemapped_at');
+            })
+            ->count();
+
+        $estForceSeconds = $avgSpeed && $avgSpeed > 0 ? (int) round($totalActive / $avgSpeed) : null;
+        $estIncrementalSeconds = $avgSpeed && $avgSpeed > 0 ? (int) round($pendingProducts / $avgSpeed) : null;
+
+        $settings = app(\App\Repositories\SettingsRepository::class);
+        $scheduleStart = (int) $settings->get('sitemap.schedule_start', 1);
+        $scheduleEnd = (int) $settings->get('sitemap.schedule_end', 5);
+        $scheduleEnabled = (bool) $settings->get('sitemap.schedule_enabled', true);
+        $separateStores = (bool) $settings->get('sitemap.separate_stores', false);
+
+        $nowTehran = now()->timezone('Asia/Tehran');
+        $currentTehranHour = (int) $nowTehran->format('G');
+
+        if ($scheduleEnabled) {
+            if ($scheduleStart <= $scheduleEnd) {
+                $inScheduleWindow = $currentTehranHour >= $scheduleStart && $currentTehranHour < $scheduleEnd;
+            } else {
+                $inScheduleWindow = $currentTehranHour >= $scheduleStart || $currentTehranHour < $scheduleEnd;
+            }
+        } else {
+            $inScheduleWindow = true;
+        }
+
+        $chunkFiles = glob(public_path('sitemaps/sitemap-*.xml.gz'));
+        $chunkCount = count($chunkFiles);
+
+        $dkChunkFiles = glob(public_path('sitemaps/sitemap-*-dk-*.xml.gz'));
+        $bsChunkFiles = glob(public_path('sitemaps/sitemap-*-bs-*.xml.gz'));
+        $mixedChunkFiles = array_filter($chunkFiles, fn($f) => !preg_match('/-(dk|bs)-\d+\.xml\.gz$/', basename($f)));
+        $dkChunkCount = count($dkChunkFiles);
+        $bsChunkCount = count($bsChunkFiles);
+        $mixedChunkCount = count($mixedChunkFiles);
+
+        $sitemapIndexPath = public_path('sitemap.xml');
+        $sitemapIndexExists = file_exists($sitemapIndexPath);
+        $appUrl = rtrim(config('app.url'), '/');
+        $sitemapIndexUrl = $sitemapIndexExists ? $appUrl.'/sitemap.xml' : null;
+
+        $chunkFileUrls = [];
+        if ($chunkCount > 0) {
+            sort($chunkFiles);
+            foreach ($chunkFiles as $file) {
+                $chunkFileUrls[] = $appUrl.'/sitemaps/'.basename($file);
+            }
+        }
+
+        $totalSize = '—';
+        if ($chunkCount > 0) {
+            $bytes = array_sum(array_map('filesize', $chunkFiles));
+            $totalSize = $bytes > 1048576
+                ? round($bytes / 1048576, 1).' MB'
+                : round($bytes / 1024, 1).' KB';
+        }
+
+        return view('dash.admin.sitemap-hub', compact(
+            'isRunning',
+            'currentRun',
+            'lastRuns',
+            'lastCompletedRun',
+            'lastFailedRun',
+            'lastCompletedForce',
+            'lastCompletedIncremental',
+            'forceDuration',
+            'incrementalDuration',
+            'totalRuns',
+            'totalRunsCompleted',
+            'chunkCount',
+            'dkChunkCount',
+            'bsChunkCount',
+            'mixedChunkCount',
+            'sitemapIndexPath',
+            'sitemapIndexExists',
+            'sitemapIndexUrl',
+            'chunkFileUrls',
+            'totalSize',
+            'totalActive',
+            'pendingProducts',
+            'estForceSeconds',
+            'estIncrementalSeconds',
+            'scheduleStart',
+            'scheduleEnd',
+            'scheduleEnabled',
+            'separateStores',
+            'nowTehran',
+            'inScheduleWindow',
+        ));
+    }
+
+    public function triggerSitemap(Request $request, ActivityLogger $activityLogger): RedirectResponse
+    {
+        $mode = $request->input('mode', 'incremental');
+
+        if (Cache::get('sitemap:running')) {
+            return back()->withErrors(['message' => 'فرآیند سایت مپ در حال اجراست. لطفاً پس از اتمام آن مجدداً تلاش کنید.']);
+        }
+
+        $separateStores = (bool) app(\App\Repositories\SettingsRepository::class)->get('sitemap.separate_stores', false);
+
+        $force = $mode === 'force';
+        $runId = now()->format('Ymd_His');
+
+        SitemapRunLog::query()->create([
+            'run_id' => $runId,
+            'status' => 'running',
+            'force_mode' => $force,
+            'started_at' => now(),
+            'total_products' => Product::query()->where('is_active', true)->count(),
+        ]);
+
+        Cache::put('sitemap:running', true, 86400);
+
+        ProcessSitemapChunkJob::dispatch(
+            $runId,
+            lastId: null,
+            force: $force,
+            store: $separateStores ? 'dk' : '',
+            separateStores: $separateStores,
+        );
+
+        $activityLogger->log(
+            'sitemap.generate',
+            auth('admin')->user(),
+            $force ? 'شروع بازسازی کامل سایت مپ' : 'شروع پردازش افزایشی سایت مپ',
+        );
+
+        return back()->with('message', 'فرآیند تولید سایت مپ با موفقیت در صف پردازش قرار گرفت.');
+    }
+
+    public function saveSitemapSettings(Request $request, ActivityLogger $activityLogger): RedirectResponse
+    {
+        $request->validate([
+            'schedule_start' => 'required|integer|min:0|max:23',
+            'schedule_end' => 'required|integer|min:0|max:23',
+            'schedule_enabled' => 'nullable|boolean',
+            'separate_stores' => 'nullable|boolean',
+        ]);
+
+        $settings = app(\App\Repositories\SettingsRepository::class);
+        $settings->set('sitemap.schedule_start', (int) $request->input('schedule_start'));
+        $settings->set('sitemap.schedule_end', (int) $request->input('schedule_end'));
+        $settings->set('sitemap.schedule_enabled', (bool) $request->input('schedule_enabled', false));
+        $settings->set('sitemap.separate_stores', (bool) $request->input('separate_stores', false));
+
+        $activityLogger->log(
+            'sitemap.settings',
+            auth('admin')->user(),
+            'تنظیمات زمان‌بندی و جداسازی فروشگاه‌های سایت مپ به‌روزرسانی شد',
+        );
+
+        return back()->with('message', 'تنظیمات سایت مپ ذخیره شد.');
     }
 }

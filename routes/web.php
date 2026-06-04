@@ -15,6 +15,7 @@ use App\Http\Controllers\Dashboard\AdminDashboardController;
 use App\Http\Controllers\Dashboard\AdminSearchController;
 use App\Http\Controllers\Dashboard\UserTicketController;
 use App\Http\Controllers\FaqController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InternalAnalyticsController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\LivewireAssetController;
@@ -23,9 +24,10 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QueueProcessController;
 use App\Http\Controllers\ResultController;
 use App\Http\Controllers\TwoFAController;
+use App\Http\Controllers\VisitorInfoController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/api/info', [\App\Http\Controllers\VisitorInfoController::class, 'index'])->name('visitor.info');
+Route::get('/api/info', [VisitorInfoController::class, 'index'])->name('visitor.info');
 Route::get('/api/assets/js', [LivewireAssetController::class, 'serveJs'])->name('livewire.asset');
 Route::get('/api/services/autocomplete/', [AutocompleteController::class, 'search'])->name('autocomplete.search');
 Route::get('/api/queue/process', [QueueProcessController::class, 'process'])->name('api.queue.process');
@@ -33,9 +35,9 @@ Route::post('/api/analytics/collect', [InternalAnalyticsController::class, 'coll
 Route::get('/go/{slug}', [AffiliateRedirectController::class, 'redirect'])->name('affiliate.go');
 Route::get('/api/bslm/{productId}', [AffiliateRedirectController::class, 'fetchAndRedirect'])->name('affiliate.redirect');
 
-Route::get('/', [\App\Http\Controllers\HomeController::class, 'home'])->name('index');
+Route::get('/', [HomeController::class, 'home'])->name('index');
 
-Route::get('/test-error/{code}', function($code) {
+Route::get('/test-error/{code}', function ($code) {
     abort($code);
 });
 
@@ -134,7 +136,7 @@ Route::prefix('dash/admin/{authkey}')
         Route::get('/', [AdminDashboardController::class, 'index'])->name('index')->middleware('permission:dashboard.view');
         Route::get('/modules', [AdminDashboardController::class, 'modules'])->name('modules')->middleware('permission:dashboard.view');
         Route::get('/modules/{moduleKey}', [AdminDashboardController::class, 'moduleSettings'])
-            ->whereIn('moduleKey', ['communication_hub', 'contact', 'affiliate', 'file_manager', 'home_items_management', 'email_templates', 'queues', 'comments', 'tickets', 'faq', 'analytics', 'geoip', 'robots', 'search', 'megamenu', 'error_pages', 'cache_management', 'object_cache', 'artisan_commands', 'visitor_intelligence', 'categories'])
+            ->whereIn('moduleKey', ['communication_hub', 'contact', 'affiliate', 'file_manager', 'home_items_management', 'email_templates', 'queues', 'comments', 'tickets', 'faq', 'analytics', 'geoip', 'robots', 'search', 'megamenu', 'error_pages', 'cache_management', 'object_cache', 'artisan_commands', 'visitor_intelligence', 'categories', 'sitemap'])
             ->name('modules.show');
         Route::post('/modules/home-slider', [AdminDashboardController::class, 'saveHomeSliderSettings'])->name('modules.home-slider.save')->middleware('permission:home_items.edit');
         Route::post('/modules/home-banners-categories', [AdminDashboardController::class, 'saveHomeBannerCategorySettings'])->name('modules.home-banners-categories.save')->middleware('permission:home_items.edit');
@@ -289,6 +291,9 @@ Route::prefix('dash/admin/{authkey}')
         Route::post('/categories/ai-test', [AdminDashboardController::class, 'testAiEmbedding'])->name('categories.ai_test');
         Route::post('/categories/sync-all', [AdminDashboardController::class, 'syncAllCategories'])->name('categories.sync_all');
         Route::get('/categories/linked', [AdminDashboardController::class, 'getLinkedCategories'])->name('categories.linked');
+
+        Route::post('/modules/sitemap/trigger', [AdminDashboardController::class, 'triggerSitemap'])->name('sitemap.trigger')->middleware('permission:dashboard.view');
+        Route::post('/modules/sitemap/settings', [AdminDashboardController::class, 'saveSitemapSettings'])->name('sitemap.settings')->middleware('permission:dashboard.view');
     });
 
 Route::prefix('admin')
