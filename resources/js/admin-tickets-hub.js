@@ -65,7 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetch(`/dash/admin/${authkey}/users?q=${encodeURIComponent(query)}`, {
                     headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error('خطا در ارتباط با سرور');
+                    return response.json();
+                })
                 .then(data => {
                     const users = data.data || [];
                     if (users.length === 0) {
@@ -79,6 +82,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         `).join('');
 
                     }
+                    searchResults.classList.remove('hidden');
+                })
+                .catch(() => {
+                    searchResults.innerHTML = '<div class="p-4 text-center text-xs opacity-50">خطا در جستجو. مجددا تلاش کنید.</div>';
                     searchResults.classList.remove('hidden');
                 });
             }, 300);

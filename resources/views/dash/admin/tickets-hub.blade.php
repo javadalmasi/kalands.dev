@@ -246,7 +246,7 @@
                     <h3 class="font-bold text-slate border-b border-slate/10 pb-2 mb-4">مسدود کردن کاربر جدید</h3>
                     <p class="text-[10px] text-slate/60 mb-4">با مسدود کردن کاربر، وی امکان ثبت تیکت جدید یا پاسخ به تیکت‌های قبلی را نخواهد داشت.</p>
 
-                    <div class="relative" id="user-search-container">
+                    <div class="relative" id="user-search-container" data-authkey="{{ $authkey }}">
                         <label class="text-xs font-bold opacity-60">جستجوی کاربر (نام، ایمیل یا تلفن)</label>
                         <input type="text" id="user-search-input" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 focus:ring-primary/20 focus:ring-2 outline-none" placeholder="شروع به تایپ کنید...">
                         <div id="user-search-results" class="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-lg border border-slate bg-white shadow-xl dark:bg-slate-800 hidden"></div>
