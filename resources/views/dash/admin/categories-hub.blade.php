@@ -201,7 +201,7 @@
                     @foreach($aiUsage as $log)
                         <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5">
                             <div>
-                                <div class="font-bold text-sm text-slate-700 dark:text-slate-200">{{ verta($log->date)->format('Y/m/d') }}</div>
+                                <div class="font-bold text-sm text-slate-700 dark:text-slate-200">{{ persianDate($log->date) }}</div>
                                 <div class="text-[10px] text-slate-400">{{ $log->requests }} درخواست</div>
                             </div>
                             <div class="text-right">

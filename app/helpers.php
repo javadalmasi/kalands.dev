@@ -56,3 +56,36 @@ if (!function_exists('generateDashboardAuthKey')) {
         return \Illuminate\Support\Str::random(max(8, $length));
     }
 }
+
+if (!function_exists('persianDate')) {
+    function persianDate($date, string $format = 'Y/m/d'): string
+    {
+        if (!$date) return '—';
+        return verta($date)->format($format);
+    }
+}
+
+if (!function_exists('persianDateTime')) {
+    function persianDateTime($date, string $format = 'Y/m/d H:i:s'): string
+    {
+        if (!$date) return '—';
+        return verta($date)->format($format);
+    }
+}
+
+if (!function_exists('persianTimeAgo')) {
+    function persianTimeAgo($date): string
+    {
+        if (!$date) return '—';
+        $v = verta($date);
+        $now = verta();
+        $diff = $v->diff($now);
+
+        if ($diff->y > 0) return $diff->y . ' سال پیش';
+        if ($diff->m > 0) return $diff->m . ' ماه پیش';
+        if ($diff->d > 0) return $diff->d . ' روز پیش';
+        if ($diff->h > 0) return $diff->h . ' ساعت پیش';
+        if ($diff->i > 0) return $diff->i . ' دقیقه پیش';
+        return 'چند لحظه پیش';
+    }
+}

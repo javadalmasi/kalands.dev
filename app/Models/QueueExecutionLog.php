@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Hekmatinasser\Verta\Verta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,9 +27,6 @@ class QueueExecutionLog extends Model
             return null;
         }
 
-        $v = new Verta($this->executed_at);
-        $v->timezone('Asia/Tehran');
-
-        return $v->format('Y/m/d H:i:s');
+        return verta($this->executed_at)->format('Y/m/d H:i:s');
     }
 }

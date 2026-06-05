@@ -84,7 +84,7 @@
                                     </span>
                                     <span class="flex items-center gap-1">
                                         <span class="material-icons !text-xs">schedule</span>
-                                        آخرین بررسی: {{ $product->last_checked_at ? verta($product->last_checked_at)->format('Y/m/d H:i') : '---' }}
+                                        آخرین بررسی: {{ persianDateTime($product->last_checked_at, 'Y/m/d H:i') }}
                                     </span>
                                 </div>
                             </div>

@@ -93,7 +93,7 @@
                         <span class="admin-ltr">{{ $message->email }}</span>
                         <span class="mx-1 opacity-30">|</span>
                         <span class="material-icons text-xs">schedule</span>
-                        <span>{{ $message->created_at->diffForHumans() }}</span>
+                        <span>{{ persianTimeAgo($message->created_at) }}</span>
                     </div>
                     <p class="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ $message->message }}</p>
                     <div class="mt-4 admin-actions text-xs border-t border-slate/5 pt-3">

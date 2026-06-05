@@ -39,7 +39,7 @@
                             @endif
                         </p>
                     </div>
-                    <span class="text-[10px] opacity-40">{{ $message->created_at->diffForHumans() }}</span>
+                    <span class="text-[10px] opacity-40">{{ persianTimeAgo($message->created_at) }}</span>
                 </div>
                 <div class="text-sm leading-relaxed prose dark:prose-invert max-w-none">
                     {!! $message->message !!}

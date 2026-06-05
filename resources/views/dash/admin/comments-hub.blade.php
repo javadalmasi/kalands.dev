@@ -102,7 +102,7 @@
                             <p class="text-sm leading-relaxed">{{ $comment->content }}</p>
                             <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-slate/60">
                                 <span class="flex items-center gap-1"><span class="material-icons !text-xs">inventory_2</span>محصول: {{ $comment->product?->title ?? $comment->product_id }}</span>
-                                <span class="flex items-center gap-1"><span class="material-icons !text-xs">schedule</span>{{ $comment->created_at->diffForHumans() }}</span>
+                                <span class="flex items-center gap-1"><span class="material-icons !text-xs">schedule</span>{{ persianTimeAgo($comment->created_at) }}</span>
                                 <span class="flex items-center gap-1"><span class="material-icons !text-xs">public</span>IP: {{ $comment->ip_address }}</span>
                             </div>
                         </div>

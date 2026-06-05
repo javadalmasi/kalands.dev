@@ -41,4 +41,16 @@ class SitemapRunLog extends Model
                 : 0,
         );
     }
+
+    public function getPersianStartedAtAttribute(): ?string
+    {
+        if (!$this->started_at) return null;
+        return verta($this->started_at)->format('Y/m/d H:i:s');
+    }
+
+    public function getPersianCompletedAtAttribute(): ?string
+    {
+        if (!$this->completed_at) return null;
+        return verta($this->completed_at)->format('Y/m/d H:i:s');
+    }
 }

@@ -71,7 +71,7 @@
                                     <span class="admin-ltr">{{ $user->email ?: $user->phone ?: '-' }}</span>
                                     <span class="flex items-center gap-1">
                                         <span class="material-icons !text-xs">schedule</span>
-                                        عضویت: {{ verta($user->created_at)->format('Y/m/d') }}
+                                        عضویت: {{ persianDate($user->created_at) }}
                                     </span>
                                 </div>
                             </div>

@@ -54,7 +54,7 @@
                     </div>
                     <div class="flex items-center justify-between text-sm">
                         <span class="text-slate">شروع</span>
-                        <span class="admin-ltr text-xs">{{ $currentRun->started_at }}</span>
+                        <span class="admin-ltr text-xs">{{ persianDateTime($currentRun->started_at) }}</span>
                     </div>
                     <div class="flex items-center justify-between text-sm">
                         <span class="text-slate">نوع</span>
@@ -184,11 +184,11 @@
                             </div>
                             <div class="flex items-center justify-between">
                                 <span>شروع</span>
-                                <span class="admin-ltr">{{ $lastCompletedRun->started_at?->format('Y-m-d H:i:s') ?? '—' }}</span>
+                                <span class="admin-ltr">{{ persianDateTime($lastCompletedRun->started_at) }}</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span>پایان</span>
-                                <span class="admin-ltr">{{ $lastCompletedRun->completed_at?->format('Y-m-d H:i:s') ?? '—' }}</span>
+                                <span class="admin-ltr">{{ persianDateTime($lastCompletedRun->completed_at) }}</span>
                             </div>
                             @if($lastCompletedRun->started_at && $lastCompletedRun->completed_at)
                             <div class="flex items-center justify-between">
@@ -226,7 +226,7 @@
                             </div>
                             <div class="flex items-center justify-between">
                                 <span>شروع</span>
-                                <span class="admin-ltr">{{ $lastFailedRun->started_at?->format('Y-m-d H:i:s') ?? '—' }}</span>
+                                <span class="admin-ltr">{{ persianDateTime($lastFailedRun->started_at) }}</span>
                             </div>
                             @if($lastFailedRun->error_message)
                             <div class="bg-danger/5 border border-danger/20 p-2 rounded mt-1">
@@ -260,11 +260,11 @@
                             </div>
                             <div class="flex items-center justify-between">
                                 <span>زمان شروع</span>
-                                <span class="admin-ltr">{{ $lastCompletedForce->started_at->format('Y-m-d H:i:s') }}</span>
+                                <span class="admin-ltr">{{ persianDateTime($lastCompletedForce->started_at) }}</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span>زمان پایان</span>
-                                <span class="admin-ltr">{{ $lastCompletedForce->completed_at->format('Y-m-d H:i:s') }}</span>
+                                <span class="admin-ltr">{{ persianDateTime($lastCompletedForce->completed_at) }}</span>
                             </div>
                             <div class="flex items-center justify-between text-base font-bold">
                                 <span>مدت زمان</span>
@@ -292,11 +292,11 @@
                             </div>
                             <div class="flex items-center justify-between">
                                 <span>زمان شروع</span>
-                                <span class="admin-ltr">{{ $lastCompletedIncremental->started_at->format('Y-m-d H:i:s') }}</span>
+                                <span class="admin-ltr">{{ persianDateTime($lastCompletedIncremental->started_at) }}</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span>زمان پایان</span>
-                                <span class="admin-ltr">{{ $lastCompletedIncremental->completed_at->format('Y-m-d H:i:s') }}</span>
+                                <span class="admin-ltr">{{ persianDateTime($lastCompletedIncremental->completed_at) }}</span>
                             </div>
                             <div class="flex items-center justify-between text-base font-bold">
                                 <span>مدت زمان</span>
@@ -361,7 +361,7 @@
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
                                 <span class="material-icons text-sm text-slate">schedule</span>
-                                <span class="text-xs font-bold admin-ltr">{{ $run->started_at?->format('Y-m-d H:i:s') ?? '—' }}</span>
+                                <span class="text-xs font-bold admin-ltr">{{ persianDateTime($run->started_at) }}</span>
                             </div>
                             <span class="px-3 py-1 rounded-full text-[10px] font-bold {{ $run->status === 'completed' ? 'bg-success text-white' : ($run->status === 'running' ? 'bg-warning text-white' : 'bg-danger text-white') }}">
                                 {{ $run->status === 'completed' ? 'موفق' : ($run->status === 'running' ? 'در حال اجرا' : 'ناموفق') }}
@@ -412,7 +412,7 @@
                                 @if($run->completed_at)
                                     <li class="flex items-center gap-2">
                                         <span class="w-1 h-1 rounded-full bg-primary/40"></span>
-                                        پایان: <span class="admin-ltr">{{ $run->completed_at->format('Y-m-d H:i:s') }}</span>
+                                        پایان: <span class="admin-ltr">{{ persianDateTime($run->completed_at) }}</span>
                                     </li>
                                 @endif
                             </ul>

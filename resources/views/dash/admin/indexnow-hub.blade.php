@@ -248,7 +248,7 @@
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
                                 <span class="material-icons text-sm text-slate">schedule</span>
-                                <span class="text-xs font-bold admin-ltr">{{ $run->started_at?->format('Y-m-d H:i:s') ?? '—' }}</span>
+                                <span class="text-xs font-bold admin-ltr">{{ persianDateTime($run->started_at) }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $run->engine === 'bing' ? 'bg-primary/10 text-primary' : 'bg-warning/10 text-warning' }}">
@@ -308,7 +308,7 @@
                                 @if($run->completed_at)
                                     <li class="flex items-center gap-2">
                                         <span class="w-1 h-1 rounded-full bg-primary/40"></span>
-                                        پایان: <span class="admin-ltr">{{ $run->completed_at->format('Y-m-d H:i:s') }}</span>
+                                        پایان: <span class="admin-ltr">{{ persianDateTime($run->completed_at) }}</span>
                                     </li>
                                 @endif
                             </ul>

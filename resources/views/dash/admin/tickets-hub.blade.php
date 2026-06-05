@@ -105,10 +105,10 @@
                             </div>
                             <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-slate/60">
                                 <span class="flex items-center gap-1"><span class="material-icons !text-xs">category</span>دسته: {{ $ticket->category?->name ?? 'نامشخص' }}</span>
-                                <span class="flex items-center gap-1"><span class="material-icons !text-xs">schedule</span>ثبت شده: {{ $ticket->created_at->diffForHumans() }}</span>
+                                <span class="flex items-center gap-1"><span class="material-icons !text-xs">schedule</span>ثبت شده: {{ persianTimeAgo($ticket->created_at) }}</span>
                                 <span class="flex items-center gap-1"><span class="material-icons !text-xs">priority_high</span>اولویت: {{ $ticket->priority }}</span>
                                 @if($ticket->latestMessage)
-                                    <span class="flex items-center gap-1"><span class="material-icons !text-xs text-success">reply</span>آخرین پاسخ: {{ $ticket->latestMessage->sender_type === 'admin' ? 'پشتیبانی' : ($ticket->latestMessage->user->name ?? 'کاربر') }} ({{ $ticket->latestMessage->created_at->diffForHumans() }})</span>
+                                    <span class="flex items-center gap-1"><span class="material-icons !text-xs text-success">reply</span>آخرین پاسخ: {{ $ticket->latestMessage->sender_type === 'admin' ? 'پشتیبانی' : ($ticket->latestMessage->user->name ?? 'کاربر') }} ({{ persianTimeAgo($ticket->latestMessage->created_at) }})</span>
                                 @endif
                             </div>
                         </div>

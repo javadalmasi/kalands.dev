@@ -3803,7 +3803,7 @@ class AdminDashboardController extends Controller
         $scheduleEnabled = (bool) $settings->get('sitemap.schedule_enabled', true);
         $separateStores = (bool) $settings->get('sitemap.separate_stores', false);
 
-        $nowTehran = now()->timezone('Asia/Tehran');
+        $nowTehran = now();
         $currentTehranHour = (int) $nowTehran->format('G');
 
         if ($scheduleEnabled) {

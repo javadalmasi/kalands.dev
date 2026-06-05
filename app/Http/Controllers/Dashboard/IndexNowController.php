@@ -57,7 +57,7 @@ class IndexNowController extends Controller
             })
             ->count();
 
-        $nowTehran = now()->timezone('Asia/Tehran');
+        $nowTehran = now();
         $currentHour = (int) $nowTehran->format('G');
 
         $estimatedDaily = [];

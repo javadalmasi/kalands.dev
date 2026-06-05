@@ -102,7 +102,7 @@
                                             {{ $log->status === 'success' ? 'موفق' : 'ناموفق' }}
                                         </span>
                                     </td>
-                                    <td class="p-3 text-xs text-slate/60 font-mono ltr" dir="ltr">{{ $log->executed_at->format('Y-m-d H:i') }}</td>
+                                    <td class="p-3 text-xs text-slate/60 font-mono ltr" dir="ltr">{{ $log->persian_executed_at }}</td>
                                     <td class="p-3 text-center">
                                         @if($log->output)
                                             <button type="button" class="admin-btn !py-1 !px-2 text-[10px] view-log-output" data-output="{{ $log->output }}">

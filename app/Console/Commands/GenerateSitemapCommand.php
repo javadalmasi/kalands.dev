@@ -77,7 +77,7 @@ class GenerateSitemapCommand extends Command
 
         $start = (int) $settings->get('sitemap.schedule_start', 1);
         $end = (int) $settings->get('sitemap.schedule_end', 5);
-        $hour = (int) now()->timezone('Asia/Tehran')->format('G');
+        $hour = (int) now()->format('G');
 
         if ($start <= $end) {
             return $hour >= $start && $hour < $end;

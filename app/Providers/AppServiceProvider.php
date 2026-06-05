@@ -52,7 +52,7 @@ class AppServiceProvider extends ServiceProvider
                     'items' => Ticket::query()->where('status', 'open')->with('user')->latest()->limit(5)->get()->map(fn($t) => [
                         'title' => $t->subject,
                         'meta' => $t->user?->name ?? 'کاربر مهمان',
-                        'time' => $t->created_at->diffForHumans(),
+                        'time' => persianTimeAgo($t->created_at),
                         'route' => route('dash.admin.tickets.show', ['authkey' => $authkey, 'ticket' => $t->id])
                     ])
                 ];
@@ -70,7 +70,7 @@ class AppServiceProvider extends ServiceProvider
                     'items' => Comment::query()->where('status', Comment::STATUS_PENDING)->with('user')->latest()->limit(5)->get()->map(fn($c) => [
                         'title' => Str::limit($c->content, 50),
                         'meta' => $c->user?->name ?? $c->name ?? 'ناشناس',
-                        'time' => $c->created_at->diffForHumans(),
+                        'time' => persianTimeAgo($c->created_at),
                         'route' => route('dash.admin.modules.show', ['authkey' => $authkey, 'moduleKey' => 'comments', 'tab' => 'tab-moderation'])
                     ])
                 ];
@@ -88,7 +88,7 @@ class AppServiceProvider extends ServiceProvider
                     'items' => ContactMessage::query()->where('is_read', false)->latest()->limit(5)->get()->map(fn($m) => [
                         'title' => $m->subject,
                         'meta' => $m->name,
-                        'time' => $m->created_at->diffForHumans(),
+                        'time' => persianTimeAgo($m->created_at),
                         'route' => route('dash.admin.modules.show', ['authkey' => $authkey, 'moduleKey' => 'contact', 'tab' => 'tab-messages'])
                     ])
                 ];
