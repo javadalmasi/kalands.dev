@@ -23,7 +23,7 @@ class SecurityHeaders
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data: https:",
             "font-src 'self' data: https:",
-            "connect-src 'self' https://www.kalands.ir",
+            "connect-src 'self' https://www.kalands.ir https://dgkl.io https://www.digikala.com https://a.bslm.ir https://basalam.com",
             "base-uri 'self'",
             "form-action 'self'",
             "frame-ancestors 'none'",
