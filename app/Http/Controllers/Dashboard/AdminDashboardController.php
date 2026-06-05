@@ -567,6 +567,7 @@ class AdminDashboardController extends Controller
             'queue_log_retention_days' => 7,
             'laravel_log_retention_days' => 14,
             'driver' => $currentDriver,
+            'webservice_enabled' => true,
         ]);
 
         $lastRuns = QueueExecutionLog::query()->latest('executed_at')->limit(100)->get();
@@ -586,6 +587,7 @@ class AdminDashboardController extends Controller
             'driver' => ['nullable', 'string', 'in:sync,database,redis,beanstalkd,sqs'],
             'queue_log_retention_days' => ['required', 'integer', 'min:1', 'max:365'],
             'laravel_log_retention_days' => ['required', 'integer', 'min:1', 'max:365'],
+            'webservice_enabled' => ['nullable', 'in:0,1'],
         ]);
 
         $current = $settingsRepository->get('queue.settings', []);
@@ -595,6 +597,7 @@ class AdminDashboardController extends Controller
             'queue_log_retention_days' => (int) $data['queue_log_retention_days'],
             'laravel_log_retention_days' => (int) $data['laravel_log_retention_days'],
             'driver' => $data['driver'] ?? $current['driver'] ?? 'sync',
+            'webservice_enabled' => (bool) ($data['webservice_enabled'] ?? false),
         ]);
 
         if ($request->filled('driver')) {

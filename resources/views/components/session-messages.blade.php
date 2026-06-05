@@ -1,5 +1,8 @@
 @if (session('message'))
-    <div class="font-medium bg-primary mt-3 mb-4 text-white px-3 py-2 rounded">
-        <p>{{ session('message') }}</p>
+    <div class="font-medium mt-3 mb-4 px-4 py-3 rounded-xl border bg-primary/5 border-primary/20 text-primary">
+        <div class="flex items-center gap-2">
+            <span class="material-icons text-sm">check_circle</span>
+            <span>{{ session('message') }}</span>
+        </div>
     </div>
 @endif

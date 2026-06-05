@@ -1,4 +1,4 @@
-const toggleLogMeta = (el) => {
+window.toggleLogMeta = (el) => {
     const meta = el.querySelector('.log-meta');
     if (meta) meta.classList.toggle('hidden');
 };

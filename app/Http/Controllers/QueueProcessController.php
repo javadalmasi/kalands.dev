@@ -16,6 +16,11 @@ class QueueProcessController extends Controller
     public function process(SettingsRepository $settingsRepository, GeoIPService $geoIPService): JsonResponse
     {
         $queueSettings = $settingsRepository->get('queue.settings', []);
+
+        if (!($queueSettings['webservice_enabled'] ?? true)) {
+            return response()->json(['message' => 'وبسرویس صف غیرفعال شده است.'], 403);
+        }
+
         $expectedToken = $queueSettings['cron_token'] ?? null;
         $providedToken = request()->header('X-Queue-Token');
 

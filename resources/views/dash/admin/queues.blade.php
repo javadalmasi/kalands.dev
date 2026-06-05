@@ -50,7 +50,7 @@
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center gap-2">
                                     <span class="material-icons text-sm text-slate">schedule</span>
-                                    <span class="text-xs font-bold admin-ltr">{{ $run->executed_at }}</span>
+                                    <span class="text-xs font-bold admin-ltr">{{ $run->persian_executed_at }}</span>
                                 </div>
                                 <span class="px-3 py-1 rounded-full text-[10px] font-bold {{ $run->status === 'success' ? 'bg-success text-white' : 'bg-danger text-white' }}">
                                     {{ $run->status === 'success' ? 'موفق' : 'ناموفق' }}
@@ -120,6 +120,19 @@
                                 <option value="artisan" @selected(($settings['mode'] ?? '') === 'artisan')>Artisan Worker (پیشنهادی برای سرور اختصاصی/مجازی)</option>
                             </select>
                         </div>
+
+                        <div class="flex items-center justify-between p-4 rounded-xl bg-slate/5 border border-slate/10">
+                            <div>
+                                <label class="text-sm font-bold block">دسترسی از وبسرویس</label>
+                                <p class="text-[11px] text-slate/50 mt-0.5">امکان پردازش صف از طریق آدرس Cron را فعال/غیرفعال کنید</p>
+                            </div>
+                            <label class="admin-switch">
+                                <input type="hidden" name="webservice_enabled" value="0">
+                                <input type="checkbox" name="webservice_enabled" value="1" class="admin-switch-input" @checked($settings['webservice_enabled'] ?? true)>
+                                <span class="admin-switch-track"></span>
+                                <span class="admin-switch-ball"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -166,13 +179,14 @@
                         <p class="text-xs text-slate/60">باعث نامعتبر شدن دستور Cron فعلی می‌شود.</p>
                     </div>
                     <button type="button"
-                            onclick="if(confirm('بازتولید توکن صف باعث نامعتبر شدن دستور قبلی می‌شود. ادامه می‌دهید؟')) document.getElementById('regenerate-token-form').submit()"
+                            onclick="document.getElementById('regenerate-token-modal').showModal()"
                             class="admin-btn admin-btn-secondary text-danger border-danger/20 hover:bg-danger/10">
                         <span class="material-icons">sync</span>
                         تولید مجدد توکن
                     </button>
                 </div>
             </div>
+
         </div>
 
         <div id="tab-driver" class="tab-content hidden space-y-6">
@@ -252,6 +266,8 @@
 </div>
     </form>
 
+    <form id="regenerate-token-form" action="{{ route('dash.admin.queues.token.regenerate', ['authkey' => $authkey]) }}" method="POST" class="hidden">@csrf</form>
+
     <div id="tab-help" class="tab-content hidden">
         <div class="flex gap-6 items-start">
             <div class="flex-1 min-w-0">
@@ -327,6 +343,24 @@
             </aside>
         </div>
     </div>
+
+<dialog id="regenerate-token-modal" class="admin-dialog w-[min(100vw-32px,450px)]">
+    <div class="admin-dialog-body">
+        <div class="flex items-start gap-4 p-2">
+            <div class="w-12 h-12 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                <span class="material-icons !text-2xl">help_outline</span>
+            </div>
+            <div class="flex-1">
+                <h3 class="font-black text-slate-800 dark:text-white mb-2">تایید عملیات</h3>
+                <p class="text-xs leading-6 text-slate-500 dark:text-slate-400">بازتولید توکن صف باعث نامعتبر شدن دستور Cron قبلی می‌شود. ادامه می‌دهید؟</p>
+            </div>
+        </div>
+        <div class="admin-dialog-actions">
+            <button type="button" onclick="this.closest('dialog').close()" class="admin-btn admin-btn-secondary">انصراف</button>
+            <button type="button" onclick="document.getElementById('regenerate-token-form').submit()" class="admin-btn admin-btn-primary px-8">تایید</button>
+        </div>
+    </div>
+</dialog>
 
 </x-layouts.admin-dashboard>
     @vite(['resources/js/admin-queues-hub.js'])
