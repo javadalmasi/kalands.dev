@@ -11,31 +11,33 @@ class AffiliateRedirectController extends Controller
 {
     public function redirect(string $slug, SettingsRepository $settingsRepository): RedirectResponse
     {
+        $cacheSettings = $settingsRepository->get('cache.webservices', []);
+
         // Decode Slug using Offset
         // Handle Basalam Product: b{id}
         if (preg_match('/^b([0-9a-z]+)$/', $slug, $matches)) {
             $productId = $matches[1];
-            return $this->fetchFromBasalamAndRedirect($productId, $slug, $settingsRepository);
+            return $this->fetchFromBasalamAndRedirect($productId, $slug, $settingsRepository, $cacheSettings);
         }
 
         // Handle Digikala Product: d{id}
         if (preg_match('/^d([0-9a-z]+)$/', $slug, $matches)) {
             $productId = $matches[1];
-            return $this->redirectToDigikala($productId);
+            return $this->redirectToDigikala($productId, $cacheSettings);
         }
 
         // Handle Digikala Search Links: ds_{base64_query}
         if (preg_match('/^ds_([a-zA-Z0-9\-\_=]+)$/', $slug, $matches)) {
             $query = base64_decode(str_replace(['-', '_'], ['+', '/'], $matches[1]));
             if ($query) {
-                return $this->redirectToSearch($query, 'digikala');
+                return $this->redirectToSearch($query, 'digikala', $cacheSettings);
             }
         }
 
         abort(404);
     }
 
-    private function fetchFromBasalamAndRedirect(string $productId, string $slug, SettingsRepository $settingsRepository): RedirectResponse
+    private function fetchFromBasalamAndRedirect(string $productId, string $slug, SettingsRepository $settingsRepository, array $cacheSettings = []): RedirectResponse
     {
         // Check DB first
         $affiliate = AffiliateLink::query()->where('product_id', $productId)->where('store', 'basalam')->first();
@@ -49,7 +51,7 @@ class AffiliateRedirectController extends Controller
             }
             
             $url = str_starts_with($affiliate->link, 'http') ? $affiliate->link : $prefix . $affiliate->link;
-            return $this->secureRedirect($url);
+            return $this->secureRedirect($url, $cacheSettings);
         }
 
         // Request to API
@@ -107,7 +109,7 @@ class AffiliateRedirectController extends Controller
                     'slug' => $slug
                 ]);
 
-                return $this->secureRedirect($shortUrl);
+                return $this->secureRedirect($shortUrl, $cacheSettings);
             }
 
             throw new \Exception('Short URL not found in response');
@@ -116,23 +118,67 @@ class AffiliateRedirectController extends Controller
         }
     }
 
-    private function redirectToDigikala(int $productId): RedirectResponse
+    private function redirectToDigikala(int $productId, array $cacheSettings = []): RedirectResponse
     {
         $fullUrl = 'https://dgkl.io/api/v1/Click/b/4dJ4L?b64=' . base64_encode('https://www.digikala.com/product/dkp-' . $productId . '/');
-        return $this->secureRedirect($fullUrl);
+        return $this->secureRedirect($fullUrl, $cacheSettings);
     }
 
-    private function redirectToSearch(string $query, string $store): RedirectResponse
+    private function redirectToSearch(string $query, string $store, array $cacheSettings = []): RedirectResponse
     {
         $fullUrl = 'https://dgkl.io/api/v1/Click/b/4dJ4L?b64=' . base64_encode('https://www.digikala.com/search/?q=' . urlencode($query));
-        return $this->secureRedirect($fullUrl);
+        return $this->secureRedirect($fullUrl, $cacheSettings);
     }
 
-    private function secureRedirect(string $link): RedirectResponse
+    private function secureRedirect(string $link, array $cacheSettings = []): RedirectResponse
     {
-        return redirect()->away($link)->withHeaders([
+        $response = redirect()->away($link)->withHeaders([
             'X-Robots-Tag' => 'noindex, noarchive, nofollow',
             'Referrer-Policy' => 'no-referrer',
         ]);
+
+        $ttl = (int) ($cacheSettings['affiliate_ttl'] ?? 31536000);
+        $type = $cacheSettings['affiliate_cache_type'] ?? 'public';
+        $litespeedEnabled = (bool) ($cacheSettings['affiliate_litespeed'] ?? true);
+
+        $customCcTtl = $cacheSettings['affiliate_custom_cc_ttl'] ?? null;
+        $customCcType = $cacheSettings['affiliate_custom_cc_type'] ?? null;
+        $customLscTtl = $cacheSettings['affiliate_custom_lsc_ttl'] ?? null;
+        $customLscType = $cacheSettings['affiliate_custom_lsc_type'] ?? null;
+        $customCdnTtl = $cacheSettings['affiliate_custom_cdn_ttl'] ?? null;
+        $customCdnType = $cacheSettings['affiliate_custom_cdn_type'] ?? null;
+        $customCfTtl = $cacheSettings['affiliate_custom_cf_ttl'] ?? null;
+        $customCfType = $cacheSettings['affiliate_custom_cf_type'] ?? null;
+
+        $ccTtl = $customCcTtl ?? $ttl;
+        $ccType = $customCcType ?? $type;
+        $lscTtl = $customLscTtl ?? $ttl;
+        $lscType = $customLscType ?? $type;
+        $cdnTtl = $customCdnTtl ?? $ttl;
+        $cdnType = $customCdnType ?? $type;
+        $cfTtl = $customCfTtl ?? $ttl;
+        $cfType = $customCfType ?? $type;
+
+        if ($ttl > 0) {
+            $response->header('Cache-Control', "{$ccType}, max-age={$ccTtl}, s-maxage={$ccTtl}");
+
+            $cdnValue = $cdnType === 'public' ? "max-age={$cdnTtl}" : null;
+            if ($cdnValue) {
+                $response->header('CDN-Cache-Control', $cdnValue);
+            }
+
+            $cfValue = $cfType === 'public' ? "max-age={$cfTtl}" : null;
+            if ($cfValue) {
+                $response->header('Cloudflare-CDN-Cache-Control', $cfValue);
+            }
+
+            $response->header('Expires', gmdate('D, d M Y H:i:s \G\M\T', time() + $ttl));
+
+            if ($litespeedEnabled) {
+                $response->header('X-LiteSpeed-Cache-Control', "{$lscType}, max-age={$lscTtl}");
+            }
+        }
+
+        return $response;
     }
 }

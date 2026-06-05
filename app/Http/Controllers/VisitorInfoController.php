@@ -70,28 +70,41 @@ class VisitorInfoController extends Controller
         $type = $cacheSettings['visitor_info_cache_type'] ?? 'private';
         $litespeedEnabled = (bool) ($cacheSettings['visitor_info_litespeed'] ?? true);
 
-        $customCc = $cacheSettings['visitor_info_custom_cc'] ?? null;
-        $customLsc = $cacheSettings['visitor_info_custom_lsc'] ?? null;
-        $customCdn = $cacheSettings['visitor_info_custom_cdn'] ?? null;
-        $customCf = $cacheSettings['visitor_info_custom_cf'] ?? null;
+        $customCcTtl = $cacheSettings['visitor_info_custom_cc_ttl'] ?? null;
+        $customCcType = $cacheSettings['visitor_info_custom_cc_type'] ?? null;
+        $customLscTtl = $cacheSettings['visitor_info_custom_lsc_ttl'] ?? null;
+        $customLscType = $cacheSettings['visitor_info_custom_lsc_type'] ?? null;
+        $customCdnTtl = $cacheSettings['visitor_info_custom_cdn_ttl'] ?? null;
+        $customCdnType = $cacheSettings['visitor_info_custom_cdn_type'] ?? null;
+        $customCfTtl = $cacheSettings['visitor_info_custom_cf_ttl'] ?? null;
+        $customCfType = $cacheSettings['visitor_info_custom_cf_type'] ?? null;
 
-        if ($ttl > 0 || $customCc) {
-            $response->header('Cache-Control', $customCc ?: "{$type}, max-age={$ttl}");
+        $ccTtl = $customCcTtl ?? $ttl;
+        $ccType = $customCcType ?? $type;
+        $lscTtl = $customLscTtl ?? $ttl;
+        $lscType = $customLscType ?? $type;
+        $cdnTtl = $customCdnTtl ?? $ttl;
+        $cdnType = $customCdnType ?? $type;
+        $cfTtl = $customCfTtl ?? $ttl;
+        $cfType = $customCfType ?? $type;
 
-            $cdnValue = $customCdn ?: ($type === 'public' ? "max-age={$ttl}" : null);
+        if ($ttl > 0) {
+            $response->header('Cache-Control', "{$ccType}, max-age={$ccTtl}");
+
+            $cdnValue = $cdnType === 'public' ? "max-age={$cdnTtl}" : null;
             if ($cdnValue) {
                 $response->header('CDN-Cache-Control', $cdnValue);
             }
 
-            $cfValue = $customCf ?: ($type === 'public' ? "max-age={$ttl}" : null);
+            $cfValue = $cfType === 'public' ? "max-age={$cfTtl}" : null;
             if ($cfValue) {
                 $response->header('Cloudflare-CDN-Cache-Control', $cfValue);
             }
 
             $response->header('Expires', gmdate('D, d M Y H:i:s \G\M\T', time() + $ttl));
 
-            if ($litespeedEnabled || $customLsc) {
-                $response->header('X-LiteSpeed-Cache-Control', $customLsc ?: "{$type}, max-age={$ttl}");
+            if ($litespeedEnabled) {
+                $response->header('X-LiteSpeed-Cache-Control', "{$lscType}, max-age={$lscTtl}");
             }
         }
 
