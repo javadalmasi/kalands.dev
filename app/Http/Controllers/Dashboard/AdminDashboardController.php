@@ -3456,6 +3456,9 @@ class AdminDashboardController extends Controller
             'affiliate_ttl' => 31536000,
             'affiliate_litespeed' => true,
             'affiliate_cache_type' => 'public',
+            'product_ttl' => 86400,
+            'product_litespeed' => true,
+            'product_cache_type' => 'public',
         ]);
 
         $htaccessPath = public_path('.htaccess');
@@ -3516,6 +3519,18 @@ class AdminDashboardController extends Controller
             'affiliate_ttl' => ['required', 'integer', 'min:0', 'max:31536000'],
             'affiliate_litespeed' => ['nullable', 'boolean'],
             'affiliate_cache_type' => ['required', 'in:public,private'],
+            'product_ttl' => ['required', 'integer', 'min:0', 'max:31536000'],
+            'product_litespeed' => ['nullable', 'boolean'],
+            'product_cache_type' => ['required', 'in:public,private'],
+            'product_custom_enabled' => ['nullable', 'boolean'],
+            'product_custom_cc_ttl' => ['nullable', 'integer', 'min:0', 'max:31536000'],
+            'product_custom_cc_type' => ['nullable', 'in:public,private'],
+            'product_custom_lsc_ttl' => ['nullable', 'integer', 'min:0', 'max:31536000'],
+            'product_custom_lsc_type' => ['nullable', 'in:public,private'],
+            'product_custom_cdn_ttl' => ['nullable', 'integer', 'min:0', 'max:31536000'],
+            'product_custom_cdn_type' => ['nullable', 'in:public,private'],
+            'product_custom_cf_ttl' => ['nullable', 'integer', 'min:0', 'max:31536000'],
+            'product_custom_cf_type' => ['nullable', 'in:public,private'],
             'affiliate_custom_enabled' => ['nullable', 'boolean'],
             'affiliate_custom_cc_ttl' => ['nullable', 'integer', 'min:0', 'max:31536000'],
             'affiliate_custom_cc_type' => ['nullable', 'in:public,private'],
@@ -3564,6 +3579,18 @@ class AdminDashboardController extends Controller
             'affiliate_custom_cdn_type' => $data['affiliate_custom_cdn_type'] ?? null,
             'affiliate_custom_cf_ttl' => $data['affiliate_custom_cf_ttl'] ?? null,
             'affiliate_custom_cf_type' => $data['affiliate_custom_cf_type'] ?? null,
+            'product_ttl' => (int) $data['product_ttl'],
+            'product_litespeed' => (bool) ($data['product_litespeed'] ?? false),
+            'product_cache_type' => $data['product_cache_type'],
+            'product_custom_enabled' => (bool) ($data['product_custom_enabled'] ?? false),
+            'product_custom_cc_ttl' => $data['product_custom_cc_ttl'] ?? null,
+            'product_custom_cc_type' => $data['product_custom_cc_type'] ?? null,
+            'product_custom_lsc_ttl' => $data['product_custom_lsc_ttl'] ?? null,
+            'product_custom_lsc_type' => $data['product_custom_lsc_type'] ?? null,
+            'product_custom_cdn_ttl' => $data['product_custom_cdn_ttl'] ?? null,
+            'product_custom_cdn_type' => $data['product_custom_cdn_type'] ?? null,
+            'product_custom_cf_ttl' => $data['product_custom_cf_ttl'] ?? null,
+            'product_custom_cf_type' => $data['product_custom_cf_type'] ?? null,
         ]);
 
         $activityLogger->log('settings.cache_management.update', auth('admin')->user(), 'بروزرسانی تنظیمات کش', $data);

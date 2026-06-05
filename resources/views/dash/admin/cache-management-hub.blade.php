@@ -279,6 +279,130 @@
                 </div>
             </div>
 
+            {{-- Product Page Cache --}}
+            <div class="admin-card is-surface">
+                <div class="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-slate/10">
+                    <div class="flex items-center gap-3">
+                        <div class="rounded-full bg-primary/10 p-2 text-primary">
+                            <span class="material-icons">inventory_2</span>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-slate">تنظیمات کش Product Page (/product/*)</h2>
+                            <p class="text-xs text-slate/60 mt-1">مدیریت هدرهای کش برای صفحات محصول</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid gap-6 md:grid-cols-3">
+                    <div>
+                        <label class="text-sm font-bold block mb-2">زمان TTL (ثانیه)</label>
+                        <input type="number" name="product_ttl" value="{{ $settings['product_ttl'] ?? 86400 }}" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="86400">
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-bold block mb-2">نوع کش (Cache-Control)</label>
+                        <select name="product_cache_type" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                            <option value="public" @selected(($settings['product_cache_type'] ?? 'public') === 'public')>Public</option>
+                            <option value="private" @selected(($settings['product_cache_type'] ?? 'public') === 'private')>Private</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <div class="flex items-center justify-between p-3 rounded-xl border border-slate/10 bg-slate/5">
+                            <div class="flex-1">
+                                <label class="text-sm font-bold block mb-1">LiteSpeed Cache</label>
+                            </div>
+                            <label class="admin-switch">
+                                <input type="checkbox" name="product_litespeed" value="1" class="admin-switch-input" @checked($settings['product_litespeed'] ?? true)>
+                                <div class="admin-switch-track"></div>
+                                <div class="admin-switch-ball"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between p-3 rounded-xl border border-slate/10 bg-slate/5">
+                            <div class="flex-1">
+                                <label class="text-sm font-bold block mb-1">پیشرفته</label>
+                            </div>
+                            <label class="admin-switch">
+                                <input type="checkbox" name="product_custom_enabled" value="1" class="admin-switch-input" id="sw-product-custom" @checked($settings['product_custom_enabled'] ?? false)>
+                                <div class="admin-switch-track"></div>
+                                <div class="admin-switch-ball"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 grid gap-6 md:grid-cols-2 pt-6 border-t border-slate/10 {{ ($settings['product_custom_enabled'] ?? false) ? '' : 'hidden' }}" id="product-custom-fields">
+                    <div class="border border-slate/10 rounded-xl p-4 bg-slate/5">
+                        <label class="text-xs font-bold block mb-3 text-slate">Custom Cache-Control</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
+                                <input type="number" name="product_custom_cc_ttl" value="{{ $settings['product_custom_cc_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
+                                <select name="product_custom_cc_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                    <option value="">پیش‌فرض</option>
+                                    <option value="public" @selected(($settings['product_custom_cc_type'] ?? '') === 'public')>Public</option>
+                                    <option value="private" @selected(($settings['product_custom_cc_type'] ?? '') === 'private')>Private</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border border-slate/10 rounded-xl p-4 bg-slate/5">
+                        <label class="text-xs font-bold block mb-3 text-slate">Custom X-LiteSpeed-Cache</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
+                                <input type="number" name="product_custom_lsc_ttl" value="{{ $settings['product_custom_lsc_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
+                                <select name="product_custom_lsc_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                    <option value="">پیش‌فرض</option>
+                                    <option value="public" @selected(($settings['product_custom_lsc_type'] ?? '') === 'public')>Public</option>
+                                    <option value="private" @selected(($settings['product_custom_lsc_type'] ?? '') === 'private')>Private</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border border-slate/10 rounded-xl p-4 bg-slate/5">
+                        <label class="text-xs font-bold block mb-3 text-slate">Custom CDN-Cache-Control</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
+                                <input type="number" name="product_custom_cdn_ttl" value="{{ $settings['product_custom_cdn_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
+                                <select name="product_custom_cdn_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                    <option value="">پیش‌فرض</option>
+                                    <option value="public" @selected(($settings['product_custom_cdn_type'] ?? '') === 'public')>Public</option>
+                                    <option value="private" @selected(($settings['product_custom_cdn_type'] ?? '') === 'private')>Private</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border border-slate/10 rounded-xl p-4 bg-slate/5">
+                        <label class="text-xs font-bold block mb-3 text-slate">Custom Cloudflare-CDN-Cache</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
+                                <input type="number" name="product_custom_cf_ttl" value="{{ $settings['product_custom_cf_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
+                                <select name="product_custom_cf_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                    <option value="">پیش‌فرض</option>
+                                    <option value="public" @selected(($settings['product_custom_cf_type'] ?? '') === 'public')>Public</option>
+                                    <option value="private" @selected(($settings['product_custom_cf_type'] ?? '') === 'private')>Private</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- Visitor Info Cache --}}
             <div class="admin-card is-surface">
                 <div class="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-slate/10">
@@ -539,6 +663,7 @@
                                 <ul class="list-disc list-inside space-y-1 mr-4">
                                     <li><b>Autocomplete:</b> وب‌سرویس جستجوی هوشمند سایت</li>
                                     <li><b>Affiliate:</b> وب‌سرویس ریدایرکت لینک‌های وابسته (/go/*)</li>
+                                    <li><b>Product Page:</b> صفحات محصول (/product/*)</li>
                                     <li><b>Visitor Info:</b> وب‌سرویس مشخصات بازدیدکننده (IP، موقعیت، مرورگر)</li>
                                 </ul>
                             </div>
@@ -551,7 +676,7 @@
                                 <span class="material-icons text-primary text-lg">schedule</span>
                                 تنظیمات TTL و Cache-Control
                             </h3>
-                            <p>TTL (Time To Live) زمان نگهداری داده‌ها در کش را مشخص می‌کند. مقدار پیش‌فرض برای Autocomplete و Affiliate ۳۱۵۳۶۰۰۰ ثانیه (یک سال) است.</p>
+                            <p>TTL (Time To Live) زمان نگهداری داده‌ها در کش را مشخص می‌کند. مقدار پیش‌فرض برای Autocomplete و Affiliate ۳۱۵۳۶۰۰۰ ثانیه (یک سال) و برای Product Page ۸۶۴۰۰ ثانیه (۲۴ ساعت) است.</p>
                             <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
                                 <h4 class="font-bold text-slate mb-2">انواع کش</h4>
                                 <ul class="list-disc list-inside space-y-1 mr-4">
@@ -607,71 +732,5 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const tabs = document.querySelectorAll('[data-tab-target]');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const target = tab.getAttribute('data-tab-target');
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-                    document.getElementById(target).classList.remove('hidden');
-
-                    tabs.forEach(t => {
-                        t.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-bold');
-                        t.classList.add('text-slate', 'font-medium');
-                    });
-                    tab.classList.add('text-primary', 'border-b-2', 'border-primary', 'font-bold');
-                    tab.classList.remove('text-slate', 'font-medium');
-
-                    // Update URL
-                    const url = new URL(window.location);
-                    url.searchParams.set('tab', target);
-                    window.history.pushState({}, '', url);
-                });
-            });
-
-            // Handle initial tab from URL
-            const params = new URLSearchParams(window.location.search);
-            const activeTab = params.get('tab');
-            if (activeTab) {
-                const tabBtn = document.querySelector(`[data-tab-target="${activeTab}"]`);
-                if (tabBtn) tabBtn.click();
-            }
-
-            // UI Logic for Cache Lookup dependencies
-            const swCacheLookup = document.getElementById('sw-cache-lookup');
-            const cacheOptions = document.getElementById('cache-lookup-options');
-            if (swCacheLookup && cacheOptions) {
-                swCacheLookup.addEventListener('change', () => {
-                    cacheOptions.classList.toggle('opacity-50', !swCacheLookup.checked);
-                    cacheOptions.classList.toggle('pointer-events-none', !swCacheLookup.checked);
-                });
-            }
-
-            // Custom Headers Toggles
-            const swAutocompleteCustom = document.getElementById('sw-autocomplete-custom');
-            const autocompleteFields = document.getElementById('autocomplete-custom-fields');
-            if (swAutocompleteCustom && autocompleteFields) {
-                swAutocompleteCustom.addEventListener('change', () => {
-                    autocompleteFields.classList.toggle('hidden', !swAutocompleteCustom.checked);
-                });
-            }
-
-            const swVisitorCustom = document.getElementById('sw-visitor-info-custom');
-            const visitorFields = document.getElementById('visitor-info-custom-fields');
-            if (swVisitorCustom && visitorFields) {
-                swVisitorCustom.addEventListener('change', () => {
-                    visitorFields.classList.toggle('hidden', !swVisitorCustom.checked);
-                });
-            }
-
-            const swAffiliateCustom = document.getElementById('sw-affiliate-custom');
-            const affiliateFields = document.getElementById('affiliate-custom-fields');
-            if (swAffiliateCustom && affiliateFields) {
-                swAffiliateCustom.addEventListener('change', () => {
-                    affiliateFields.classList.toggle('hidden', !swAffiliateCustom.checked);
-                });
-            }
-        });
-    </script>
+    @vite(['resources/js/admin-cache-hub.js'])
 </x-layouts.admin-dashboard>

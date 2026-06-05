@@ -21,5 +21,5 @@
     <!-- Product Gallery modal -->
     @include('layouts.product.parts.product-gallery-modal')
     @include('layouts.product.parts.share-modal')
-    @vite('resources/js/product-page.js')
+    @vite(['resources/js/visitor-info.js', 'resources/js/product-page.js'])
 @endsection

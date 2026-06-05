@@ -218,7 +218,7 @@ class ProductController extends Controller
             $challenge = app(JsChallengeService::class)->issue('comment_form');
         $commentSettings = app(\App\Repositories\SettingsRepository::class)->get('comments.settings', ['enabled' => true, 'disabled_message' => 'ارسال نظر در این زمان ممکن نیست.']);
 
-            return view('layouts.product.index', [
+            $response = response()->view('layouts.product.index', [
                 'data' => $data,
                 'product' => Product::find((string) $data['id']),
                 'comments' => $comments,
@@ -226,6 +226,10 @@ class ProductController extends Controller
             'commentSettings' => $commentSettings,
                 'store' => 'basalam'
             ]);
+
+            self::applyProductCacheHeaders($response);
+
+            return $response;
         } elseif (str_starts_with(request()->path(), 'product/xbs-')) {
             return redirect(config('app.url') . '/product/' . str_replace('xbs-', 'XBS-', $ProductID) . '/' . $ProductName);
         } else {
@@ -291,7 +295,7 @@ class ProductController extends Controller
             $challenge = app(JsChallengeService::class)->issue('comment_form');
         $commentSettings = app(\App\Repositories\SettingsRepository::class)->get('comments.settings', ['enabled' => true, 'disabled_message' => 'ارسال نظر در این زمان ممکن نیست.']);
 
-            return view('layouts.product.index', [
+            $response = response()->view('layouts.product.index', [
                 'data' => $data,
                 'product' => Product::find($data['data']['product']['id']),
                 'comments' => $comments,
@@ -299,6 +303,10 @@ class ProductController extends Controller
             'commentSettings' => $commentSettings,
                 'store' => 'digikala'
             ]);
+
+            self::applyProductCacheHeaders($response);
+
+            return $response;
         }
     }
 
@@ -441,6 +449,25 @@ class ProductController extends Controller
         $MainText = ['| فروشگاه اینترنتی دیجی‌کالا', 'دیجیکالا', 'دیجی کالا', 'دیجی‌کالا'];
         $Result = str_replace($MainText, '', $Query);
         return $Result;
+    }
+
+    private static function applyProductCacheHeaders(\Illuminate\Http\Response $response): void
+    {
+        $cacheSettings = app(\App\Repositories\SettingsRepository::class)->get('cache.webservices', []);
+
+        $ttl = (int) ($cacheSettings['product_ttl'] ?? 86400);
+        $type = $cacheSettings['product_cache_type'] ?? 'public';
+        $litespeedEnabled = (bool) ($cacheSettings['product_litespeed'] ?? true);
+
+        if ($ttl > 0) {
+            $response->header('Cache-Control', "{$type}, max-age={$ttl}, s-maxage={$ttl}");
+            $response->header('Expires', gmdate('D, d M Y H:i:s \G\M\T', time() + $ttl));
+            $response->header('CDN-Cache-Control', $type === 'public' ? "max-age={$ttl}" : null);
+            $response->header('Cloudflare-CDN-Cache-Control', $type === 'public' ? "max-age={$ttl}" : null);
+            if ($litespeedEnabled) {
+                $response->header('X-LiteSpeed-Cache-Control', "{$type}, max-age={$ttl}");
+            }
+        }
     }
 
     // 3th Functiuons

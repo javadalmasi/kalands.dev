@@ -388,13 +388,16 @@ window.copyToClipboardSocialShareMobile = (button) => {
     };
 
     var preCacheAffiliateUrls = function () {
-        var seen = {};
-        document.querySelectorAll('[data-human-href]').forEach(function (el) {
-            var url = el.getAttribute('data-human-href');
-            if (url && !seen[url]) {
-                seen[url] = true;
-                fetch(url, { method: 'GET', keepalive: true, mode: 'no-cors' });
-            }
+        (window.__visitorInfo || Promise.resolve({})).then(function (data) {
+            if (data.st === 'on' || data.ast === 'on') return;
+            var seen = {};
+            document.querySelectorAll('[data-human-href]').forEach(function (el) {
+                var url = el.getAttribute('data-human-href');
+                if (url && !seen[url]) {
+                    seen[url] = true;
+                    fetch(url, { method: 'GET', keepalive: true, mode: 'no-cors' });
+                }
+            });
         });
     };
 
