@@ -48,6 +48,7 @@ class PermissionSeeder extends Seeder
             'cache_management' => 'مدیریت کش',
             'object_cache' => 'مدیریت Object Cache',
             'artisan_commands' => 'دستورات Artisan',
+            'sitemap' => 'مدیریت سایت مپ',
             'indexnow' => 'ایندکس‌سازی (IndexNow)',
         ];
 
@@ -91,6 +92,7 @@ class PermissionSeeder extends Seeder
                 'contact.view', 'contact.edit',
                 'megamenu.view', 'megamenu.edit',
                 'error_pages.view', 'error_pages.edit',
+                'sitemap.view',
             ])->pluck('id')
         );
 
@@ -116,6 +118,7 @@ class PermissionSeeder extends Seeder
                 'communication.view', 'communication.edit', 'communication.full',
                 'affiliate.view', 'affiliate.edit', 'affiliate.full',
                 'file_manager.view', 'file_manager.full',
+                'sitemap.view',
             ])->pluck('id')
         );
 
