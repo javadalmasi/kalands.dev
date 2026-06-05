@@ -856,6 +856,14 @@ class AdminDashboardController extends Controller
                 'permission' => 'dashboard.view',
                 'category' => 'technical',
             ],
+            [
+                'key' => 'indexnow',
+                'label' => 'ایندکس‌سازی (IndexNow)',
+                'description' => 'ارسال خودکار محصولات به بینگ و یاندکس با برنامه‌ریزی ساعتی و کنترل نرخ',
+                'icon' => 'publish',
+                'permission' => 'indexnow.view',
+                'category' => 'technical',
+            ],
         ];
 
         $settings = [
@@ -935,6 +943,7 @@ class AdminDashboardController extends Controller
             'artisan_commands' => ['label' => 'دستورات Artisan', 'description' => 'اجرای دستورات کاربردی Artisan مانند پاکسازی کش، اجرای migration و ...', 'icon' => 'terminal', 'permission' => 'dashboard.view'],
             'categories' => ['label' => 'مدیریت دسته‌بندی‌ها', 'description' => 'مدیریت درخت دسته‌بندی محصولات و نگاشت هوشمند', 'icon' => 'category', 'permission' => 'dashboard.view'],
             'sitemap' => ['label' => 'مدیریت سایت مپ', 'description' => 'تولید خودکار sitemap.xml با پشتیبانی از ایندکس چندبخشی، فشرده‌سازی gzip و پردازش افزایشی', 'icon' => 'map', 'permission' => 'dashboard.view'],
+            'indexnow' => ['label' => 'ایندکس‌سازی (IndexNow)', 'description' => 'ارسال خودکار محصولات به بینگ و یاندکس با برنامه‌ریزی ساعتی و کنترل نرخ', 'icon' => 'publish', 'permission' => 'indexnow.view'],
         ];
 
         abort_unless(isset($modules[$moduleKey]), 404);
@@ -1071,6 +1080,10 @@ class AdminDashboardController extends Controller
 
         if ($moduleKey === 'sitemap') {
             return $this->sitemapHub();
+        }
+
+        if ($moduleKey === 'indexnow') {
+            return app(\App\Http\Controllers\Dashboard\IndexNowController::class)->hub($request);
         }
 
         return view('dash.admin.module-settings', [

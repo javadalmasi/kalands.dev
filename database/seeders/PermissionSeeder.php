@@ -48,6 +48,7 @@ class PermissionSeeder extends Seeder
             'cache_management' => 'مدیریت کش',
             'object_cache' => 'مدیریت Object Cache',
             'artisan_commands' => 'دستورات Artisan',
+            'indexnow' => 'ایندکس‌سازی (IndexNow)',
         ];
 
         $actions = [

@@ -41,6 +41,14 @@ Route::get('/test-error/{code}', function ($code) {
     abort($code);
 });
 
+Route::get('/{key}.txt', function (string $key) {
+    $path = public_path("{$key}.txt");
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    return response()->file($path, ['Content-Type' => 'text/plain']);
+})->where('key', '[a-z0-9]{32}');
+
 Route::controller(ResultController::class)->group(function () {
     Route::get('api/result/infinite', 'infinite')->name('result.infinite');
     Route::get('product/brand/{brand_name}', 'brand');
@@ -136,7 +144,7 @@ Route::prefix('dash/admin/{authkey}')
         Route::get('/', [AdminDashboardController::class, 'index'])->name('index')->middleware('permission:dashboard.view');
         Route::get('/modules', [AdminDashboardController::class, 'modules'])->name('modules')->middleware('permission:dashboard.view');
         Route::get('/modules/{moduleKey}', [AdminDashboardController::class, 'moduleSettings'])
-            ->whereIn('moduleKey', ['communication_hub', 'contact', 'affiliate', 'file_manager', 'home_items_management', 'email_templates', 'queues', 'comments', 'tickets', 'faq', 'analytics', 'geoip', 'robots', 'search', 'megamenu', 'error_pages', 'cache_management', 'object_cache', 'artisan_commands', 'visitor_intelligence', 'categories', 'sitemap'])
+            ->whereIn('moduleKey', ['communication_hub', 'contact', 'affiliate', 'file_manager', 'home_items_management', 'email_templates', 'queues', 'comments', 'tickets', 'faq', 'analytics', 'geoip', 'robots', 'search', 'megamenu', 'error_pages', 'cache_management', 'object_cache', 'artisan_commands', 'visitor_intelligence', 'categories', 'sitemap', 'indexnow'])
             ->name('modules.show');
         Route::post('/modules/home-slider', [AdminDashboardController::class, 'saveHomeSliderSettings'])->name('modules.home-slider.save')->middleware('permission:home_items.edit');
         Route::post('/modules/home-banners-categories', [AdminDashboardController::class, 'saveHomeBannerCategorySettings'])->name('modules.home-banners-categories.save')->middleware('permission:home_items.edit');
@@ -294,6 +302,11 @@ Route::prefix('dash/admin/{authkey}')
 
         Route::post('/modules/sitemap/trigger', [AdminDashboardController::class, 'triggerSitemap'])->name('sitemap.trigger')->middleware('permission:dashboard.view');
         Route::post('/modules/sitemap/settings', [AdminDashboardController::class, 'saveSitemapSettings'])->name('sitemap.settings')->middleware('permission:dashboard.view');
+
+        Route::post('/modules/indexnow/settings', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'saveSettings'])->name('indexnow.settings.save')->middleware('permission:indexnow.edit');
+        Route::post('/modules/indexnow/trigger', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'triggerHour'])->name('indexnow.trigger')->middleware('permission:indexnow.full');
+        Route::post('/modules/indexnow/regenerate-key', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'regenerateKey'])->name('indexnow.key.regenerate')->middleware('permission:indexnow.edit');
+        Route::get('/modules/indexnow/stats', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'getHourlyStats'])->name('indexnow.stats')->middleware('permission:indexnow.view');
     });
 
 Route::prefix('admin')
