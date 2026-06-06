@@ -46,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('queue:work --daemon')->everyMinute()->withoutOverlapping();
         $schedule->command('sitemap:generate')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('indexnow:process-hourly')->hourly()->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontFlash([
