@@ -6,6 +6,7 @@ use App\Jobs\AggregateAnalyticsEventsJob;
 use App\Models\QueueExecutionLog;
 use App\Repositories\SettingsRepository;
 use App\Services\GeoIPService;
+use App\Services\IndexNowService;
 use App\Services\Sitemap\SitemapGenerationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Artisan;
@@ -18,6 +19,7 @@ class QueueProcessController extends Controller
         SettingsRepository $settingsRepository,
         GeoIPService $geoIPService,
         SitemapGenerationService $sitemapGenerationService,
+        IndexNowService $indexNowService,
     ): JsonResponse
     {
         $queueSettings = $settingsRepository->get('queue.settings', []);
@@ -58,6 +60,10 @@ class QueueProcessController extends Controller
                 if ($run) {
                     $meta['tasks'][] = "شروع خودکار تولید سایت مپ: اجرای {$run->run_id} در صف قرار گرفت.";
                 }
+            }
+
+            if ($indexNowService->dispatchContinuousIfDue()) {
+                $meta['tasks'][] = 'شروع خودکار IndexNow برای ساعت جاری در صف قرار گرفت.';
             }
 
             // 2. Process Queue Jobs

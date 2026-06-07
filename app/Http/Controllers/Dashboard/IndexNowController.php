@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\IndexNow\DispatchHourlyJob;
 use App\Models\IndexNowRunLog;
 use App\Models\Product;
 use App\Repositories\SettingsRepository;
@@ -33,6 +32,7 @@ class IndexNowController extends Controller
             $enabled[$e] = $this->indexNowService->isEnabled($e);
             $keys[$e] = $this->indexNowService->getVerificationKey($e);
         }
+        $sharedKey = $this->indexNowService->getSharedVerificationKey();
 
         $dailyLimit = $this->indexNowService->getDailyLimit();
         $today = now()->format('Y-m-d');
@@ -72,10 +72,26 @@ class IndexNowController extends Controller
             }
         }
 
+        $engineStats = [];
+        foreach ($engines as $engine) {
+            $aggregates = IndexNowRunLog::query()
+                ->where('engine', $engine)
+                ->where('created_at', '>=', now()->subDays(7))
+                ->selectRaw('SUM(total_queued) as queued, SUM(total_submitted) as submitted, SUM(total_failed) as failed')
+                ->first();
+
+            $engineStats[$engine] = [
+                'queued' => (int) ($aggregates?->queued ?? 0),
+                'submitted' => (int) ($aggregates?->submitted ?? 0),
+                'failed' => (int) ($aggregates?->failed ?? 0),
+            ];
+        }
+
         return view('dash.admin.indexnow-hub', compact(
             'weights',
             'enabled',
             'keys',
+            'sharedKey',
             'dailyLimit',
             'todaySubmitted',
             'lastRuns',
@@ -84,6 +100,7 @@ class IndexNowController extends Controller
             'currentHour',
             'nowTehran',
             'estimatedDaily',
+            'engineStats',
         ));
     }
 
@@ -95,32 +112,34 @@ class IndexNowController extends Controller
             'daily_limit' => 'required|integer|min:100|max:1000000',
             'bing_enabled' => 'nullable|boolean',
             'yandex_enabled' => 'nullable|boolean',
-            'bing_key' => 'nullable|string|max:255',
-            'yandex_key' => 'nullable|string|max:255',
+            'shared_key' => 'nullable|string|max:255',
             'bing_weights' => 'nullable',
             'yandex_weights' => 'nullable',
         ]);
 
         $this->indexNowService->setDailyLimit((int) $request->input('daily_limit'));
 
+        $newSharedKey = (string) $request->input('shared_key', '');
+        $oldSharedKey = $this->indexNowService->getSharedVerificationKey();
+
+        if ($newSharedKey !== $oldSharedKey) {
+            if (!empty($oldSharedKey)) {
+                $oldPath = public_path("{$oldSharedKey}.txt");
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+            }
+
+            $this->indexNowService->setSharedVerificationKey($newSharedKey);
+        }
+
+        if ($newSharedKey !== '') {
+            $this->indexNowService->generateVerificationFile();
+        }
+
         foreach ($engines as $engine) {
             $enabled = (bool) $request->input("{$engine}_enabled", false);
             $this->indexNowService->setEnabled($engine, $enabled);
-
-            $newKey = $request->input("{$engine}_key");
-            $oldKey = $this->indexNowService->getVerificationKey($engine);
-
-            if ($newKey !== $oldKey) {
-                if (!empty($oldKey)) {
-                    $this->indexNowService->removeVerificationFile($engine);
-                }
-                $this->indexNowService->setVerificationKey($engine, $newKey ?? '');
-                if (!empty($newKey)) {
-                    $this->indexNowService->generateVerificationFile($engine);
-                }
-            } elseif (!empty($newKey)) {
-                $this->indexNowService->generateVerificationFile($engine);
-            }
 
             $weightsInput = $request->input("{$engine}_weights");
             $weights = is_string($weightsInput) ? json_decode($weightsInput, true) : $weightsInput;
@@ -140,72 +159,25 @@ class IndexNowController extends Controller
 
     public function regenerateKey(Request $request, ActivityLogger $activityLogger): JsonResponse
     {
-        $engine = $request->input('engine');
-        if (!in_array($engine, ['bing', 'yandex'])) {
-            return response()->json(['error' => 'Invalid engine'], 400);
-        }
-
-        $oldKey = $this->indexNowService->getVerificationKey($engine);
+        $oldKey = $this->indexNowService->getSharedVerificationKey();
         if (!empty($oldKey)) {
-            $this->indexNowService->removeVerificationFile($engine);
+            $oldPath = public_path("{$oldKey}.txt");
+            if (file_exists($oldPath)) {
+                unlink($oldPath);
+            }
         }
 
         $newKey = strtolower(Str::random(32));
-        $this->indexNowService->setVerificationKey($engine, $newKey);
-        $this->indexNowService->generateVerificationFile($engine);
+        $this->indexNowService->setSharedVerificationKey($newKey);
+        $this->indexNowService->generateVerificationFile();
 
         $activityLogger->log(
-            "settings.indexnow.key.{$engine}",
+            'settings.indexnow.key.shared',
             auth('admin')->user(),
-            "تولید کلید وریفای جدید برای {$this->indexNowService->engineLabel($engine)}",
+            'تولید کلید وریفای مشترک جدید برای بینگ و یاندکس',
         );
 
         return response()->json(['key' => $newKey]);
     }
 
-    public function triggerHour(Request $request, ActivityLogger $activityLogger): RedirectResponse
-    {
-        $hour = (int) $request->input('hour', now()->format('G'));
-        if ($hour < 0 || $hour > 23) {
-            return back()->withErrors(['message' => 'ساعت وارد شده معتبر نیست.']);
-        }
-
-        DispatchHourlyJob::dispatch($hour);
-
-        $activityLogger->log(
-            'settings.indexnow.trigger',
-            auth('admin')->user(),
-            "اجرای دستی IndexNow برای ساعت {$hour}",
-        );
-
-        return back()->with('message', "پردازش ساعت {$hour} در صف قرار گرفت.");
-    }
-
-    public function getHourlyStats(Request $request): JsonResponse
-    {
-        $engine = $request->input('engine', 'bing');
-        if (!in_array($engine, ['bing', 'yandex'])) {
-            return response()->json(['error' => 'Invalid engine'], 400);
-        }
-
-        $logs = IndexNowRunLog::query()
-            ->where('engine', $engine)
-            ->where('created_at', '>=', now()->subDays(7))
-            ->selectRaw('hour, SUM(total_queued) as queued, SUM(total_submitted) as submitted, SUM(total_failed) as failed')
-            ->groupBy('hour')
-            ->orderBy('hour')
-            ->get()
-            ->keyBy('hour');
-
-        $stats = [];
-        for ($h = 0; $h < 24; $h++) {
-            $stats[$h] = [
-                'queued' => (int) ($logs[$h]->queued ?? 0),
-                'submitted' => (int) ($logs[$h]->submitted ?? 0),
-                'failed' => (int) ($logs[$h]->failed ?? 0),
-            ];
-        }
-
-        return response()->json($stats);
-    }
 }

@@ -306,9 +306,7 @@ Route::prefix('dash/admin/{authkey}')
         Route::post('/modules/sitemap/reset', [AdminDashboardController::class, 'resetSitemap'])->name('sitemap.reset')->middleware('permission:sitemap.view');
 
         Route::post('/modules/indexnow/settings', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'saveSettings'])->name('indexnow.settings.save')->middleware('permission:indexnow.edit');
-        Route::post('/modules/indexnow/trigger', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'triggerHour'])->name('indexnow.trigger')->middleware('permission:indexnow.full');
         Route::post('/modules/indexnow/regenerate-key', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'regenerateKey'])->name('indexnow.key.regenerate')->middleware('permission:indexnow.edit');
-        Route::get('/modules/indexnow/stats', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'getHourlyStats'])->name('indexnow.stats')->middleware('permission:indexnow.view');
     });
 
 Route::prefix('admin')

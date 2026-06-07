@@ -18,6 +18,10 @@
                 <span class="material-icons text-base">dashboard</span>
                 <span>وضعیت و آمار</span>
             </button>
+            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-settings">
+                <span class="material-icons text-base">settings</span>
+                <span>تنظیمات</span>
+            </button>
             <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-bing">
                 <span class="material-icons text-base">travel_explore</span>
                 <span>تنظیمات بینگ</span>
@@ -59,6 +63,39 @@
                 </div>
             </div>
 
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                @foreach($engines as $engine)
+                    @php
+                        $engineLabel = $engine === 'bing' ? 'بینگ' : 'یاندکس';
+                        $submitted = $engineStats[$engine]['submitted'] ?? 0;
+                        $queued = $engineStats[$engine]['queued'] ?? 0;
+                        $failed = $engineStats[$engine]['failed'] ?? 0;
+                    @endphp
+                    <div class="admin-card">
+                        <h2 class="mb-4 font-bold flex items-center gap-2">
+                            <span class="material-icons text-primary">{{ $engine === 'bing' ? 'travel_explore' : 'language' }}</span>
+                            آمار ۷ روز گذشته - {{ $engineLabel }}
+                        </h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="text-center p-4 rounded-xl bg-slate/10 dark:bg-white/5">
+                                <div class="text-2xl font-bold text-primary">{{ number_format($submitted) }}</div>
+                                <div class="text-[10px] text-slate mt-1">ارسال شده</div>
+                            </div>
+                            <div class="text-center p-4 rounded-xl bg-slate/10 dark:bg-white/5">
+                                <div class="text-2xl font-bold text-warning">{{ number_format($queued) }}</div>
+                                <div class="text-[10px] text-slate mt-1">در صف</div>
+                            </div>
+                            <div class="text-center p-4 rounded-xl bg-slate/10 dark:bg-white/5">
+                                <div class="text-2xl font-bold text-danger">{{ number_format($failed) }}</div>
+                                <div class="text-[10px] text-slate mt-1">ناموفق</div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        <div id="tab-settings" class="tab-content space-y-6 hidden">
             <div class="admin-card">
                 <h2 class="mb-4 font-bold flex items-center gap-2">
                     <span class="material-icons text-primary">schedule</span>
@@ -70,6 +107,33 @@
                     <p class="text-[11px] text-slate/60 mt-1">حداکثر تعداد URL ارسالی به هر موتور جستجو در روز</p>
                 </div>
             </div>
+
+            <div class="admin-card">
+                <h2 class="mb-4 font-bold flex items-center gap-2">
+                    <span class="material-icons text-primary">vpn_key</span>
+                    کلید وریفای مشترک بینگ و یاندکس
+                </h2>
+                <div class="space-y-2 max-w-2xl">
+                    <div class="flex gap-2">
+                        <input type="text" name="shared_key" id="shared-key-input" value="{{ $sharedKey }}" class="admin-input flex-1 admin-ltr text-xs font-mono" placeholder="یک کلید ۳۲ کاراکتری وارد کنید یا تولید کنید">
+                        <button type="button" class="admin-btn admin-btn-secondary shrink-0" onclick="regenerateKey()">
+                            <span class="material-icons">refresh</span>
+                            تولید
+                        </button>
+                    </div>
+                    @if(!empty($sharedKey))
+                    <p class="text-[11px] text-success mt-1 flex items-center gap-1">
+                        <span class="material-icons text-xs">check_circle</span>
+                        فایل وریفای مشترک در <code class="bg-slate/10 px-1 rounded text-[10px] admin-ltr">/{{ $sharedKey }}.txt</code> قرار گرفته است.
+                    </p>
+                    @else
+                    <p class="text-[11px] text-warning mt-1 flex items-center gap-1">
+                        <span class="material-icons text-xs">warning</span>
+                        بدون کلید مشترک، ارسال IndexNow انجام نمی‌شود.
+                    </p>
+                    @endif
+                </div>
+            </div>
         </div>
 
         @foreach($engines as $engine)
@@ -78,163 +142,103 @@
             $engineIcon = $engine === 'bing' ? 'travel_explore' : 'language';
         @endphp
         <div id="tab-{{ $engine }}" class="tab-content space-y-6 hidden">
-            <div class="admin-card">
-                <div class="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-slate/10">
-                    <div class="flex items-center gap-3">
-                        <div class="rounded-full bg-primary/10 p-2 text-primary">
-                            <span class="material-icons">{{ $engineIcon }}</span>
+            <div class="admin-card !p-0 overflow-hidden">
+                <details class="group" open>
+                    <summary class="flex items-center justify-between gap-4 cursor-pointer list-none px-6 py-5 hover:bg-slate/5 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <div class="rounded-full bg-primary/10 p-2 text-primary">
+                                <span class="material-icons">{{ $engineIcon }}</span>
+                            </div>
+                            <div>
+                                <h2 class="font-bold text-slate">تنظیمات {{ $engineLabel }}</h2>
+                                <p class="text-xs text-slate/60 mt-0.5">مدیریت وریفای و تعیین نرخ ارسال ساعتی</p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 class="font-bold text-slate">تنظیمات {{ $engineLabel }}</h2>
-                            <p class="text-xs text-slate/60 mt-1">مدیریت وریفای و تعیین نرخ ارسال ساعتی</p>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-slate/60">وضعیت:</span>
+                            <label class="admin-switch">
+                                <input type="hidden" name="{{ $engine }}_enabled" value="0">
+                                <input type="checkbox" name="{{ $engine }}_enabled" value="1" class="admin-switch-input" {{ $enabled[$engine] ? 'checked' : '' }}>
+                                <div class="admin-switch-track"></div>
+                                <div class="admin-switch-ball"></div>
+                            </label>
+                            <span class="text-xs font-bold {{ $enabled[$engine] ? 'text-success' : 'text-slate' }}">{{ $enabled[$engine] ? 'فعال' : 'غیرفعال' }}</span>
                         </div>
-                    </div>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="hidden" name="{{ $engine }}_enabled" value="0">
-                        <input type="checkbox" name="{{ $engine }}_enabled" value="1" class="w-4 h-4 rounded border-slate/30 text-primary focus:ring-primary" {{ $enabled[$engine] ? 'checked' : '' }}>
-                        <span class="text-sm font-bold {{ $enabled[$engine] ? 'text-success' : 'text-slate' }}">{{ $enabled[$engine] ? 'فعال' : 'غیرفعال' }}</span>
-                    </label>
-                </div>
+                    </summary>
 
-                <div class="space-y-6 max-w-xl">
-                    <div>
-                        <label class="block text-sm font-medium mb-2">کلید وریفای {{ $engineLabel }}</label>
-                        <div class="flex gap-2">
-                            <input type="text" name="{{ $engine }}_key" id="{{ $engine }}-key-input" value="{{ $keys[$engine] }}" class="admin-input flex-1 admin-ltr text-xs font-mono" placeholder="یک کلید ۳۲ کاراکتری وارد کنید یا تولید کنید">
-                            <button type="button" class="admin-btn admin-btn-secondary shrink-0" onclick="regenerateKey('{{ $engine }}')">
-                                <span class="material-icons">refresh</span>
-                                تولید
-                            </button>
-                        </div>
-                        @if(!empty($keys[$engine]))
-                        <p class="text-[11px] text-success mt-2 flex items-center gap-1">
-                            <span class="material-icons text-xs">check_circle</span>
-                            فایل وریفای در <code class="bg-slate/10 px-1 rounded text-[10px] admin-ltr">/{{ $keys[$engine] }}.txt</code> قرار گرفته است.
-                        </p>
-                        @else
-                        <p class="text-[11px] text-warning mt-2 flex items-center gap-1">
-                            <span class="material-icons text-xs">warning</span>
-                            برای فعال‌سازی ایندکس‌سازی، یک کلید وریفای تولید یا وارد کنید.
-                        </p>
-                        @endif
-                    </div>
-                </div>
-            </div>
+                    <div class="px-6 pb-6 pt-4 border-t border-slate/10">
+                        <div class="admin-card" id="crawl-chart-card-{{ $engine }}">
+                            <h2 class="mb-4 font-bold flex items-center gap-2">
+                                <span class="material-icons text-primary">bar_chart</span>
+                                نمودار نرخ ارسال ساعتی - {{ $engineLabel }}
+                            </h2>
+                            <p class="text-xs text-slate mb-4">
+                                با کلیک روی هر ستون، وزن ارسال برای آن ساعت را مشخص کنید.
+                                وزن بیشتر = ارسال محصولات بیشتر در آن ساعت.
+                                وزن صفر = عدم ارسال در آن ساعت.
+                            </p>
 
-            <div class="admin-card" id="crawl-chart-card-{{ $engine }}">
-                <h2 class="mb-4 font-bold flex items-center gap-2">
-                    <span class="material-icons text-primary">bar_chart</span>
-                    نمودار نرخ ارسال ساعتی - {{ $engineLabel }}
-                </h2>
-                <p class="text-xs text-slate mb-4">
-                    با کلیک روی هر ستون، وزن ارسال برای آن ساعت را مشخص کنید.
-                    وزن بیشتر = ارسال محصولات بیشتر در آن ساعت.
-                    وزن صفر = عدم ارسال در آن ساعت.
-                </p>
-
-                <div class="crawlChartContainer">
-                    <div class="crawlChartInner">
-                        <div class="crawlYAxis">
-                            @for($w = 10; $w >= 0; $w--)
-                                <span class="crawlYTick">{{ $w }}</span>
-                            @endfor
-                        </div>
-                        <div class="crawlChartBody">
-                            <div class="crawlChartGrid" id="crawl-chart-{{ $engine }}">
-                                @for($w = 10; $w >= 1; $w--)
-                                    <div class="crawlRow" data-weight="{{ $w }}">
-                                        @php
-                                            $rowPerHour = $enabled[$engine] ? floor(($w / max(array_sum($weights[$engine]), 1)) * $dailyLimit) : 0;
-                                        @endphp
-                                        @for($h = 0; $h < 24; $h++)
-                                            @php
-                                                $currentWeight = $weights[$engine][$h] ?? 1;
-                                            @endphp
-                                            <button type="button"
-                                                class="crawlCell {{ $currentWeight >= $w ? 'selected' : '' }}"
-                                                data-engine="{{ $engine }}"
-                                                data-hour="{{ $h }}"
-                                                data-weight="{{ $w }}"
-                                                aria-label="وزن {{ $w }} برای ساعت {{ $h }}"
-                                                tabindex="-1"></button>
+                            <div class="crawlChartContainer">
+                                <div class="crawlChartInner">
+                                    <div class="crawlYAxis">
+                                        @for($w = 10; $w >= 0; $w--)
+                                            <span class="crawlYTick">{{ $w }}</span>
                                         @endfor
                                     </div>
-                                @endfor
+                                    <div class="crawlChartBody">
+                                        <div class="crawlChartGrid" id="crawl-chart-{{ $engine }}">
+                                            @for($w = 10; $w >= 1; $w--)
+                                                <div class="crawlRow" data-weight="{{ $w }}">
+                                                    @php
+                                                        $rowPerHour = $enabled[$engine] ? floor(($w / max(array_sum($weights[$engine]), 1)) * $dailyLimit) : 0;
+                                                    @endphp
+                                                    @for($h = 0; $h < 24; $h++)
+                                                        @php
+                                                            $currentWeight = $weights[$engine][$h] ?? 1;
+                                                        @endphp
+                                                        <button type="button"
+                                                            class="crawlCell {{ $currentWeight >= $w ? 'selected' : '' }}"
+                                                            data-engine="{{ $engine }}"
+                                                            data-hour="{{ $h }}"
+                                                            data-weight="{{ $w }}"
+                                                            aria-label="وزن {{ $w }} برای ساعت {{ $h }}"
+                                                            tabindex="-1"></button>
+                                                    @endfor
+                                                </div>
+                                            @endfor
+                                        </div>
+                                        <div class="crawlXAxis">
+                                            @for($h = 0; $h < 24; $h++)
+                                                <span class="crawlXLabel">{{ $h }}</span>
+                                            @endfor
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="crawlXAxis">
-                                @for($h = 0; $h < 24; $h++)
-                                    <span class="crawlXLabel">{{ $h }}</span>
-                                @endfor
+
+                            <div class="mt-4 flex items-center gap-4 text-xs text-slate">
+                                <span class="flex items-center gap-1">
+                                    <span class="w-4 h-4 rounded-sm bg-primary"></span>
+                                    = وزن فعال
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span class="w-4 h-4 rounded-sm border-2 border-slate/30 bg-transparent"></span>
+                                    = وزن غیرفعال
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <span class="material-icons text-xs">bar_chart</span>
+                                    = تعداد تخمینی ارسال در هر ساعت
+                                </span>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="mt-4 flex items-center gap-4 text-xs text-slate">
-                    <span class="flex items-center gap-1">
-                        <span class="w-4 h-4 rounded-sm bg-primary"></span>
-                        = وزن فعال
-                    </span>
-                    <span class="flex items-center gap-1">
-                        <span class="w-4 h-4 rounded-sm border-2 border-slate/30 bg-transparent"></span>
-                        = وزن غیرفعال
-                    </span>
-                    <span class="flex items-center gap-1">
-                        <span class="material-icons text-xs">bar_chart</span>
-                        = تعداد تخمینی ارسال در هر ساعت
-                    </span>
-                </div>
+                        <input type="hidden" name="{{ $engine }}_weights" id="{{ $engine }}-weights-input" value="{{ json_encode($weights[$engine]) }}">
+                    </div>
+                </details>
             </div>
-
-            <div class="admin-card">
-                <h2 class="mb-4 font-bold flex items-center gap-2">
-                    <span class="material-icons text-primary">query_stats</span>
-                    آمار ۷ روز گذشته - {{ $engineLabel }}
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="stats-{{ $engine }}">
-                    <div class="text-center p-4 rounded-xl bg-slate/10 dark:bg-white/5">
-                        <div class="text-2xl font-bold text-primary">—</div>
-                        <div class="text-[10px] text-slate mt-1">ارسال شده</div>
-                    </div>
-                    <div class="text-center p-4 rounded-xl bg-slate/10 dark:bg-white/5">
-                        <div class="text-2xl font-bold text-warning">—</div>
-                        <div class="text-[10px] text-slate mt-1">در صف</div>
-                    </div>
-                    <div class="text-center p-4 rounded-xl bg-slate/10 dark:bg-white/5">
-                        <div class="text-2xl font-bold text-danger">—</div>
-                        <div class="text-[10px] text-slate mt-1">ناموفق</div>
-                    </div>
-                </div>
-            </div>
-
-            <input type="hidden" name="{{ $engine }}_weights" id="{{ $engine }}-weights-input" value="{{ json_encode($weights[$engine]) }}">
         </div>
         @endforeach
     </form>
-
-    <div id="tab-overview" class="tab-content">
-        <div class="admin-card">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="font-bold flex items-center gap-2">
-                    <span class="material-icons text-primary">play_arrow</span>
-                    اجرای دستی
-                </h2>
-            </div>
-            <p class="text-sm text-slate mb-4">یک ساعت خاص را برای پردازش دستی انتخاب کنید.</p>
-            <form action="{{ route('dash.admin.indexnow.trigger', ['authkey' => $authkey]) }}" method="POST" class="flex items-center gap-4">
-                @csrf
-                <select name="hour" class="admin-input w-32">
-                    @for($h = 0; $h <= 23; $h++)
-                        <option value="{{ $h }}" {{ $h === $currentHour ? 'selected' : '' }}>{{ str_pad($h, 2, '0', STR_PAD_LEFT) }}:00</option>
-                    @endfor
-                </select>
-                <button type="submit" class="admin-btn admin-btn-primary">
-                    <span class="material-icons">send</span>
-                    اجرا
-                </button>
-            </form>
-        </div>
-    </div>
 
     <div id="tab-logs" class="tab-content space-y-6 hidden">
         <div class="admin-card">
@@ -346,15 +350,29 @@
                     <section id="doc-verify">
                         <h3 class="text-base font-bold mb-3 flex items-center gap-2">
                             <span class="material-icons text-primary text-lg">verified</span>
-                            وریفای مالکیت سایت
+                            وریفای مشترک بینگ و یاندکس
                         </h3>
-                        <p class="text-sm text-slate leading-7">برای استفاده از IndexNow باید مالکیت سایت خود را اثبات کنید. برای این کار:</p>
+                        <p class="text-sm text-slate leading-7">ماژول IndexNow از یک کلید وریفای مشترک برای هر دو موتور بینگ و یاندکس استفاده می‌کند. مالکیت سایت فقط یک‌بار تأیید می‌شود و فایل <code class="bg-slate/10 px-1.5 py-0.5 rounded">{key}.txt</code> باید در ریشه سایت قابل دسترس باشد.</p>
                         <ol class="list-decimal list-inside mt-3 space-y-2 mr-4 text-sm text-slate leading-7">
                             <li>یک کلید ۳۲ کاراکتری (ترجیحاً تصادفی) تولید یا وارد کنید.</li>
-                            <li>فایل <code class="bg-slate/10 px-1.5 py-0.5 rounded">{key}.txt</code> به صورت خودکار در ریشه سایت قرار می‌گیرد.</li>
-                            <li>هنگام ارسال درخواست، کلید و محل فایل به موتور جستجو ارسال می‌شود.</li>
-                            <li>موتور جستجو فایل را بررسی کرده و مالکیت شما را تأیید می‌کند.</li>
+                            <li>فایل <code class="bg-slate/10 px-1.5 py-0.5 rounded">{key}.txt</code> در ریشه سایت قرار دهید.</li>
+                            <li>هنگام ارسال درخواست، کلید و محل فایل به هر دو موتور ارسال می‌شود.</li>
+                            <li>هر دو موتور یک فایل مشترک را بررسی می‌کنند.</li>
                         </ol>
+                        <p class="text-[11px] text-warning mt-3 flex items-center gap-1">
+                            <span class="material-icons text-xs">warning</span>
+                            در صورت تغییر کلید، فایل قبلی حذف و فایل جدید تولید می‌شود.
+                        </p>
+                    </section>
+
+                    <hr class="border-slate/10">
+
+                    <section id="doc-disable">
+                        <h3 class="text-base font-bold mb-3 flex items-center gap-2">
+                            <span class="material-icons text-primary text-lg">toggle_on</span>
+                            فعال و غیرفعال کردن موتورها
+                        </h3>
+                        <p class="text-sm text-slate leading-7">هر موتور (بینگ و یاندکس) را می‌توانید به صورت مستقل فعال یا غیرفعال کنید. اگر موتری غیرفعال باشد، ارسال به آن موتور متوقف می‌شود.</p>
                     </section>
 
                     <hr class="border-slate/10">
@@ -389,11 +407,7 @@
                             <span class="material-icons text-primary text-lg">schedule</span>
                             زمان‌بندی
                         </h3>
-                        <p class="text-sm text-slate leading-7">پردازش ساعتی توسط cron job یا scheduler لاراول انجام می‌شود. دستور زیر را در crontab تنظیم کنید:</p>
-                        <div class="bg-slate-900 text-slate-300 p-4 rounded-lg admin-ltr text-xs border border-white/10 mt-3">
-                            <code>0 * * * * php /path/to/artisan indexnow:process-hourly</code>
-                        </div>
-                        <p class="text-sm text-slate leading-7 mt-4">این دستور هر ساعت یکبار اجرا شده و بر اساس وزن تنظیم شده برای آن ساعت، محصولات را به موتورهای جستجو ارسال می‌کند.</p>
+                        <p class="text-sm text-slate leading-7">ماژول IndexNow به صورت خودکار داخل چرخه مدیریت صف اجرا می‌شود و نیاز به اجرای دستور مجزا ندارد. کافی است پردازشگر صف (Queue) طبق تنظیمات ماژول صف فعال باشد.</p>
                     </section>
                 </div>
             </div>
@@ -403,7 +417,8 @@
                     <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
                     <nav class="space-y-1">
                         <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">IndexNow چیست؟</a>
-                        <a href="#doc-verify" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">وریفای مالکیت</a>
+                        <a href="#doc-verify" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">وریفای مشترک</a>
+                        <a href="#doc-disable" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">فعال/غیرفعال موتورها</a>
                         <a href="#doc-weights" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">نرخ ارسال ساعتی</a>
                         <a href="#doc-limits" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">محدودیت‌ها</a>
                         <a href="#doc-schedule" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">زمان‌بندی</a>
@@ -580,11 +595,11 @@
             ['bing', 'yandex'].forEach(engine => updateWeights(engine));
         });
 
-        function regenerateKey(engine) {
+        function regenerateKey() {
             const dialog = document.getElementById('admin-confirm-dialog');
             if (!dialog || typeof dialog.showModal !== 'function') {
                 if (!confirm('آیا از تولید کلید جدید اطمینان دارید؟ کلید قبلی نامعتبر می‌شود.')) return;
-                return doFetchRegenerateKey(engine);
+                return doFetchRegenerateKey();
             }
 
             const titleEl = document.getElementById('admin-confirm-title');
@@ -606,7 +621,7 @@
                 msgEl.textContent = origMsg;
                 if (labelSpan) labelSpan.textContent = origLabel;
                 if (dialog.returnValue === 'confirm') {
-                    doFetchRegenerateKey(engine);
+                    doFetchRegenerateKey();
                 }
             }
 
@@ -614,17 +629,18 @@
             dialog.showModal();
         }
 
-        function doFetchRegenerateKey(engine) {
+        function doFetchRegenerateKey() {
             fetch('{{ route("dash.admin.indexnow.key.regenerate", ["authkey" => $authkey]) }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                 },
-                body: JSON.stringify({ engine: engine }),
             }).then(r => r.json()).then(data => {
                 if (data.key) {
-                    document.getElementById(engine + '-key-input').value = data.key;
+                    const keyInput = document.getElementById('shared-key-input');
+                    if (keyInput) keyInput.value = data.key;
+                    showToast('کلید مشترک جدید تولید شد.');
                 }
             }).catch(function () { showToast('خطا در تولید کلید'); });
         }

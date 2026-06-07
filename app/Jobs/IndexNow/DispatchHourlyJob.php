@@ -20,6 +20,7 @@ class DispatchHourlyJob implements ShouldQueue
 
     public function __construct(
         private int $hour,
+        private ?int $overrideLimit = null,
     ) {}
 
     public function handle(IndexNowService $service): void
@@ -36,7 +37,7 @@ class DispatchHourlyJob implements ShouldQueue
                 continue;
             }
 
-            $limit = $service->getProductsForHour($engine, $this->hour);
+            $limit = $this->overrideLimit ?? $service->getProductsForHour($engine, $this->hour);
             if ($limit <= 0) {
                 continue;
             }
