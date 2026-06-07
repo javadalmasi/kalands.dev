@@ -6,6 +6,7 @@ use App\Jobs\AggregateAnalyticsEventsJob;
 use App\Models\QueueExecutionLog;
 use App\Repositories\SettingsRepository;
 use App\Services\GeoIPService;
+use App\Services\Sitemap\SitemapGenerationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +14,11 @@ use Illuminate\Support\Facades\File;
 
 class QueueProcessController extends Controller
 {
-    public function process(SettingsRepository $settingsRepository, GeoIPService $geoIPService): JsonResponse
+    public function process(
+        SettingsRepository $settingsRepository,
+        GeoIPService $geoIPService,
+        SitemapGenerationService $sitemapGenerationService,
+    ): JsonResponse
     {
         $queueSettings = $settingsRepository->get('queue.settings', []);
 
@@ -43,11 +48,27 @@ class QueueProcessController extends Controller
             // 1. Dispatch periodic analytics aggregation before draining the queue.
             AggregateAnalyticsEventsJob::dispatch();
 
+            $refreshedCounts = $sitemapGenerationService->refreshCachedCountsIfDue(10);
+            if ($refreshedCounts) {
+                $meta['tasks'][] = 'بروزرسانی شمار محصولات سایت‌مپ (هر ۱۰ دقیقه) انجام شد.';
+            }
+
+            if ($sitemapGenerationService->shouldStartAutomatically()) {
+                $run = $sitemapGenerationService->start(true);
+                if ($run) {
+                    $meta['tasks'][] = "شروع خودکار تولید سایت مپ: اجرای {$run->run_id} در صف قرار گرفت.";
+                }
+            }
+
             // 2. Process Queue Jobs
             $initialJobsCount = DB::table('jobs')->count();
+            $sitemapQueue = (string) config('queue.sitemap_queue', 'default');
+            $queueOrder = implode(',', array_values(array_unique([$sitemapQueue, 'default'])));
             Artisan::call('queue:work', [
+                '--queue' => $queueOrder,
                 '--stop-when-empty' => true,
                 '--tries' => 3,
+                '--timeout' => 300,
             ]);
             $finalJobsCount = DB::table('jobs')->count();
             $processedJobs = max(0, $initialJobsCount - $finalJobsCount);

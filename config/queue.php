@@ -38,7 +38,7 @@ return [
             'driver' => 'database',
             'table' => 'jobs',
             'queue' => 'default',
-            'retry_after' => 90,
+            'retry_after' => 600,
             'after_commit' => false,
         ],
 
@@ -72,6 +72,17 @@ return [
         ],
 
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Module Queues
+    |--------------------------------------------------------------------------
+    |
+    | Dedicated queue names for internal modules. Keeping sitemap on "default"
+    | makes it compatible with plain "php artisan queue:work" execution.
+    |
+    */
+    'sitemap_queue' => env('SITEMAP_QUEUE', 'default'),
 
     /*
     |--------------------------------------------------------------------------

@@ -13,16 +13,25 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Services\Sitemap\SitemapGenerationService;
 
 class ProcessSitemapChunkJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 600;
+    public int $timeout = 300;
 
-    public int $tries = 3;
+    public int $tries = 5;
 
-    private const int CHUNK_SIZE = 50000;
+    public array $backoff = [10, 30, 60, 120];
+
+    public const int CHUNK_SIZE = 1000;
+
+    public const int MAX_CHUNKS_PER_GROUP = 50;
+
+    public const int URLS_PER_GZIP = self::CHUNK_SIZE * self::MAX_CHUNKS_PER_GROUP;
+
+    private const int BATCH_SIZE = 1000;
 
     public function __construct(
         protected string $runId,
@@ -30,15 +39,23 @@ class ProcessSitemapChunkJob implements ShouldQueue
         protected bool $force = false,
         protected string $store = '',
         protected bool $separateStores = false,
-    ) {}
+        protected int $chunkIndex = 0,
+    ) {
+        $this->onQueue((string) config('queue.sitemap_queue', 'default'));
+    }
 
-    public function handle(): void
+    public function handle(SitemapGenerationService $sitemapService): void
     {
+        if ($this->shouldStop()) {
+            return;
+        }
+
         if ($this->force && $this->lastId === null && in_array($this->store, ['', 'dk'], true)) {
             $this->cleanupOldChunks();
         }
 
         $query = Product::query()
+            ->select(['id', 'title', 'updated_at', 'created_at'])
             ->where('is_active', true)
             ->orderBy('id');
 
@@ -46,6 +63,8 @@ class ProcessSitemapChunkJob implements ShouldQueue
             $query->where('store', 'digikala');
         } elseif ($this->store === 'bs') {
             $query->where('store', 'basalam');
+        } elseif ($this->store === 'other') {
+            $query->whereNotIn('store', ['digikala', 'basalam']);
         }
 
         if ($this->force) {
@@ -65,30 +84,21 @@ class ProcessSitemapChunkJob implements ShouldQueue
 
         $products = $query->limit(self::CHUNK_SIZE)->get();
 
-        if ($products->isEmpty()) {
-            if ($this->store === 'dk' && $this->separateStores) {
-                $this->info('Digikala products done. Starting Basalam products.');
-                self::dispatch(
-                    $this->runId,
-                    lastId: null,
-                    force: $this->force,
-                    store: 'bs',
-                    separateStores: true,
-                );
-            } else {
-                $this->info('No more products to process. Finalizing sitemap.');
-                FinalizeSitemapJob::dispatch($this->runId, $this->force, $this->separateStores);
-            }
+        $groupIndex = (int) ($this->chunkIndex / self::MAX_CHUNKS_PER_GROUP);
+        $chunkInGroup = $this->chunkIndex % self::MAX_CHUNKS_PER_GROUP;
+        $isLastInGroup = $chunkInGroup === (self::MAX_CHUNKS_PER_GROUP - 1);
 
+        if ($products->isEmpty()) {
+            $this->handleEmptyProducts($groupIndex, $chunkInGroup);
             return;
         }
 
         $storePrefix = $this->store ? "-{$this->store}" : '';
-        $chunkIndex = $this->getNextChunkIndex();
-        $filename = "sitemap-{$this->runId}{$storePrefix}-{$chunkIndex}.xml.gz";
+        $filename = "sitemap-{$this->runId}{$storePrefix}-g{$groupIndex}-{$this->chunkIndex}.xml";
         $urls = [];
 
         $maxLastMod = null;
+        $productIds = [];
 
         foreach ($products as $product) {
             $lastMod = ($product->updated_at ?? $product->created_at)
@@ -104,24 +114,32 @@ class ProcessSitemapChunkJob implements ShouldQueue
                 'loc' => config('app.url').'/product/'.$product->id.($slug ? '/'.$slug : ''),
                 'lastmod' => $lastMod,
             ];
+
+            $productIds[] = $product->id;
+
+            usleep(200);
         }
 
-        $this->generateSitemapFile($filename, $urls);
+        $this->generatePlainSitemapFile($filename, $urls);
 
         $now = now();
         $lastProductId = $products->last()->id;
 
-        Product::query()
-            ->whereIn('id', $products->pluck('id'))
-            ->update(['sitemapped_at' => $now]);
+        collect($productIds)
+            ->chunk(self::BATCH_SIZE)
+            ->each(function ($ids) use ($now) {
+                Product::query()
+                    ->whereIn('id', $ids)
+                    ->update(['sitemapped_at' => $now]);
+            });
 
-        $processedCount = $products->count();
+        $processedCount = count($productIds);
+        $hasMoreProducts = $products->count() >= self::CHUNK_SIZE;
 
         SitemapRunLog::query()
             ->where('run_id', $this->runId)
             ->update([
                 'processed_products' => DB::raw('processed_products + '.(int) $processedCount),
-                'total_chunks' => DB::raw('total_chunks + 1'),
             ]);
 
         $maxLastModStr = $maxLastMod
@@ -129,7 +147,7 @@ class ProcessSitemapChunkJob implements ShouldQueue
             : $now->setTimezone('UTC')->format('Y-m-d\TH:i:sP');
 
         Storage::disk('local')->put(
-            "sitemap_chunks/{$this->runId}{$storePrefix}-{$chunkIndex}.json",
+            "sitemap_chunks/{$this->runId}{$storePrefix}-g{$groupIndex}-{$this->chunkIndex}.json",
             json_encode([
                 'filename' => $filename,
                 'url_count' => count($urls),
@@ -139,36 +157,69 @@ class ProcessSitemapChunkJob implements ShouldQueue
             ])
         );
 
-        self::dispatch(
-            $this->runId,
-            lastId: $lastProductId,
-            force: $this->force,
-            store: $this->store,
-            separateStores: $this->separateStores,
-        );
-    }
-
-    private function getNextChunkIndex(): int
-    {
-        $storePrefix = $this->store ? "-{$this->store}" : '';
-        $files = glob(storage_path("app/sitemap_chunks/{$this->runId}{$storePrefix}-*.json"));
-        if (empty($files)) {
-            return 0;
+        if ($isLastInGroup) {
+            CompressSitemapGroupJob::dispatch(
+                $this->runId,
+                $groupIndex,
+                force: $this->force,
+                store: $this->store,
+                separateStores: $this->separateStores,
+                lastId: $lastProductId,
+                storeExhausted: !$hasMoreProducts,
+            )->delay(now()->addSeconds($sitemapService->getDelaySecondsForNextBatch()));
+        } else {
+            self::dispatch(
+                $this->runId,
+                lastId: $lastProductId,
+                force: $this->force,
+                store: $this->store,
+                separateStores: $this->separateStores,
+                chunkIndex: $this->chunkIndex + 1,
+            )->delay(now()->addSeconds($sitemapService->getDelaySecondsForNextBatch()));
         }
-
-        $pattern = $this->store
-            ? "/{$this->runId}-{$this->store}-(\d+)\.json$/"
-            : "/{$this->runId}-(\d+)\.json$/";
-
-        $indices = array_map(function ($file) use ($pattern) {
-            preg_match($pattern, $file, $m);
-            return (int) ($m[1] ?? -1);
-        }, $files);
-
-        return max($indices) + 1;
     }
 
-    private function generateSitemapFile(string $filename, array $urls): void
+    private function handleEmptyProducts(int $groupIndex, int $chunkInGroup): void
+    {
+        if ($chunkInGroup > 0) {
+            CompressSitemapGroupJob::dispatch(
+                $this->runId,
+                $groupIndex,
+                force: $this->force,
+                store: $this->store,
+                separateStores: $this->separateStores,
+                lastId: $this->lastId,
+                storeExhausted: true,
+            );
+        } elseif ($this->store === 'dk' && $this->separateStores) {
+            self::dispatch(
+                $this->runId,
+                lastId: null,
+                force: $this->force,
+                store: 'bs',
+                separateStores: true,
+                chunkIndex: 0,
+            )->delay(now()->addSeconds(app(SitemapGenerationService::class)->getDelaySecondsForNextBatch()));
+        } elseif ($this->store === 'bs' && $this->separateStores) {
+            self::dispatch(
+                $this->runId,
+                lastId: null,
+                force: $this->force,
+                store: 'other',
+                separateStores: true,
+                chunkIndex: 0,
+            )->delay(now()->addSeconds(app(SitemapGenerationService::class)->getDelaySecondsForNextBatch()));
+        } else {
+            ContinueSitemapRunJob::dispatch(
+                $this->runId,
+                lastId: $this->lastId,
+                force: $this->force,
+                separateStores: $this->separateStores,
+            )->delay(now()->addMinutes(5));
+        }
+    }
+
+    private function generatePlainSitemapFile(string $filename, array $urls): void
     {
         $xml = '<?xml version="1.0" encoding="UTF-8"?>';
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
@@ -189,7 +240,7 @@ class ProcessSitemapChunkJob implements ShouldQueue
             mkdir(dirname($path), 0755, true);
         }
 
-        file_put_contents($path, gzencode($xml, 9));
+        file_put_contents($path, $xml);
     }
 
     private function escapeXml(string $value): string
@@ -204,10 +255,29 @@ class ProcessSitemapChunkJob implements ShouldQueue
             @unlink($file);
         }
 
+        $plainXml = glob(public_path('sitemaps/sitemap-*-g*-*.xml'));
+        foreach ($plainXml as $file) {
+            @unlink($file);
+        }
+
         $metaFiles = glob(storage_path('app/sitemap_chunks/*.json'));
         foreach ($metaFiles as $file) {
             @unlink($file);
         }
+
+        $indexFiles = [
+            public_path('sitemap.xml'),
+            public_path('sitemap-digikala.xml'),
+            public_path('sitemap-basalam.xml'),
+            public_path('sitemap-other.xml'),
+        ];
+        foreach ($indexFiles as $file) {
+            if (file_exists($file)) {
+                @unlink($file);
+            }
+        }
+
+        app(\App\Services\Sitemap\SitemapGenerationService::class)->clearTailGzip();
     }
 
     public function failed(\Throwable $exception): void
@@ -223,6 +293,28 @@ class ProcessSitemapChunkJob implements ShouldQueue
         Cache::forget('sitemap:running');
 
         Log::error("SitemapGenerator: Chunk job failed for run {$this->runId}: {$exception->getMessage()}");
+    }
+
+    private function shouldStop(): bool
+    {
+        if (!Cache::has("sitemap:stop:{$this->runId}")) {
+            return false;
+        }
+
+        SitemapRunLog::query()
+            ->where('run_id', $this->runId)
+            ->update([
+                'status' => 'failed',
+                'error_message' => 'فرآیند توسط مدیر متوقف شد',
+                'completed_at' => now(),
+            ]);
+
+        Cache::forget("sitemap:stop:{$this->runId}");
+        Cache::forget('sitemap:running');
+
+        $this->info("Sitemap generation stopped for run {$this->runId}");
+
+        return true;
     }
 
     private function info(string $message): void

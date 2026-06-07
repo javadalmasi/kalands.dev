@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTicketMessageRequest;
-use App\Jobs\Sitemap\ProcessSitemapChunkJob;
 use App\Mail\GenericTemplateMail;
 use App\Models\Admin;
 use App\Models\AffiliateDailyStat;
@@ -35,6 +34,7 @@ use App\Services\Communication\ChannelSettingsResolver;
 use App\Services\EmailTemplateService;
 use App\Services\GeoIPService;
 use App\Services\InternalAnalyticsService;
+use App\Services\Sitemap\SitemapGenerationService;
 use App\Services\Slider\HomeCategoryBannerStorage;
 use App\Services\Slider\HomeItemsPayloadStorage;
 use App\Services\Slider\SliderStorage;
@@ -1082,7 +1082,7 @@ class AdminDashboardController extends Controller
         }
 
         if ($moduleKey === 'sitemap') {
-            return $this->sitemapHub();
+            return $this->sitemapHub(app(SitemapGenerationService::class));
         }
 
         if ($moduleKey === 'indexnow') {
@@ -3806,7 +3806,7 @@ class AdminDashboardController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function sitemapHub()
+    public function sitemapHub(SitemapGenerationService $sitemapGenerationService)
     {
         $isRunning = (bool) Cache::get('sitemap:running', false);
         $currentRun = SitemapRunLog::query()->where('status', 'running')->latest('id')->first();
@@ -3822,20 +3822,10 @@ class AdminDashboardController extends Controller
             ->whereNotNull('completed_at')
             ->latest('id')
             ->first();
-        $lastCompletedIncremental = SitemapRunLog::query()
-            ->where('status', 'completed')
-            ->where('force_mode', false)
-            ->whereNotNull('completed_at')
-            ->latest('id')
-            ->first();
 
         $forceDuration = null;
         if ($lastCompletedForce && $lastCompletedForce->started_at && $lastCompletedForce->completed_at) {
             $forceDuration = $lastCompletedForce->started_at->diffInSeconds($lastCompletedForce->completed_at);
-        }
-        $incrementalDuration = null;
-        if ($lastCompletedIncremental && $lastCompletedIncremental->started_at && $lastCompletedIncremental->completed_at) {
-            $incrementalDuration = $lastCompletedIncremental->started_at->diffInSeconds($lastCompletedIncremental->completed_at);
         }
 
         $completedRuns = SitemapRunLog::query()
@@ -3855,43 +3845,32 @@ class AdminDashboardController extends Controller
         }
         $avgSpeed = !empty($speeds) ? round(array_sum($speeds) / count($speeds), 2) : null;
 
-        $totalActive = Product::query()->where('is_active', true)->count();
-        $pendingProducts = Product::query()
-            ->where('is_active', true)
-            ->where(function ($q) {
-                $q->whereNull('sitemapped_at')
-                  ->orWhereColumn('updated_at', '>', 'sitemapped_at');
-            })
-            ->count();
+        $cachedCounts = $sitemapGenerationService->getCachedCounts();
+        $totalActive = (int) $cachedCounts['active_products'];
+        $pendingProducts = (int) $cachedCounts['pending_products'];
+        $countsUpdatedAt = (string) $cachedCounts['updated_at'];
 
-        $estForceSeconds = $avgSpeed && $avgSpeed > 0 ? (int) round($totalActive / $avgSpeed) : null;
-        $estIncrementalSeconds = $avgSpeed && $avgSpeed > 0 ? (int) round($pendingProducts / $avgSpeed) : null;
 
         $settings = app(\App\Repositories\SettingsRepository::class);
-        $scheduleStart = (int) $settings->get('sitemap.schedule_start', 1);
-        $scheduleEnd = (int) $settings->get('sitemap.schedule_end', 5);
-        $scheduleEnabled = (bool) $settings->get('sitemap.schedule_enabled', true);
         $separateStores = (bool) $settings->get('sitemap.separate_stores', false);
+        $mode = $sitemapGenerationService->getMode();
+        $executionEnabled = $mode !== 'off';
+        $autoEnabled = $mode === 'auto';
+        $hourlyRates = $sitemapGenerationService->getHourlyRates();
+        $maxBatchesPerHour = $sitemapGenerationService->getMaxBatchesPerHour();
 
         $nowTehran = now();
         $currentTehranHour = (int) $nowTehran->format('G');
-
-        if ($scheduleEnabled) {
-            if ($scheduleStart <= $scheduleEnd) {
-                $inScheduleWindow = $currentTehranHour >= $scheduleStart && $currentTehranHour < $scheduleEnd;
-            } else {
-                $inScheduleWindow = $currentTehranHour >= $scheduleStart || $currentTehranHour < $scheduleEnd;
-            }
-        } else {
-            $inScheduleWindow = true;
-        }
+        $currentRate = $sitemapGenerationService->getCurrentRate($currentTehranHour);
+        $currentBatchesPerHour = $sitemapGenerationService->getBatchesForHour($currentTehranHour);
+        $currentDelaySeconds = $sitemapGenerationService->getDelaySecondsForNextBatch($currentTehranHour);
 
         $chunkFiles = glob(public_path('sitemaps/sitemap-*.xml.gz'));
         $chunkCount = count($chunkFiles);
 
         $dkChunkFiles = glob(public_path('sitemaps/sitemap-*-dk-*.xml.gz'));
         $bsChunkFiles = glob(public_path('sitemaps/sitemap-*-bs-*.xml.gz'));
-        $mixedChunkFiles = array_filter($chunkFiles, fn($f) => !preg_match('/-(dk|bs)-\d+\.xml\.gz$/', basename($f)));
+        $mixedChunkFiles = array_filter($chunkFiles, fn($f) => !preg_match('/-(dk|bs)-g\d+\.xml\.gz$/', basename($f)));
         $dkChunkCount = count($dkChunkFiles);
         $bsChunkCount = count($bsChunkFiles);
         $mixedChunkCount = count($mixedChunkFiles);
@@ -3924,9 +3903,7 @@ class AdminDashboardController extends Controller
             'lastCompletedRun',
             'lastFailedRun',
             'lastCompletedForce',
-            'lastCompletedIncremental',
             'forceDuration',
-            'incrementalDuration',
             'totalRuns',
             'totalRunsCompleted',
             'chunkCount',
@@ -3940,78 +3917,136 @@ class AdminDashboardController extends Controller
             'totalSize',
             'totalActive',
             'pendingProducts',
-            'estForceSeconds',
-            'estIncrementalSeconds',
-            'scheduleStart',
-            'scheduleEnd',
-            'scheduleEnabled',
+            'countsUpdatedAt',
             'separateStores',
+            'mode',
+            'executionEnabled',
+            'autoEnabled',
+            'hourlyRates',
+            'maxBatchesPerHour',
             'nowTehran',
-            'inScheduleWindow',
+            'currentTehranHour',
+            'currentRate',
+            'currentBatchesPerHour',
+            'currentDelaySeconds',
+            'avgSpeed',
         ));
     }
 
-    public function triggerSitemap(Request $request, ActivityLogger $activityLogger): RedirectResponse
+    public function sitemapStatus(SitemapGenerationService $sitemapGenerationService): JsonResponse
     {
-        $mode = $request->input('mode', 'incremental');
+        $currentRun = SitemapRunLog::query()->where('status', 'running')->latest('id')->first();
+        $chunkFiles = glob(public_path('sitemaps/sitemap-*.xml.gz')) ?: [];
+        $hour = (int) now()->format('G');
 
-        if (Cache::get('sitemap:running')) {
-            return back()->withErrors(['message' => 'فرآیند سایت مپ در حال اجراست. لطفاً پس از اتمام آن مجدداً تلاش کنید.']);
-        }
-
-        $separateStores = (bool) app(\App\Repositories\SettingsRepository::class)->get('sitemap.separate_stores', false);
-
-        $force = $mode === 'force';
-        $runId = now()->format('Ymd_His');
-
-        SitemapRunLog::query()->create([
-            'run_id' => $runId,
-            'status' => 'running',
-            'force_mode' => $force,
-            'started_at' => now(),
-            'total_products' => Product::query()->where('is_active', true)->count(),
+        return response()->json([
+            'is_running' => (bool) Cache::get('sitemap:running', false),
+            'mode' => $sitemapGenerationService->getMode(),
+            'current_hour' => $hour,
+            'current_rate' => $sitemapGenerationService->getCurrentRate($hour),
+            'batches_per_hour' => $sitemapGenerationService->getBatchesForHour($hour),
+            'delay_seconds' => $sitemapGenerationService->getDelaySecondsForNextBatch($hour),
+            'max_batches_per_hour' => $sitemapGenerationService->getMaxBatchesPerHour(),
+            'pending_products' => (int) $sitemapGenerationService->getCachedCounts()['pending_products'],
+            'active_products' => (int) $sitemapGenerationService->getCachedCounts()['active_products'],
+            'counts_updated_at' => persianDateTime((string) $sitemapGenerationService->getCachedCounts()['updated_at']),
+            'chunk_count' => count($chunkFiles),
+            'current_run' => $currentRun ? [
+                'run_id' => $currentRun->run_id,
+                'status' => $currentRun->status,
+                'force_mode' => (bool) $currentRun->force_mode,
+                'processed_products' => (int) $currentRun->processed_products,
+                'total_products' => (int) ($currentRun->total_products ?? 0),
+                'total_chunks' => (int) $currentRun->total_chunks,
+                'progress' => $currentRun->progress,
+                'started_at' => $currentRun->started_at ? persianDateTime($currentRun->started_at) : null,
+            ] : null,
         ]);
-
-        Cache::put('sitemap:running', true, 86400);
-
-        ProcessSitemapChunkJob::dispatch(
-            $runId,
-            lastId: null,
-            force: $force,
-            store: $separateStores ? 'dk' : '',
-            separateStores: $separateStores,
-        );
-
-        $activityLogger->log(
-            'sitemap.generate',
-            auth('admin')->user(),
-            $force ? 'شروع بازسازی کامل سایت مپ' : 'شروع پردازش افزایشی سایت مپ',
-        );
-
-        return back()->with('message', 'فرآیند تولید سایت مپ با موفقیت در صف پردازش قرار گرفت.');
     }
 
-    public function saveSitemapSettings(Request $request, ActivityLogger $activityLogger): RedirectResponse
+    public function saveSitemapSettings(Request $request, ActivityLogger $activityLogger, SitemapGenerationService $sitemapGenerationService): RedirectResponse
     {
         $request->validate([
-            'schedule_start' => 'required|integer|min:0|max:23',
-            'schedule_end' => 'required|integer|min:0|max:23',
-            'schedule_enabled' => 'nullable|boolean',
             'separate_stores' => 'nullable|boolean',
+            'mode' => 'required|in:auto,off',
+            'max_batches_per_hour' => 'required|integer|min:1|max:3600',
+            'hourly_rates' => 'nullable',
         ]);
 
         $settings = app(\App\Repositories\SettingsRepository::class);
-        $settings->set('sitemap.schedule_start', (int) $request->input('schedule_start'));
-        $settings->set('sitemap.schedule_end', (int) $request->input('schedule_end'));
-        $settings->set('sitemap.schedule_enabled', (bool) $request->input('schedule_enabled', false));
         $settings->set('sitemap.separate_stores', (bool) $request->input('separate_stores', false));
+        $sitemapGenerationService->setMode((string) $request->input('mode', 'auto'));
+        $sitemapGenerationService->setMaxBatchesPerHour((int) $request->input('max_batches_per_hour'));
+
+        $ratesInput = $request->input('hourly_rates');
+        $rates = is_string($ratesInput) ? json_decode($ratesInput, true) : $ratesInput;
+        if (is_array($rates) && count($rates) === 24) {
+            $sitemapGenerationService->setHourlyRates($rates);
+        }
 
         $activityLogger->log(
             'sitemap.settings',
             auth('admin')->user(),
-            'تنظیمات زمان‌بندی و جداسازی فروشگاه‌های سایت مپ به‌روزرسانی شد',
+            'تنظیمات نرخ تولید و جداسازی فروشگاه‌های سایت مپ به‌روزرسانی شد',
         );
 
         return back()->with('message', 'تنظیمات سایت مپ ذخیره شد.');
+    }
+
+    public function stopSitemap(Request $request, ActivityLogger $activityLogger): RedirectResponse
+    {
+        $runId = $request->input('run_id');
+
+        if (!$runId) {
+            return back()->withErrors(['message' => 'شناسه اجرا مشخص نشده است.']);
+        }
+
+        Cache::put("sitemap:stop:{$runId}", true, 86400);
+        Cache::forget('sitemap:running');
+
+        DB::table('jobs')
+            ->where('queue', (string) config('queue.sitemap_queue', 'default'))
+            ->where(function ($query) use ($runId) {
+                $query->where('payload', 'like', '%ProcessSitemapChunkJob%')
+                    ->orWhere('payload', 'like', '%CompressSitemapGroupJob%')
+                    ->orWhere('payload', 'like', '%FinalizeSitemapJob%')
+                    ->orWhere('payload', 'like', '%'.$runId.'%');
+            })
+            ->delete();
+
+        SitemapRunLog::query()
+            ->where('run_id', $runId)
+            ->where('status', 'running')
+            ->update([
+                'status' => 'failed',
+                'error_message' => 'توقف اضطراری',
+                'completed_at' => now(),
+            ]);
+
+        $activityLogger->log(
+            'sitemap.stop',
+            auth('admin')->user(),
+            'توقف اضطراری فرآیند سایت مپ',
+        );
+
+        return back()->with('message', 'فرآیند سایت مپ با موفقیت متوقف شد.');
+    }
+
+    public function resetSitemap(Request $request, SitemapGenerationService $sitemap, ActivityLogger $activityLogger): RedirectResponse
+    {
+        $run = $sitemap->reset();
+
+        $activityLogger->log(
+            'sitemap.reset',
+            auth('admin')->user(),
+            'بازنشانی کامل سایت‌مپ و شروع مجدد تولید',
+        );
+
+        return back()->with(
+            'message',
+            $run
+                ? 'تمامی فایل‌های سایت‌مپ حذف و فرآیند تولید از نو آغاز شد.'
+                : 'تمامی فایل‌های سایت‌مپ حذف شدند اما ماژول غیرفعال است یا در حال اجراست.',
+        );
     }
 }

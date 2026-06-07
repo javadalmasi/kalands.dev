@@ -19,13 +19,14 @@ class SecurityHeaders
 
         $csp = implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
             "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data: https:",
             "font-src 'self' data: https:",
             "connect-src 'self' https://www.kalands.ir https://dgkl.io https://www.digikala.com https://a.bslm.ir https://basalam.com",
             "base-uri 'self'",
             "form-action 'self'",
+            "frame-src 'self'",
             "frame-ancestors 'none'",
             "object-src 'none'",
         ]);

@@ -7,6 +7,7 @@ use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\ValidateSignature;
 use App\Http\Middleware\Verified;
 use App\Http\Middleware\Verify2FA;
+use App\Providers\QueueSitemapAutoStartServiceProvider;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,6 +15,9 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return Application::configure(basePath: dirname(__DIR__))
+    ->withProviders([
+        QueueSitemapAutoStartServiceProvider::class,
+    ])
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
@@ -44,8 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function (Schedule $schedule): void {
-        $schedule->command('queue:work --daemon')->everyMinute()->withoutOverlapping();
-        $schedule->command('sitemap:generate')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('queue:work --queue=sitemap,default --timeout=300 --tries=3')->everyMinute()->withoutOverlapping();
         $schedule->command('indexnow:process-hourly')->hourly()->withoutOverlapping();
     })
     ->withExceptions(function (Exceptions $exceptions): void {

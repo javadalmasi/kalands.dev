@@ -300,8 +300,10 @@ Route::prefix('dash/admin/{authkey}')
         Route::post('/categories/sync-all', [AdminDashboardController::class, 'syncAllCategories'])->name('categories.sync_all');
         Route::get('/categories/linked', [AdminDashboardController::class, 'getLinkedCategories'])->name('categories.linked');
 
-        Route::post('/modules/sitemap/trigger', [AdminDashboardController::class, 'triggerSitemap'])->name('sitemap.trigger')->middleware('permission:sitemap.view');
+        Route::get('/modules/sitemap/status', [AdminDashboardController::class, 'sitemapStatus'])->name('sitemap.status')->middleware('permission:sitemap.view');
         Route::post('/modules/sitemap/settings', [AdminDashboardController::class, 'saveSitemapSettings'])->name('sitemap.settings')->middleware('permission:sitemap.view');
+        Route::post('/modules/sitemap/stop', [AdminDashboardController::class, 'stopSitemap'])->name('sitemap.stop')->middleware('permission:sitemap.view');
+        Route::post('/modules/sitemap/reset', [AdminDashboardController::class, 'resetSitemap'])->name('sitemap.reset')->middleware('permission:sitemap.view');
 
         Route::post('/modules/indexnow/settings', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'saveSettings'])->name('indexnow.settings.save')->middleware('permission:indexnow.edit');
         Route::post('/modules/indexnow/trigger', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'triggerHour'])->name('indexnow.trigger')->middleware('permission:indexnow.full');
