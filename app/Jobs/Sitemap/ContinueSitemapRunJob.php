@@ -94,30 +94,32 @@ class ContinueSitemapRunJob implements ShouldQueue
         $oldPath = public_path("sitemaps/{$tailGzip['filename']}");
         $oldIds = $sitemapService->parseGzipProductIds($oldPath);
 
-        $oldProducts = Product::query()
-            ->whereIn('id', $oldIds)
-            ->where('is_active', true)
-            ->orderBy('id')
-            ->get(['id', 'title', 'updated_at', 'created_at']);
-
-        $newProducts = Product::query()
-            ->where('is_active', true)
-            ->where('id', '>', $tailGzip['last_product_id'])
-            ->orderBy('id')
-            ->get(['id', 'title', 'updated_at', 'created_at']);
-
         @unlink($oldPath);
         $sitemapService->clearTailGzip();
 
         $allUrls = [];
+        $BATCH = 500;
 
-        foreach ($oldProducts as $product) {
-            $allUrls[] = $sitemapService->productToUrlData($product);
+        foreach (array_chunk($oldIds, $BATCH) as $idChunk) {
+            Product::query()
+                ->whereIn('id', $idChunk)
+                ->where('is_active', true)
+                ->orderBy('id')
+                ->get()
+                ->each(function ($product) use ($sitemapService, &$allUrls) {
+                    $allUrls[] = $sitemapService->productToUrlData($product);
+                });
         }
 
-        foreach ($newProducts as $product) {
-            $allUrls[] = $sitemapService->productToUrlData($product);
-        }
+        Product::query()
+            ->where('is_active', true)
+            ->where('id', '>', $tailGzip['last_product_id'])
+            ->orderBy('id')
+            ->chunk($BATCH, function ($products) use ($sitemapService, &$allUrls) {
+                foreach ($products as $product) {
+                    $allUrls[] = $sitemapService->productToUrlData($product);
+                }
+            });
 
         $urlsPerGzip = ProcessSitemapChunkJob::URLS_PER_GZIP;
         $groups = array_chunk($allUrls, $urlsPerGzip);
@@ -135,9 +137,13 @@ class ContinueSitemapRunJob implements ShouldQueue
                 }
             }
 
-            Product::query()
-                ->whereIn('id', $batchIds)
-                ->update(['sitemapped_at' => now()]);
+            collect($batchIds)
+                ->chunk(ProcessSitemapChunkJob::BATCH_SIZE)
+                ->each(function ($ids) {
+                    Product::query()
+                        ->whereIn('id', $ids)
+                        ->update(['sitemapped_at' => now()]);
+                });
 
             if (count($urlBatch) < $urlsPerGzip) {
                 $newLastProductId = !empty($batchIds) ? max($batchIds) : null;
