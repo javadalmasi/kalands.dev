@@ -16,6 +16,7 @@ class ChannelSettingsResolver
         $general = $this->normalizeSmtpConfig($this->settingsRepository->get('smtp.general'));
 
         $this->applySmtp([
+            'mailer' => $transactional['mailer'] ?: $general['mailer'] ?: 'smtp',
             'host' => $transactional['host'] ?: $general['host'] ?: config('mail.mailers.smtp.host'),
             'port' => $transactional['port'] ?: $general['port'] ?: config('mail.mailers.smtp.port'),
             'username' => $transactional['username'] ?: $general['username'] ?: config('mail.mailers.smtp.username'),
@@ -31,6 +32,7 @@ class ChannelSettingsResolver
         $general = $this->normalizeSmtpConfig($this->settingsRepository->get('smtp.general'));
 
         $this->applySmtp([
+            'mailer' => $general['mailer'] ?: 'smtp',
             'host' => $general['host'] ?: config('mail.mailers.smtp.host'),
             'port' => $general['port'] ?: config('mail.mailers.smtp.port'),
             'username' => $general['username'] ?: config('mail.mailers.smtp.username'),
@@ -43,8 +45,22 @@ class ChannelSettingsResolver
 
     private function applySmtp(array $config): void
     {
+        $mailer = $config['mailer'] ?? 'smtp';
+
+        config(['mail.default' => $mailer]);
+
+        if ($mailer === 'sendmail') {
+            config([
+                'mail.mailers.sendmail.transport' => 'sendmail',
+                'mail.mailers.sendmail.path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
+                'mail.from.address' => $config['sender_email'],
+                'mail.from.name' => $config['sender_name'],
+            ]);
+            return;
+        }
+
         config([
-            'mail.default' => 'smtp',
+            'mail.mailers.smtp.transport' => 'smtp',
             'mail.mailers.smtp.host' => $config['host'],
             'mail.mailers.smtp.port' => (int) $config['port'],
             'mail.mailers.smtp.username' => $config['username'],
@@ -70,6 +86,7 @@ class ChannelSettingsResolver
     {
         if (!is_array($config)) {
             return [
+                'mailer' => null,
                 'host' => null,
                 'port' => null,
                 'username' => null,
@@ -81,6 +98,7 @@ class ChannelSettingsResolver
         }
 
         return [
+            'mailer' => $config['mailer'] ?? null,
             'host' => $config['host'] ?? null,
             'port' => $config['port'] ?? null,
             'username' => $config['username'] ?? null,

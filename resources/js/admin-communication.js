@@ -16,6 +16,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    function toggleSmtpFields(select) {
+        const targetId = select.getAttribute('data-target');
+        const fields = document.getElementById(targetId);
+        if (select.value === 'sendmail') {
+            fields.style.display = 'none';
+        } else {
+            fields.style.display = 'grid';
+        }
+    }
+
+    document.querySelectorAll('.mailer-select').forEach(select => {
+        toggleSmtpFields(select);
+        select.addEventListener('change', () => toggleSmtpFields(select));
+    });
+
     window.runEmailTest = async function() {
         const btn = document.getElementById('email-test-btn');
         const type = document.getElementById('test-email-type').value;

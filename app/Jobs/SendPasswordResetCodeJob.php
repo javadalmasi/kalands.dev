@@ -35,9 +35,7 @@ class SendPasswordResetCodeJob implements ShouldQueue, ShouldBeUnique
     {
         if ($this->channel === 'email') {
             $channelSettingsResolver->applyTransactionalSmtp();
-            Mail::mailer('smtp')
-                ->to($this->destination)
-                ->send(new PasswordResetCodeMail($this->code));
+            Mail::to($this->destination)->send(new PasswordResetCodeMail($this->code));
             return;
         }
 

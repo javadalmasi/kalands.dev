@@ -633,8 +633,9 @@ class AdminDashboardController extends Controller
     public function saveSmtpGeneral(Request $request, SettingsRepository $settingsRepository, ActivityLogger $activityLogger): RedirectResponse
     {
         $data = $request->validate([
-            'host' => ['required'],
-            'port' => ['required', 'integer'],
+            'mailer' => ['nullable', 'in:smtp,sendmail'],
+            'host' => ['required_if:mailer,smtp', 'required_if:mailer,null'],
+            'port' => ['nullable', 'integer', 'required_if:mailer,smtp', 'required_if:mailer,null'],
             'username' => ['nullable'],
             'password' => ['nullable'],
             'encryption' => ['nullable', 'in:tls,ssl'],
@@ -658,8 +659,9 @@ class AdminDashboardController extends Controller
     public function saveSmtpTransactional(Request $request, SettingsRepository $settingsRepository, ActivityLogger $activityLogger): RedirectResponse
     {
         $data = $request->validate([
-            'host' => ['required'],
-            'port' => ['required', 'integer'],
+            'mailer' => ['nullable', 'in:smtp,sendmail'],
+            'host' => ['required_if:mailer,smtp', 'required_if:mailer,null'],
+            'port' => ['nullable', 'integer', 'required_if:mailer,smtp', 'required_if:mailer,null'],
             'username' => ['nullable'],
             'password' => ['nullable'],
             'encryption' => ['nullable', 'in:tls,ssl'],
@@ -1382,11 +1384,11 @@ class AdminDashboardController extends Controller
             $channelSettingsResolver->applyGeneralSmtp();
             $mailable = new GenericTemplateMail('تست SMTP عمومی', '<p>ارسال آزمایشی SMTP عمومی موفق بود.</p>');
             $mailable->shouldQueue = false;
-            Mail::mailer('smtp')->to($data['to'])->send($mailable);
+            Mail::to($data['to'])->send($mailable);
 
-            return response()->json(['ok' => true, 'message' => 'ایمیل تست SMTP عمومی ارسال شد.']);
+            return response()->json(['ok' => true, 'message' => 'ایمیل تست عمومی ارسال شد.']);
         } catch (\Throwable $e) {
-            Log::error('SMTP General Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Mail General Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
             return response()->json(['ok' => false, 'error' => 'ارسال ایمیل تست با خطا مواجه شد.'], 500);
         }
@@ -1399,11 +1401,11 @@ class AdminDashboardController extends Controller
             $channelSettingsResolver->applyTransactionalSmtp();
             $mailable = new GenericTemplateMail('تست SMTP تراکنشی', '<p>ارسال آزمایشی SMTP تراکنشی موفق بود.</p>');
             $mailable->shouldQueue = false;
-            Mail::mailer('smtp')->to($data['to'])->send($mailable);
+            Mail::to($data['to'])->send($mailable);
 
-            return response()->json(['ok' => true, 'message' => 'ایمیل تست SMTP تراکنشی ارسال شد.']);
+            return response()->json(['ok' => true, 'message' => 'ایمیل تست تراکنشی ارسال شد.']);
         } catch (\Throwable $e) {
-            Log::error('SMTP Transactional Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Mail Transactional Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
             return response()->json(['ok' => false, 'error' => 'ارسال ایمیل تست با خطا مواجه شد.'], 500);
         }

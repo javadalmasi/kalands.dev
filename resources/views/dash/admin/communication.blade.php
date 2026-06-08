@@ -35,37 +35,46 @@
             </div>
             <form action="{{ route('dash.admin.smtp.general.save', ['authkey' => $authkey]) }}" method="POST" class="grid gap-5 md:grid-cols-2">
                 @csrf
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate/70 px-1">میزبان (Host)</label>
-                    <input name="host" value="{{ $settings['smtp_general']['host'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr" placeholder="smtp.gmail.com">
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate/70 px-1">پورت (Port)</label>
-                    <input name="port" type="number" value="{{ $settings['smtp_general']['port'] ?? '587' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate/70 px-1">نام کاربری (Username)</label>
-                    <input name="username" value="{{ $settings['smtp_general']['username'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate/70 px-1">کلمه عبور (Password)</label>
-                    <input name="password" type="password" value="{{ $settings['smtp_general']['password'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate/70 px-1">نوع رمزنگاری (Encryption)</label>
-                    <select name="encryption" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10">
-                        <option value="" @selected(!($settings['smtp_general']['encryption'] ?? null))>بدون رمزنگاری</option>
-                        <option value="tls" @selected(($settings['smtp_general']['encryption'] ?? '') === 'tls')>TLS</option>
-                        <option value="ssl" @selected(($settings['smtp_general']['encryption'] ?? '') === 'ssl')>SSL</option>
+                <div class="space-y-1.5 md:col-span-2">
+                    <label class="text-xs font-bold text-slate/70 px-1">روش ارسال (Mailer)</label>
+                    <select name="mailer" class="mailer-select w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10" data-target="general-smtp-fields">
+                        <option value="smtp" @selected(($settings['smtp_general']['mailer'] ?? 'smtp') === 'smtp')>SMTP</option>
+                        <option value="sendmail" @selected(($settings['smtp_general']['mailer'] ?? '') === 'sendmail')>PHP Mail (Sendmail)</option>
                     </select>
                 </div>
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate/70 px-1">ایمیل فرستنده (Sender Email)</label>
-                    <input name="sender_email" value="{{ $settings['smtp_general']['sender_email'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
-                </div>
-                <div class="space-y-1.5 md:col-span-2">
-                    <label class="text-xs font-bold text-slate/70 px-1">نام فرستنده (Sender Name)</label>
-                    <input name="sender_name" value="{{ $settings['smtp_general']['sender_name'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10">
+                <div class="smtp-fields space-y-5 md:grid-cols-2 md:col-span-2 md:grid md:gap-5" id="general-smtp-fields">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate/70 px-1">میزبان (Host)</label>
+                        <input name="host" value="{{ $settings['smtp_general']['host'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr" placeholder="smtp.gmail.com">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate/70 px-1">پورت (Port)</label>
+                        <input name="port" type="number" value="{{ $settings['smtp_general']['port'] ?? '587' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate/70 px-1">نام کاربری (Username)</label>
+                        <input name="username" value="{{ $settings['smtp_general']['username'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate/70 px-1">کلمه عبور (Password)</label>
+                        <input name="password" type="password" value="{{ $settings['smtp_general']['password'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate/70 px-1">نوع رمزنگاری (Encryption)</label>
+                        <select name="encryption" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <option value="" @selected(!($settings['smtp_general']['encryption'] ?? null))>بدون رمزنگاری</option>
+                            <option value="tls" @selected(($settings['smtp_general']['encryption'] ?? '') === 'tls')>STARTTLS</option>
+                            <option value="ssl" @selected(($settings['smtp_general']['encryption'] ?? '') === 'ssl')>SSL/TLS</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate/70 px-1">ایمیل فرستنده (Sender Email)</label>
+                        <input name="sender_email" value="{{ $settings['smtp_general']['sender_email'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
+                    </div>
+                    <div class="space-y-1.5 md:col-span-2">
+                        <label class="text-xs font-bold text-slate/70 px-1">نام فرستنده (Sender Name)</label>
+                        <input name="sender_name" value="{{ $settings['smtp_general']['sender_name'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10">
+                    </div>
                 </div>
                 <div class="admin-actions md:col-span-2 mt-4">
                     <button class="admin-btn admin-btn-primary px-8"><span class="material-icons">save</span>ذخیره تنظیمات عمومی</button>
@@ -86,29 +95,46 @@
             </div>
             <form action="{{ route('dash.admin.smtp.transactional.save', ['authkey' => $authkey]) }}" method="POST" class="grid gap-5 md:grid-cols-2">
                 @csrf
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate/70 px-1">میزبان (Host)</label>
-                    <input name="host" value="{{ $settings['smtp_transactional']['host'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr" placeholder="smtp.mailtrap.io">
+                <div class="space-y-1.5 md:col-span-2">
+                    <label class="text-xs font-bold text-slate/70 px-1">روش ارسال (Mailer)</label>
+                    <select name="mailer" class="mailer-select w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10" data-target="transactional-smtp-fields">
+                        <option value="smtp" @selected(($settings['smtp_transactional']['mailer'] ?? 'smtp') === 'smtp')>SMTP</option>
+                        <option value="sendmail" @selected(($settings['smtp_transactional']['mailer'] ?? '') === 'sendmail')>PHP Mail (Sendmail)</option>
+                    </select>
                 </div>
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate/70 px-1">پورت (Port)</label>
-                    <input name="port" type="number" value="{{ $settings['smtp_transactional']['port'] ?? '587' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate/70 px-1">نام کاربری (Username)</label>
-                    <input name="username" value="{{ $settings['smtp_transactional']['username'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate/70 px-1">کلمه عبور (Password)</label>
-                    <input name="password" type="password" value="{{ $settings['smtp_transactional']['password'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate/70 px-1">ایمیل فرستنده (Sender Email)</label>
-                    <input name="sender_email" value="{{ $settings['smtp_transactional']['sender_email'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
-                </div>
-                <div class="space-y-1.5">
-                    <label class="text-xs font-bold text-slate/70 px-1">نام فرستنده (Sender Name)</label>
-                    <input name="sender_name" value="{{ $settings['smtp_transactional']['sender_name'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10">
+                <div class="smtp-fields space-y-5 md:grid-cols-2 md:col-span-2 md:grid md:gap-5" id="transactional-smtp-fields">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate/70 px-1">میزبان (Host)</label>
+                        <input name="host" value="{{ $settings['smtp_transactional']['host'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr" placeholder="smtp.mailtrap.io">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate/70 px-1">پورت (Port)</label>
+                        <input name="port" type="number" value="{{ $settings['smtp_transactional']['port'] ?? '587' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate/70 px-1">نام کاربری (Username)</label>
+                        <input name="username" value="{{ $settings['smtp_transactional']['username'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate/70 px-1">کلمه عبور (Password)</label>
+                        <input name="password" type="password" value="{{ $settings['smtp_transactional']['password'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate/70 px-1">نوع رمزنگاری (Encryption)</label>
+                        <select name="encryption" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <option value="" @selected(!($settings['smtp_transactional']['encryption'] ?? null))>بدون رمزنگاری</option>
+                            <option value="tls" @selected(($settings['smtp_transactional']['encryption'] ?? '') === 'tls')>STARTTLS</option>
+                            <option value="ssl" @selected(($settings['smtp_transactional']['encryption'] ?? '') === 'ssl')>SSL/TLS</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate/70 px-1">ایمیل فرستنده (Sender Email)</label>
+                        <input name="sender_email" value="{{ $settings['smtp_transactional']['sender_email'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate/70 px-1">نام فرستنده (Sender Name)</label>
+                        <input name="sender_name" value="{{ $settings['smtp_transactional']['sender_name'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10">
+                    </div>
                 </div>
                 <div class="admin-actions md:col-span-2 mt-4">
                     <button class="admin-btn admin-btn-primary px-8"><span class="material-icons">save</span>ذخیره تنظیمات تراکنشی</button>
@@ -189,8 +215,8 @@
                     <div>
                         <label class="text-[11px] font-bold text-slate/60 mb-1 block px-1">نوع ارسال:</label>
                         <select id="test-email-type" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10">
-                            <option value="general">از طریق درگاه SMTP عمومی</option>
-                            <option value="transactional">از طریق درگاه SMTP تراکنشی</option>
+                            <option value="general">از طریق درگاه عمومی</option>
+                            <option value="transactional">از طریق درگاه تراکنشی</option>
                         </select>
                     </div>
                     <div>
