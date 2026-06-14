@@ -16,9 +16,6 @@
 
     $schemaProducts = $Data['data']['products'] ?? [];
     $schemaPage = max(1, (int) request()->query('page', 1));
-    $schemaHasNext = !empty($infinite['hasMore']);
-    $schemaNextPage = $schemaHasNext ? $schemaPage + 1 : null;
-    $schemaNextUrl = $schemaHasNext ? request()->fullUrlWithQuery(['page' => $schemaNextPage]) : null;
     $schemaCurrentUrl = request()->fullUrl();
 
     $schemaItemListElements = [];
@@ -45,11 +42,13 @@
             ];
         }
 
+        $schemaItemType = $offers ? 'Product' : 'Thing';
+
         $schemaItem = [
             '@type' => 'ListItem',
             'position' => $index + 1,
             'item' => array_filter([
-                '@type' => 'Product',
+                '@type' => $schemaItemType,
                 'name' => ProductController::LinkReplaced($item['title_fa'] ?? ''),
                 'url' => $itemUrl,
                 'image' => $schemaImage,
@@ -69,7 +68,6 @@
             'url' => 'https://www.kalands.ir',
             'name' => 'کالندز',
         ],
-        'nextPage' => $schemaNextUrl,
         'mainEntity' => [
             '@type' => 'ItemList',
             'numberOfItems' => count($schemaItemListElements),
