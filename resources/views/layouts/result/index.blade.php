@@ -42,17 +42,14 @@
             ];
         }
 
-        $schemaItemType = $offers ? 'Product' : 'Thing';
-
         $schemaItem = [
             '@type' => 'ListItem',
             'position' => $index + 1,
             'item' => array_filter([
-                '@type' => $schemaItemType,
+                '@type' => 'Thing',
                 'name' => ProductController::LinkReplaced($item['title_fa'] ?? ''),
                 'url' => $itemUrl,
                 'image' => $schemaImage,
-                'offers' => $offers,
             ]),
         ];
         $schemaItemListElements[] = $schemaItem;
