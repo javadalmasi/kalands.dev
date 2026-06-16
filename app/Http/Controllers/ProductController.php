@@ -4,12 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\Comment;
 use App\Models\Product;
+use App\Models\ProductIdMapping;
 use App\Services\Auth\JsChallengeService;
 use App\Jobs\ProcessProductCategoriesJob;
 use Illuminate\Support\Facades\Http;
 
 class ProductController extends Controller
 {
+    private static function resolveProductId(string $productId, string $store): string
+    {
+        $mapping = ProductIdMapping::where('old_product_id', $productId)
+            ->where('store', $store)
+            ->where('is_active', true)
+            ->first();
+
+        return $mapping?->new_product_id ?? $productId;
+    }
     public static function DigikalaApi($url, $version, $skip = null, $cache = null)
     {
 		//www.kalands.ir/api/services/dcom
@@ -43,22 +53,47 @@ class ProductController extends Controller
         }
 
         if ($skip != true) {
-            if (($status === 301 || $status === 302) && str_contains((string) data_get($data, 'redirect_url.uri'), '/fresh/product/')) {
-                try {
-                    $freshResponse = Http::withHeaders([
-                        'User-Agent' => request()->header('user-agent'),
-                        'Host' => 'bws.kalands.ir',
-                    ])->withOptions(['verify' => false])
-                        ->timeout(10)
-                        ->get('http://' . $backend . '/fresh/v1/' . $url);
+            if (($status === 301 || $status === 302) && ($redirectUri = data_get($data, 'redirect_url.uri'))) {
+                if (str_contains($redirectUri, '/fresh/product/')) {
+                    try {
+                        $freshResponse = Http::withHeaders([
+                            'User-Agent' => request()->header('user-agent'),
+                            'Host' => 'bws.kalands.ir',
+                        ])->withOptions(['verify' => false])
+                            ->timeout(10)
+                            ->get('http://' . $backend . '/fresh/v1/' . $url);
 
-                    return $freshResponse->json() ?? [];
-                } catch (\Throwable $exception) {
-                    abort(503, 'ارتباط با سرویس محصول برقرار نشد.');
+                        return $freshResponse->json() ?? [];
+                    } catch (\Throwable $exception) {
+                        abort(503, 'ارتباط با سرویس محصول برقرار نشد.');
+                    }
                 }
-            } else {
-                abort($status, 'Error Code : ' . $status);
+
+                if (preg_match('#/product/dkp-(\d+)#', $redirectUri, $matches)) {
+                    $newProductId = $matches[1];
+
+                    if (preg_match('#product/(\d+)#', $url, $oldMatches)) {
+                        $oldProductId = $oldMatches[1];
+                        if ($oldProductId !== $newProductId) {
+                            ProductIdMapping::updateOrCreate(
+                                [
+                                    'old_product_id' => $oldProductId,
+                                    'store' => 'digikala',
+                                ],
+                                [
+                                    'new_product_id' => $newProductId,
+                                    'reason' => 'Auto-created from 301 redirect',
+                                    'is_active' => true,
+                                ]
+                            );
+                        }
+                    }
+
+                    return self::DigikalaApi('product/' . $newProductId . '/', $version, $skip, $cache);
+                }
             }
+
+            abort($status, 'Error Code : ' . $status);
         }
 
         return $data;
@@ -233,23 +268,26 @@ class ProductController extends Controller
         } elseif (str_starts_with(request()->path(), 'product/xbs-')) {
             return redirect(config('app.url') . '/product/' . str_replace('xbs-', 'XBS-', $ProductID) . '/' . $ProductName);
         } else {
-            $data = self::DigikalaApi('product/' . $ProductID . '/', 'v2');
+            $resolvedProductId = self::resolveProductId($ProductID, 'digikala');
+            $data = self::DigikalaApi('product/' . $resolvedProductId . '/', 'v2');
 
-            $digikalaProduct = Product::find($ProductID);
+            $actualProductId = $data['data']['product']['id'] ?? $resolvedProductId;
+
+            $digikalaProduct = Product::find($actualProductId);
             if ($digikalaProduct && !$digikalaProduct->is_active) {
                 return self::renderInactiveProductView($data['data']['product']['title_fa'] ?? null);
             }
 
             if (!empty($data['data']['product']['is_inactive'])) {
                 $title = $data['data']['product']['title_fa'] ?? null;
-                Product::where('id', $ProductID)->update(['is_active' => false]);
+                Product::where('id', $actualProductId)->update(['is_active' => false]);
                 return self::renderInactiveProductView($title);
             }
 
-            $digikalaProduct = Product::where('id', (string) $ProductID)->first();
+            $digikalaProduct = Product::where('id', (string) $actualProductId)->first();
             if (!$digikalaProduct) {
                 $digikalaProduct = Product::create([
-                    'id' => (string) $data['data']['product']['id'],
+                    'id' => (string) $actualProductId,
                     'title' => $data['data']['product']['title_fa'],
                     'store' => 'digikala',
                     'is_active' => true,
@@ -277,8 +315,16 @@ class ProductController extends Controller
                     );
                 }
             }
+
+            $mappedIds = ProductIdMapping::where('new_product_id', $actualProductId)
+                ->where('store', 'digikala')
+                ->where('is_active', true)
+                ->pluck('old_product_id')
+                ->toArray();
+            $allProductIds = array_merge([$actualProductId], $mappedIds);
+
             $comments = Comment::query()
-                ->where('product_id', $data['data']['product']['id'])
+                ->whereIn('product_id', $allProductIds)
                 ->where('status', Comment::STATUS_APPROVED)
                 ->whereNull('parent_id')
                 ->with([
@@ -297,7 +343,7 @@ class ProductController extends Controller
 
             $response = response()->view('layouts.product.index', [
                 'data' => $data,
-                'product' => Product::find($data['data']['product']['id']),
+                'product' => Product::find($actualProductId),
                 'comments' => $comments,
                 'challenge' => $challenge,
             'commentSettings' => $commentSettings,
@@ -318,16 +364,19 @@ class ProductController extends Controller
         } elseif (str_starts_with(request()->path(), 'product/xbs-')) {
             return redirect(config('app.url') . '/product/' . str_replace('xbs-', 'XBS-', $ProductID) . '/no?utm_source=to_new_url&utm_medium=redirect&utm_campaign=old_url');
         } else {
-            $data = self::DigikalaApi('product/' . $ProductID . '/', 'v2');
+            $resolvedProductId = self::resolveProductId($ProductID, 'digikala');
+            $data = self::DigikalaApi('product/' . $resolvedProductId . '/', 'v2');
 
-            $digikalaProduct = Product::find($ProductID);
+            $actualProductId = $data['data']['product']['id'] ?? $resolvedProductId;
+
+            $digikalaProduct = Product::find($actualProductId);
             if ($digikalaProduct && !$digikalaProduct->is_active) {
                 return self::renderInactiveProductView($data['data']['product']['title_fa'] ?? null);
             }
 
             if (!empty($data['data']['product']['is_inactive'])) {
                 $title = $data['data']['product']['title_fa'] ?? null;
-                Product::where('id', $ProductID)->update(['is_active' => false]);
+                Product::where('id', $actualProductId)->update(['is_active' => false]);
                 return self::renderInactiveProductView($title);
             }
 

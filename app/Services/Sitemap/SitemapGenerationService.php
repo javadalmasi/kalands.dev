@@ -4,6 +4,7 @@ namespace App\Services\Sitemap;
 
 use App\Jobs\Sitemap\ProcessSitemapChunkJob;
 use App\Models\Product;
+use App\Models\SitemapGroup;
 use App\Models\SitemapRunLog;
 use App\Repositories\SettingsRepository;
 use Illuminate\Support\Carbon;
@@ -15,10 +16,111 @@ class SitemapGenerationService
     private const string MODE_AUTO = 'auto';
 
     private const string MODE_OFF = 'off';
+    
+    private const int URLS_PER_GROUP = 50000;
 
     public function __construct(
         private SettingsRepository $settings,
     ) {}
+    
+    public function getPeriodicRebuildEnabled(): bool
+    {
+        return (bool) $this->settings->get('sitemap.periodic_rebuild_enabled', false);
+    }
+    
+    public function setPeriodicRebuildEnabled(bool $enabled): void
+    {
+        $this->settings->set('sitemap.periodic_rebuild_enabled', $enabled);
+    }
+    
+    public function getPeriodicRebuildDays(): int
+    {
+        return max(30, min(90, (int) $this->settings->get('sitemap.periodic_rebuild_days', 75)));
+    }
+    
+    public function setPeriodicRebuildDays(int $days): void
+    {
+        $this->settings->set('sitemap.periodic_rebuild_days', max(30, min(90, $days)));
+    }
+    
+    public function getLastFullRebuildAt(): ?Carbon
+    {
+        $timestamp = $this->settings->get('sitemap.last_full_rebuild_at');
+        return $timestamp ? Carbon::parse($timestamp) : null;
+    }
+    
+    public function setLastFullRebuildAt(?Carbon $date): void
+    {
+        $this->settings->set('sitemap.last_full_rebuild_at', $date?->toIso8601String());
+    }
+    
+    public function shouldDoFullRebuild(): bool
+    {
+        if (!$this->getPeriodicRebuildEnabled()) {
+            return false;
+        }
+        
+        $lastRebuild = $this->getLastFullRebuildAt();
+        if (!$lastRebuild) {
+            return true;
+        }
+        
+        $daysSinceRebuild = $lastRebuild->diffInDays(now());
+        return $daysSinceRebuild >= $this->getPeriodicRebuildDays();
+    }
+    
+    public function getCurrentVersion(): string
+    {
+        return $this->settings->get('sitemap.current_version', 'v1');
+    }
+    
+    public function setCurrentVersion(string $version): void
+    {
+        $this->settings->set('sitemap.current_version', $version);
+    }
+    
+    public function generateNewVersion(): string
+    {
+        return 'v' . now()->format('YmdHis');
+    }
+    
+    public function getIncompleteGroup(?string $version = null): ?SitemapGroup
+    {
+        $version ??= $this->getCurrentVersion();
+        
+        return SitemapGroup::query()
+            ->where('version', $version)
+            ->where('is_active', true)
+            ->where('is_complete', false)
+            ->orderBy('group_index', 'desc')
+            ->first();
+    }
+    
+    public function getNextGroupIndex(?string $version = null): int
+    {
+        $version ??= $this->getCurrentVersion();
+        
+        $maxIndex = SitemapGroup::query()
+            ->where('version', $version)
+            ->max('group_index');
+            
+        return $maxIndex !== null ? $maxIndex + 1 : 0;
+    }
+    
+    public function createNewGroup(string $version, int $groupIndex): SitemapGroup
+    {
+        $filename = "sitemap-{$version}-g{$groupIndex}.xml.gz";
+        
+        return SitemapGroup::create([
+            'version' => $version,
+            'group_index' => $groupIndex,
+            'filename' => $filename,
+            'url_count' => 0,
+            'is_complete' => false,
+            'is_active' => true,
+            'created_at' => now(),
+        ]);
+    }
 
     public function getMode(): string
     {
@@ -146,16 +248,27 @@ class SitemapGenerationService
             return null;
         }
 
-        $force = true;
         $separateStores = (bool) $this->settings->get('sitemap.separate_stores', false);
+        
+        $rebuildType = 'incremental';
+        $version = $this->getCurrentVersion();
+        
+        if ($force || $this->shouldDoFullRebuild()) {
+            $rebuildType = 'full';
+            $version = $this->generateNewVersion();
+            $this->setCurrentVersion($version);
+        }
+        
         $runId = now()->format('Ymd_His');
 
         $run = SitemapRunLog::query()->create([
             'run_id' => $runId,
+            'version' => $version,
             'status' => 'running',
             'force_mode' => $force,
+            'rebuild_type' => $rebuildType,
             'started_at' => now(),
-            'total_products' => $force ? $this->activeProductsCount() : $this->pendingProductsCount(),
+            'total_products' => ($rebuildType === 'full') ? $this->activeProductsCount() : $this->pendingProductsCount(),
             'meta' => [
                 'trigger' => 'queue_auto_continuous',
                 'batch_size' => ProcessSitemapChunkJob::CHUNK_SIZE,
@@ -167,8 +280,9 @@ class SitemapGenerationService
 
         ProcessSitemapChunkJob::dispatch(
             $runId,
+            $version,
             lastId: null,
-            force: $force,
+            force: ($rebuildType === 'full'),
             store: $separateStores ? 'dk' : '',
             separateStores: $separateStores,
             chunkIndex: 0,
@@ -341,6 +455,62 @@ class SitemapGenerationService
         }
 
         file_put_contents($path, gzencode($xml, 9));
+    }
+    
+    public function deactivateOldVersionGroups(string $currentVersion): void
+    {
+        SitemapGroup::query()
+            ->where('version', '!=', $currentVersion)
+            ->where('is_active', true)
+            ->update(['is_active' => false]);
+    }
+    
+    public function cleanupOldVersionFiles(string $currentVersion): void
+    {
+        $oldGroups = SitemapGroup::query()
+            ->where('version', '!=', $currentVersion)
+            ->where('is_active', false)
+            ->get();
+            
+        foreach ($oldGroups as $group) {
+            $path = public_path("sitemaps/{$group->filename}");
+            if (file_exists($path)) {
+                @unlink($path);
+            }
+        }
+        
+        SitemapGroup::query()
+            ->where('version', '!=', $currentVersion)
+            ->delete();
+    }
+    
+    public function rebuildSitemapIndexForVersion(string $version): void
+    {
+        $appUrl = rtrim(config('app.url'), '/');
+        
+        $groups = SitemapGroup::query()
+            ->where('version', $version)
+            ->where('is_active', true)
+            ->where('is_complete', true)
+            ->orderBy('group_index')
+            ->get();
+            
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>';
+        $xml .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+        
+        foreach ($groups as $group) {
+            $loc = "{$appUrl}/sitemaps/{$group->filename}";
+            $lastmod = ($group->completed_at ?? $group->created_at)->setTimezone('UTC')->format('Y-m-d\TH:i:sP');
+            
+            $xml .= '<sitemap>';
+            $xml .= '<loc>' . htmlspecialchars($loc, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</loc>';
+            $xml .= '<lastmod>' . $lastmod . '</lastmod>';
+            $xml .= '</sitemap>';
+        }
+        
+        $xml .= '</sitemapindex>';
+        
+        file_put_contents(public_path('sitemap.xml'), $xml);
     }
 
     public function reset(): ?SitemapRunLog

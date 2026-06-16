@@ -34,6 +34,7 @@
             'children' => [
                 ['label' => 'مدیریت محصولات', 'route' => 'dash.admin.products', 'active' => 'dash.admin.products', 'permission' => 'products.view'],
                 ['label' => 'بررسی محصولات غیرفعال', 'route' => 'dash.admin.products.checker', 'active' => 'dash.admin.products.checker*', 'permission' => 'products.check'],
+                ['label' => 'مپینگ شناسه‌ها', 'route' => 'dash.admin.product_mappings', 'active' => 'dash.admin.product_mappings', 'permission' => 'products.view'],
             ],
         ],
         [

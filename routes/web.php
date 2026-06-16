@@ -267,6 +267,10 @@ Route::prefix('dash/admin/{authkey}')
         Route::get('/products/digikala-ids', [AdminDashboardController::class, 'getDigikalaIdsForCheck'])->name('products.digikala_ids')->middleware('permission:products.check');
         Route::post('/products/check-api', [AdminDashboardController::class, 'checkProductsApiStatus'])->name('products.check_api')->middleware('permission:products.check');
 
+        Route::get('/product-mappings', [AdminDashboardController::class, 'productIdMappings'])->name('product_mappings')->middleware('permission:products.view');
+        Route::post('/product-mappings', [AdminDashboardController::class, 'storeProductIdMapping'])->name('product_mappings.store')->middleware('permission:products.edit');
+        Route::delete('/product-mappings/{mapping}', [AdminDashboardController::class, 'deleteProductIdMapping'])->name('product_mappings.delete')->middleware('permission:products.edit');
+
         Route::get('/megamenu', [AdminDashboardController::class, 'megamenuHub'])->name('megamenu')->middleware('permission:megamenu.view');
         Route::post('/megamenu/save', [AdminDashboardController::class, 'saveMegamenu'])->name('megamenu.save')->middleware('permission:megamenu.edit');
         Route::post('/megamenu/test-links', [AdminDashboardController::class, 'testMegamenuLinks'])->name('megamenu.test_links')->middleware('permission:megamenu.view');

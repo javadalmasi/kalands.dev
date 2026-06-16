@@ -19,7 +19,7 @@
 
     <form method="POST" class="space-y-6 {{ !($commentSettings['enabled'] ?? true) ? 'opacity-50 pointer-events-none' : '' }}" action="{{ route('comments.store') }}">
         @csrf
-        <input type="hidden" name="product_id" value="{{ $product->id }}">
+        <input type="hidden" name="product_id" value="{{ $product->id ?? '' }}">
 
         @guest
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

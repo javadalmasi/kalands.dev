@@ -55,4 +55,32 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    public function idMappings()
+    {
+        return $this->hasMany(ProductIdMapping::class, 'new_product_id', 'id');
+    }
+
+    public function reverseIdMappings()
+    {
+        return $this->hasMany(ProductIdMapping::class, 'old_product_id', 'id');
+    }
+
+    public function getMappedProductId()
+    {
+        $mapping = ProductIdMapping::where('old_product_id', $this->id)
+            ->where('store', $this->store)
+            ->where('is_active', true)
+            ->first();
+
+        return $mapping?->new_product_id;
+    }
+
+    public function getReverseMappedProductIds()
+    {
+        return ProductIdMapping::where('new_product_id', $this->id)
+            ->where('store', $this->store)
+            ->where('is_active', true)
+            ->pluck('old_product_id');
+    }
 }

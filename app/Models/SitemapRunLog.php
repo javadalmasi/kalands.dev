@@ -9,13 +9,16 @@ class SitemapRunLog extends Model
 {
     protected $fillable = [
         'run_id',
+        'version',
         'status',
         'total_products',
         'processed_products',
         'total_chunks',
         'force_mode',
+        'rebuild_type',
         'started_at',
         'completed_at',
+        'last_full_rebuild_at',
         'error_message',
         'meta',
     ];
@@ -29,6 +32,7 @@ class SitemapRunLog extends Model
             'total_chunks' => 'integer',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
+            'last_full_rebuild_at' => 'datetime',
             'meta' => 'array',
         ];
     }
@@ -52,5 +56,15 @@ class SitemapRunLog extends Model
     {
         if (!$this->completed_at) return null;
         return verta($this->completed_at)->format('Y/m/d H:i:s');
+    }
+    
+    public function isFullRebuild(): bool
+    {
+        return $this->rebuild_type === 'full';
+    }
+    
+    public function isIncremental(): bool
+    {
+        return $this->rebuild_type === 'incremental';
     }
 }

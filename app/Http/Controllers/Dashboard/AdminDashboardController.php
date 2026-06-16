@@ -17,6 +17,7 @@ use App\Models\ContactMessage;
 use App\Models\Faq;
 use App\Models\Permission;
 use App\Models\Product;
+use App\Models\ProductIdMapping;
 use App\Models\QueueExecutionLog;
 use App\Models\Role;
 use App\Models\SitemapRunLog;
@@ -2434,6 +2435,83 @@ class AdminDashboardController extends Controller
         curl_multi_close($multiCurl);
 
         return response()->json(['ok' => true, 'results' => $results]);
+    }
+
+    public function productIdMappings(string $authkey, Request $request)
+    {
+        $q = trim((string) $request->input('q'));
+        $store = (string) $request->input('store', 'all');
+
+        $mappings = ProductIdMapping::query()
+            ->with(['oldProduct', 'newProduct'])
+            ->when($q, function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('old_product_id', 'like', "%{$q}%")
+                        ->orWhere('new_product_id', 'like', "%{$q}%")
+                        ->orWhereHas('oldProduct', fn ($q2) => $q2->where('title', 'like', "%{$q}%"))
+                        ->orWhereHas('newProduct', fn ($q2) => $q2->where('title', 'like', "%{$q}%"));
+                });
+            })
+            ->when($store !== 'all', fn ($query) => $query->where('store', $store))
+            ->latest()
+            ->paginate(30)
+            ->withQueryString();
+
+        return view('dash.admin.products.mappings', compact('mappings', 'q', 'store', 'authkey'));
+    }
+
+    public function storeProductIdMapping(string $authkey, Request $request, ActivityLogger $activityLogger): RedirectResponse
+    {
+        $data = $request->validate([
+            'old_product_id' => ['required', 'string', 'exists:products,id'],
+            'new_product_id' => ['required', 'string', 'exists:products,id'],
+            'store' => ['required', 'in:digikala,basalam'],
+            'reason' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        if ($data['old_product_id'] === $data['new_product_id']) {
+            return back()->with('error', 'شناسه قدیمی و جدید نمی‌توانند یکسان باشند.');
+        }
+
+        $oldProduct = Product::find($data['old_product_id']);
+        $newProduct = Product::find($data['new_product_id']);
+
+        if ($oldProduct->store !== $data['store'] || $newProduct->store !== $data['store']) {
+            return back()->with('error', 'هر دو محصول باید از فروشگاه انتخاب شده باشند.');
+        }
+
+        $mapping = ProductIdMapping::updateOrCreate(
+            [
+                'old_product_id' => $data['old_product_id'],
+                'store' => $data['store'],
+            ],
+            [
+                'new_product_id' => $data['new_product_id'],
+                'reason' => $data['reason'],
+                'is_active' => true,
+            ]
+        );
+
+        $activityLogger->log('admin.product.mapping.create', auth('admin')->user(), 'ایجاد مپینگ شناسه محصول', [
+            'old_product_id' => $data['old_product_id'],
+            'new_product_id' => $data['new_product_id'],
+            'store' => $data['store'],
+        ]);
+
+        return back()->with('message', 'مپینگ شناسه محصول با موفقیت ایجاد/بروزرسانی شد.');
+    }
+
+    public function deleteProductIdMapping(string $authkey, ProductIdMapping $mapping, ActivityLogger $activityLogger): RedirectResponse
+    {
+        $mapping->delete();
+
+        $activityLogger->log('admin.product.mapping.delete', auth('admin')->user(), 'حذف مپینگ شناسه محصول', [
+            'old_product_id' => $mapping->old_product_id,
+            'new_product_id' => $mapping->new_product_id,
+            'store' => $mapping->store,
+        ]);
+
+        return back()->with('message', 'مپینگ شناسه محصول حذف شد.');
     }
 
     public function analyticsHub(InternalAnalyticsService $analytics)

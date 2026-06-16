@@ -17,15 +17,14 @@ class ContinueSitemapRunJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $timeout = 300;
-
     public int $tries = 1;
 
     private const int MAX_RETRIES = 12;
-
-    private const int TAIL_FILL_THRESHOLD = 10000;
+    private const int NEW_PRODUCTS_THRESHOLD = 10000;
 
     public function __construct(
         protected string $runId,
+        protected string $version,
         protected ?string $lastId,
         protected bool $force,
         protected bool $separateStores,
@@ -36,7 +35,7 @@ class ContinueSitemapRunJob implements ShouldQueue
 
     public function handle(SitemapGenerationService $sitemapService): void
     {
-        if (! Cache::get('sitemap:running')) {
+        if (!Cache::get('sitemap:running')) {
             return;
         }
 
@@ -47,16 +46,24 @@ class ContinueSitemapRunJob implements ShouldQueue
             return;
         }
 
-        $tailGzip = $sitemapService->getTailGzip();
+        $incompleteGroup = $sitemapService->getIncompleteGroup($this->version);
 
-        if ($tailGzip !== null) {
+        if ($incompleteGroup !== null) {
             $newCount = Product::query()
                 ->where('is_active', true)
-                ->where('id', '>', $tailGzip['last_product_id'])
+                ->where('id', '>', $incompleteGroup->last_product_id ?? 0)
                 ->count();
 
-            if ($newCount >= self::TAIL_FILL_THRESHOLD) {
-                $this->fillTailGzip($sitemapService, $tailGzip);
+            if ($newCount >= self::NEW_PRODUCTS_THRESHOLD) {
+                ProcessSitemapChunkJob::dispatch(
+                    $this->runId,
+                    $this->version,
+                    lastId: $incompleteGroup->last_product_id,
+                    force: $this->force,
+                    store: $this->separateStores ? 'dk' : '',
+                    separateStores: $this->separateStores,
+                    chunkIndex: 0,
+                );
                 return;
             }
 
@@ -67,11 +74,16 @@ class ContinueSitemapRunJob implements ShouldQueue
         $hasNew = Product::query()
             ->where('is_active', true)
             ->when($this->lastId, fn ($q) => $q->where('id', '>', $this->lastId))
+            ->where(function ($q) {
+                $q->whereNull('sitemapped_at')
+                    ->orWhereColumn('updated_at', '>', 'sitemapped_at');
+            })
             ->exists();
 
         if ($hasNew) {
             ProcessSitemapChunkJob::dispatch(
                 $this->runId,
+                $this->version,
                 lastId: $this->lastId,
                 force: $this->force,
                 store: $this->separateStores ? 'dk' : '',
@@ -89,84 +101,11 @@ class ContinueSitemapRunJob implements ShouldQueue
         $this->finalize($sitemapService);
     }
 
-    private function fillTailGzip(SitemapGenerationService $sitemapService, array $tailGzip): void
-    {
-        $oldPath = public_path("sitemaps/{$tailGzip['filename']}");
-        $oldIds = $sitemapService->parseGzipProductIds($oldPath);
-
-        @unlink($oldPath);
-        $sitemapService->clearTailGzip();
-
-        $allUrls = [];
-        $BATCH = 500;
-
-        foreach (array_chunk($oldIds, $BATCH) as $idChunk) {
-            Product::query()
-                ->whereIn('id', $idChunk)
-                ->where('is_active', true)
-                ->orderBy('id')
-                ->get()
-                ->each(function ($product) use ($sitemapService, &$allUrls) {
-                    $allUrls[] = $sitemapService->productToUrlData($product);
-                });
-        }
-
-        Product::query()
-            ->where('is_active', true)
-            ->where('id', '>', $tailGzip['last_product_id'])
-            ->orderBy('id')
-            ->chunk($BATCH, function ($products) use ($sitemapService, &$allUrls) {
-                foreach ($products as $product) {
-                    $allUrls[] = $sitemapService->productToUrlData($product);
-                }
-            });
-
-        $urlsPerGzip = ProcessSitemapChunkJob::URLS_PER_GZIP;
-        $groups = array_chunk($allUrls, $urlsPerGzip);
-        $newRunId = now()->format('Ymd_His');
-        $newLastProductId = null;
-
-        foreach ($groups as $gIdx => $urlBatch) {
-            $gzFilename = "sitemap-{$newRunId}-g{$gIdx}.xml.gz";
-            $sitemapService->writeGzipFromUrls(public_path("sitemaps/{$gzFilename}"), $urlBatch);
-
-            $batchIds = [];
-            foreach ($urlBatch as $url) {
-                if (preg_match('#/product/(\d+)#', $url['loc'], $m)) {
-                    $batchIds[] = (int) $m[1];
-                }
-            }
-
-            collect($batchIds)
-                ->chunk(ProcessSitemapChunkJob::BATCH_SIZE)
-                ->each(function ($ids) {
-                    Product::query()
-                        ->whereIn('id', $ids)
-                        ->update(['sitemapped_at' => now()]);
-                });
-
-            if (count($urlBatch) < $urlsPerGzip) {
-                $newLastProductId = !empty($batchIds) ? max($batchIds) : null;
-                $sitemapService->setTailGzip([
-                    'filename' => $gzFilename,
-                    'run_id' => $newRunId,
-                    'group' => $gIdx,
-                    'url_count' => count($urlBatch),
-                    'last_product_id' => $newLastProductId,
-                ]);
-            }
-        }
-
-        $sitemapService->rebuildSitemapIndex();
-        $sitemapService->refreshCachedCountsIfDue(5);
-
-        $this->lastId = $newLastProductId;
-    }
-
     private function recheck(): void
     {
         self::dispatch(
             $this->runId,
+            $this->version,
             $this->lastId,
             $this->force,
             $this->separateStores,
@@ -188,7 +127,7 @@ class ContinueSitemapRunJob implements ShouldQueue
         $sitemapService->refreshCachedCountsIfDue(10);
 
         if ($sitemapService->shouldStartAutomatically()) {
-            $nextRun = $sitemapService->start(true);
+            $nextRun = $sitemapService->start(false);
             if ($nextRun) {
                 info("ContinueSitemapRunJob: Auto-started next continuous run {$nextRun->run_id}.");
             }

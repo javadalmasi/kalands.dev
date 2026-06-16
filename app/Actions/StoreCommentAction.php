@@ -4,13 +4,33 @@ namespace App\Actions;
 
 use App\Contracts\Action;
 use App\Models\Comment;
+use App\Models\Product;
+use App\Models\ProductIdMapping;
 
 class StoreCommentAction implements Action
 {
+    private function resolveProductId(string $productId): string
+    {
+        $product = Product::find($productId);
+        if (!$product) {
+            return $productId;
+        }
+
+        $mapping = ProductIdMapping::where('old_product_id', $productId)
+            ->where('store', $product->store)
+            ->where('is_active', true)
+            ->first();
+
+        return $mapping?->new_product_id ?? $productId;
+    }
+
     public function execute()
     {
+        $originalProductId = request('product_id');
+        $resolvedProductId = $this->resolveProductId($originalProductId);
+
         $payload = [
-            'product_id' => request('product_id'),
+            'product_id' => $resolvedProductId,
             'parent_id' => request('parent_id'),
             'content' => strip_tags((string) request('content')),
             'status' => Comment::STATUS_PENDING,
