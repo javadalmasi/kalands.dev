@@ -73,11 +73,7 @@ class ContinueSitemapRunJob implements ShouldQueue
 
         $hasNew = Product::query()
             ->where('is_active', true)
-            ->when($this->lastId, fn ($q) => $q->where('id', '>', $this->lastId))
-            ->where(function ($q) {
-                $q->whereNull('sitemapped_at')
-                    ->orWhereColumn('updated_at', '>', 'sitemapped_at');
-            })
+            ->whereNull('sitemapped_at')
             ->exists();
 
         if ($hasNew) {

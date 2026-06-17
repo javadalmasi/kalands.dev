@@ -14,8 +14,8 @@ return new class extends Migration
              $table->unsignedInteger('group_index')->index();
              $table->string('filename');
              $table->unsignedInteger('url_count')->default(0);
-             $table->unsignedBigInteger('first_product_id')->nullable();
-             $table->unsignedBigInteger('last_product_id')->nullable();
+             $table->string('first_product_id', 120)->nullable();
+             $table->string('last_product_id', 120)->nullable();
              $table->boolean('is_complete')->default(false);
              $table->boolean('is_active')->default(true);
              $table->timestamp('created_at')->nullable();

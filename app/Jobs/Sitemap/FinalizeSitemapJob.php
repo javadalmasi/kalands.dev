@@ -42,7 +42,6 @@ class FinalizeSitemapJob implements ShouldQueue
 
         $this->info('Sitemap generation completed.');
 
-        $this->pruneOldLogs();
     }
 
     public function failed(\Throwable $exception): void
@@ -58,22 +57,6 @@ class FinalizeSitemapJob implements ShouldQueue
         Cache::forget('sitemap:running');
 
         Log::error("SitemapGenerator: Finalize job failed for run {$this->runId}: {$exception->getMessage()}");
-    }
-
-    private function pruneOldLogs(): void
-    {
-        $keepIds = SitemapRunLog::query()
-            ->latest('id')
-            ->limit(15)
-            ->pluck('id');
-
-        if ($keepIds->isNotEmpty()) {
-            SitemapRunLog::query()
-                ->whereNotIn('id', $keepIds)
-                ->delete();
-        }
-
-        $this->info('Pruned sitemap logs, keeping only the 15 most recent.');
     }
 
     private function info(string $message): void

@@ -29,6 +29,14 @@
                 <span class="material-icons text-base">history</span>
                 <span>گزارش اجراها</span>
             </button>
+            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-periodic">
+                <span class="material-icons text-base">schedule</span>
+                <span>بازسازی دوره‌ای</span>
+            </button>
+            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-queue">
+                <span class="material-icons text-base">queue</span>
+                <span>مدیریت صف</span>
+            </button>
             <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-actions">
                 <span class="material-icons text-base">settings</span>
                 <span>تنظیمات و کنترل</span>
@@ -418,10 +426,21 @@
 
     <div id="tab-logs" class="tab-content space-y-6 hidden">
         <div class="admin-card">
-            <h2 class="mb-4 font-bold flex items-center justify-between">
-                <div class="flex items-center gap-2"><span class="material-icons text-primary">history</span>گزارش ۵۰ اجرای آخر</div>
-                <span class="text-[10px] font-normal text-slate">برای مشاهده جزئیات کلیک کنید</span>
-            </h2>
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div>
+                    <h2 class="font-bold flex items-center gap-2">
+                        <span class="material-icons text-primary">history</span>
+                        گزارش ۵۰ اجرای آخر
+                    </h2>
+                    <p class="text-[10px] text-slate mt-1">برای مشاهده جزئیات هر اجرا روی همان ردیف کلیک کنید.</p>
+                </div>
+                <button type="button"
+                    onclick="document.getElementById('sitemap-clean-logs-modal').showModal()"
+                    class="admin-btn admin-btn-secondary border-warning/20 text-warning hover:bg-warning/10 text-xs">
+                    <span class="material-icons text-sm">delete_sweep</span>
+                    پاک‌سازی لاگ‌ها
+                </button>
+            </div>
             <div class="space-y-3 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
                 @forelse($lastRuns as $run)
                     <div class="rounded-xl border border-slate bg-slate/10 p-4 hover:bg-slate/20 transition-all cursor-pointer group dark:border-white/5 dark:bg-white/5 dark:hover:bg-white/10" onclick="toggleLogMeta(this)">
@@ -439,7 +458,7 @@
                             <span class="material-icons text-xs">info</span>
                             <span>
                                 @if($run->status === 'completed')
-                                    {{ number_format($run->processed_products) }} محصول در {{ $run->total_chunks }} فایل — چرخه یکپارچه خودکار
+                                    {{ number_format($run->processed_products) }} محصول — {{ $run->rebuild_type === 'full' ? 'بازسازی کامل' : 'افزایشی' }}
                                 @elseif($run->status === 'running')
                                     {{ number_format($run->processed_products) }} محصول پردازش شده از {{ $run->total_products ? number_format($run->total_products) : '?' }}
                                 @else
@@ -463,6 +482,16 @@
                                 <li class="flex items-center gap-2">
                                     <span class="w-1 h-1 rounded-full bg-primary/40"></span>
                                     شناسه اجرا: <span class="admin-ltr font-mono">{{ $run->run_id }}</span>
+                                </li>
+                                @if($run->version)
+                                    <li class="flex items-center gap-2">
+                                        <span class="w-1 h-1 rounded-full bg-primary/40"></span>
+                                        نسخه: <span class="admin-ltr font-mono">{{ $run->version }}</span>
+                                    </li>
+                                @endif
+                                <li class="flex items-center gap-2">
+                                    <span class="w-1 h-1 rounded-full bg-primary/40"></span>
+                                    نوع اجرا: {{ $run->rebuild_type === 'full' ? 'بازسازی کامل' : 'افزایشی' }}
                                 </li>
                                 <li class="flex items-center gap-2">
                                     <span class="w-1 h-1 rounded-full bg-primary/40"></span>
@@ -490,6 +519,181 @@
                         هنوز هیچ اجرایی ثبت نشده است.
                     </div>
                 @endforelse
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-periodic" class="tab-content space-y-6 hidden">
+        <div class="admin-card">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-5 pb-4 border-b border-slate/10">
+                <div>
+                    <h2 class="font-bold flex items-center gap-2">
+                        <span class="material-icons text-primary">schedule</span>
+                        بازسازی دوره‌ای سایت‌مپ
+                    </h2>
+                    <p class="text-xs text-slate/60 mt-1 leading-6">بازسازی کامل در نسخه جدید ساخته می‌شود و تا پایان ساخت، sitemap فعلی دست‌نخورده می‌ماند.</p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-[10px] font-bold {{ $periodicRebuildEnabled ? 'bg-success text-white' : 'bg-slate/20 text-slate' }}">
+                    {{ $periodicRebuildEnabled ? 'فعال' : 'غیرفعال' }}
+                </span>
+            </div>
+
+            <form action="{{ route('dash.admin.sitemap.rebuild-settings', ['authkey' => $authkey]) }}" method="POST" class="space-y-5">
+                @csrf
+                <label class="flex items-center justify-between gap-4 rounded-xl border border-slate/10 bg-slate/[0.04] p-4 cursor-pointer">
+                    <span>
+                        <span class="block text-sm font-bold">فعال‌سازی بازسازی دوره‌ای</span>
+                        <span class="block text-[11px] text-slate/60 mt-1">در موعد تعیین‌شده، Queue یک full rebuild نسخه‌بندی‌شده شروع می‌کند.</span>
+                    </span>
+                    <span class="admin-switch">
+                        <input type="hidden" name="periodic_rebuild_enabled" value="0">
+                        <input type="checkbox" name="periodic_rebuild_enabled" value="1" class="admin-switch-input" {{ $periodicRebuildEnabled ? 'checked' : '' }}>
+                        <span class="admin-switch-track"></span>
+                        <span class="admin-switch-ball"></span>
+                    </span>
+                </label>
+
+                <div>
+                    <label class="text-xs font-bold text-slate/70 mb-2 block">پریود بازسازی کامل</label>
+                    <select name="periodic_rebuild_days" class="admin-input max-w-xs">
+                        @foreach([30, 45, 60, 75, 90] as $days)
+                            <option value="{{ $days }}" {{ (int) $periodicRebuildDays === $days ? 'selected' : '' }}>{{ $days }} روز</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div class="p-3 rounded-xl bg-primary/[0.06] border border-primary/10">
+                        <div class="text-[10px] text-slate/60 mb-1">نسخه فعال</div>
+                        <div class="font-bold admin-ltr text-primary">{{ $currentVersion }}</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-primary/[0.06] border border-primary/10">
+                        <div class="text-[10px] text-slate/60 mb-1">آخرین full rebuild</div>
+                        <div class="font-bold text-xs">{{ $lastFullRebuildAt ? persianDateTime($lastFullRebuildAt) : 'ثبت نشده' }}</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-primary/[0.06] border border-primary/10">
+                        <div class="text-[10px] text-slate/60 mb-1">گروه‌های کامل</div>
+                        <div class="font-bold admin-ltr text-primary">{{ number_format($completeGroups) }}</div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-primary/[0.06] border border-primary/10">
+                        <div class="text-[10px] text-slate/60 mb-1">URL در draft</div>
+                        <div class="font-bold admin-ltr text-primary">{{ number_format($draftUrlsInGroups) }}</div>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-slate/10 bg-slate/[0.04] p-3 text-xs text-slate/70 leading-6">
+                    اجرای افزایشی فقط وقتی شروع می‌شود که حداقل
+                    <span class="admin-ltr font-bold text-primary">{{ number_format($pendingNeededForNextGroup) }}</span>
+                    محصول جدید برای تکمیل گروه ۵۰٬۰۰۰تایی بعدی آماده باشد. گروه ناقص تا قبل از تکمیل شدن وارد sitemap.xml نمی‌شود.
+                </div>
+
+                @if($shouldDoFullRebuild)
+                    <div class="rounded-xl border border-warning/20 bg-warning/10 p-3 text-xs text-warning leading-6">
+                        موعد بازسازی کامل رسیده است؛ در اجرای بعدی Queue، full rebuild به صورت خودکار شروع می‌شود.
+                    </div>
+                @endif
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <button type="submit" class="admin-btn admin-btn-primary">
+                        <span class="material-icons">save</span>
+                        ذخیره تنظیمات
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="admin-card">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <h2 class="font-bold flex items-center gap-2">
+                    <span class="material-icons text-primary">view_list</span>
+                    گروه‌های نسخه فعال
+                </h2>
+                <form action="{{ route('dash.admin.sitemap.force-full-rebuild', ['authkey' => $authkey]) }}" method="POST">
+                    @csrf
+                    <button type="submit"
+                        onclick="return confirm('بازسازی کامل سایت‌مپ در نسخه جدید شروع شود؟')"
+                        class="admin-btn admin-btn-secondary border-primary/20 text-primary hover:bg-primary/10 text-xs"
+                        {{ $isRunning ? 'disabled' : '' }}>
+                        <span class="material-icons text-sm">restart_alt</span>
+                        شروع full rebuild
+                    </button>
+                </form>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                <div class="p-3 rounded-xl bg-slate/10">
+                    <div class="text-[10px] text-slate/60">کل گروه‌ها</div>
+                    <div class="text-lg font-bold admin-ltr">{{ number_format($totalGroups) }}</div>
+                </div>
+                <div class="p-3 rounded-xl bg-slate/10">
+                    <div class="text-[10px] text-slate/60">کامل و داخل sitemap.xml</div>
+                    <div class="text-lg font-bold admin-ltr text-success">{{ number_format($completeGroups) }}</div>
+                </div>
+                <div class="p-3 rounded-xl bg-slate/10">
+                    <div class="text-[10px] text-slate/60">ناقص و draft</div>
+                    <div class="text-lg font-bold admin-ltr text-warning">{{ number_format($incompleteGroups) }}</div>
+                </div>
+            </div>
+            <div class="mb-4 rounded-xl border border-primary/10 bg-primary/[0.04] p-3 text-xs text-slate/70 leading-6">
+                ظرفیت باقی‌مانده تا sitemap کامل بعدی:
+                <span class="admin-ltr font-bold text-primary">{{ number_format($pendingNeededForNextGroup) }}</span>
+                URL
+            </div>
+            <div class="rounded-xl border border-slate/10 overflow-hidden">
+                <div class="max-h-72 overflow-y-auto custom-scrollbar divide-y divide-slate/10">
+                    @forelse($activeGroups as $group)
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-2 p-3 text-xs items-center">
+                            <span class="font-bold admin-ltr">#{{ $group->group_index }}</span>
+                            <span class="admin-ltr truncate md:col-span-2">{{ $group->filename }}</span>
+                            <span class="admin-ltr">{{ number_format($group->url_count) }} / 50,000</span>
+                            <span class="{{ $group->is_complete ? 'text-success' : 'text-warning' }} font-bold">
+                                {{ $group->is_complete ? 'کامل' : 'draft' }}
+                            </span>
+                        </div>
+                    @empty
+                        <div class="p-6 text-center text-sm text-slate/60">هنوز گروهی برای نسخه فعال ثبت نشده است.</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-queue" class="tab-content space-y-6 hidden">
+        <div class="admin-card">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-5 pb-4 border-b border-slate/10">
+                <div>
+                    <h2 class="font-bold flex items-center gap-2">
+                        <span class="material-icons text-primary">queue</span>
+                        اتصال به مدیریت صف‌ها
+                    </h2>
+                    <p class="text-xs text-slate/60 mt-1 leading-6">شروع خودکار sitemap از وب‌سرویس صف انجام می‌شود و jobها روی صف تنظیم‌شده اجرا می‌شوند.</p>
+                </div>
+                <a href="{{ route('dash.admin.queues', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary text-xs">
+                    <span class="material-icons text-sm">open_in_new</span>
+                    ماژول صف‌ها
+                </a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div class="p-3 rounded-xl bg-primary/[0.06] border border-primary/10">
+                    <div class="text-[10px] text-slate/60 mb-1">نام صف sitemap</div>
+                    <div class="font-bold admin-ltr text-primary">{{ $sitemapQueueName }}</div>
+                </div>
+                <div class="p-3 rounded-xl bg-primary/[0.06] border border-primary/10">
+                    <div class="text-[10px] text-slate/60 mb-1">jobهای sitemap در صف</div>
+                    <div class="font-bold admin-ltr text-primary">{{ number_format($pendingSitemapJobs) }}</div>
+                </div>
+                <div class="p-3 rounded-xl bg-primary/[0.06] border border-primary/10">
+                    <div class="text-[10px] text-slate/60 mb-1">وب‌سرویس صف</div>
+                    <div class="font-bold {{ ($queueSettings['webservice_enabled'] ?? true) ? 'text-success' : 'text-danger' }}">
+                        {{ ($queueSettings['webservice_enabled'] ?? true) ? 'فعال' : 'غیرفعال' }}
+                    </div>
+                </div>
+                <div class="p-3 rounded-xl bg-primary/[0.06] border border-primary/10">
+                    <div class="text-[10px] text-slate/60 mb-1">آخرین اجرای صف</div>
+                    <div class="font-bold text-xs">{{ $lastQueueRun?->executed_at ? persianDateTime($lastQueueRun->executed_at) : 'ثبت نشده' }}</div>
+                </div>
+            </div>
+            <div class="mt-4 rounded-xl border border-slate/10 bg-slate/[0.04] p-3 text-xs text-slate/70 leading-6">
+                Cron یا وب‌سرویس مدیریت صف، ابتدا شمار محصولات sitemap را به‌روز می‌کند؛ اگر ماژول فعال باشد و اجرای فعالی وجود نداشته باشد، job افزایشی یا full rebuild دوره‌ای را در صف قرار می‌دهد.
             </div>
         </div>
     </div>
@@ -651,12 +855,12 @@
                             <span class="material-icons text-primary text-lg">info</span>
                             نحوه عملکرد
                         </h3>
-                        <p class="text-sm text-slate leading-7">این ماژول به صورت هوشمند و افزایشی کار می‌کند. در هر بار اجرا، فقط محصولاتی که:</p>
+                        <p class="text-sm text-slate leading-7">این ماژول به صورت افزایشی و گروه‌بندی‌شده کار می‌کند. در اجرای افزایشی، فقط محصولاتی پردازش می‌شوند که:</p>
                         <ul class="list-disc list-inside space-y-1 mt-2 text-xs text-slate">
                             <li>جدید اضافه شده‌اند (sitemapped_at null)</li>
-                            <li>بروزرسانی شده‌اند (updated_at > sitemapped_at)</li>
+                            <li>برای تکمیل گروه ۵۰٬۰۰۰تایی بعدی به حد نصاب رسیده‌اند</li>
                         </ul>
-                        <p class="mt-2 text-sm text-slate leading-7">در صف پردازش قرار می‌گیرند. محصولات پردازش نشده در فایل‌های ۵۰٬۰۰۰ تایی gzip شده ذخیره می‌شوند.</p>
+                        <p class="mt-2 text-sm text-slate leading-7">گروه ناقص در draft نگه‌داری می‌شود و تا زمانی که به ۵۰٬۰۰۰ URL نرسد داخل sitemap.xml قرار نمی‌گیرد. به‌روزرسانی کامل URLهای قبلی با بازسازی دوره‌ای انجام می‌شود.</p>
                     </section>
                     <hr class="border-slate/10">
                     <section id="doc-schedule">
@@ -671,9 +875,9 @@
                     <section id="doc-rebuild">
                         <h3 class="text-base font-bold mb-3 flex items-center gap-2">
                             <span class="material-icons text-primary text-lg">restart_alt</span>
-                            چرخه دائمی بازتولید
+                            بازسازی دوره‌ای
                         </h3>
-                        <p class="text-sm text-slate leading-7">در معماری جدید، ماژول به‌صورت دائم چرخه‌ی بازتولید کامل را اجرا می‌کند و اجرای دستی حذف شده است. هر چرخه فایل‌های قبلی را جایگزین می‌کند تا خروجی نهایی یکنواخت، بدون تکرار URL و همواره به‌روز باشد.</p>
+                        <p class="text-sm text-slate leading-7">در بازسازی کامل، نسخه جدید پشت صحنه ساخته می‌شود. نسخه قبلی و sitemap.xml فعلی تا پایان ساخت حفظ می‌شوند و بعد از کامل شدن نسخه جدید، فایل‌های نسخه قبلی حذف و sitemap.xml با آدرس فایل‌های جدید جایگزین می‌شود.</p>
                     </section>
                     <hr class="border-slate/10">
                     <section id="doc-files">
@@ -697,7 +901,7 @@
                     <nav class="space-y-1">
                         <a href="#doc-howto" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">نحوه عملکرد</a>
                         <a href="#doc-schedule" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">زمان‌بندی</a>
-                        <a href="#doc-rebuild" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">چرخه دائمی بازتولید</a>
+                        <a href="#doc-rebuild" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">بازسازی دوره‌ای</a>
                         <a href="#doc-files" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">ساختار فایل‌ها</a>
                     </nav>
                 </div>
@@ -943,6 +1147,31 @@
                     @csrf
                     <button type="submit" class="admin-btn bg-danger text-white hover:bg-danger/90 px-8">تایید و بازنشانی</button>
                 </form>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="sitemap-clean-logs-modal" class="admin-dialog w-[min(100vw-32px,450px)]">
+        <div class="admin-dialog-body">
+            <div class="flex items-start gap-4 p-2">
+                <div class="w-12 h-12 rounded-full bg-warning/10 text-warning flex items-center justify-center shrink-0">
+                    <span class="material-icons !text-2xl">delete_sweep</span>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-black text-slate-800 dark:text-white mb-2">پاک‌سازی لاگ‌های سایت‌مپ</h3>
+                    <p class="text-xs leading-6 text-slate-500 dark:text-slate-400">
+                        رکوردهای قدیمی‌تر از تعداد انتخاب‌شده حذف می‌شوند و اجرای فعلی تغییری نمی‌کند.
+                    </p>
+                    <form method="POST" action="{{ route('dash.admin.sitemap.clean-logs', ['authkey' => $authkey]) }}" class="mt-4" id="sitemap-clean-logs-form">
+                        @csrf
+                        <label class="text-xs font-bold text-slate/70 mb-2 block">تعداد لاگ‌های اخیر برای نگه‌داری</label>
+                        <input type="number" name="keep_count" value="15" min="5" max="100" class="admin-input max-w-32 text-center admin-ltr">
+                    </form>
+                </div>
+            </div>
+            <div class="admin-dialog-actions">
+                <button type="button" onclick="this.closest('dialog').close()" class="admin-btn admin-btn-secondary">انصراف</button>
+                <button type="submit" form="sitemap-clean-logs-form" class="admin-btn bg-warning text-white hover:bg-warning/90 px-8">تایید پاک‌سازی</button>
             </div>
         </div>
     </dialog>

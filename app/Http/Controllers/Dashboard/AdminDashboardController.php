@@ -3976,6 +3976,35 @@ class AdminDashboardController extends Controller
                 : round($bytes / 1024, 1).' KB';
         }
 
+        $currentVersion = $sitemapGenerationService->getCurrentVersion();
+        $periodicRebuildEnabled = $sitemapGenerationService->getPeriodicRebuildEnabled();
+        $periodicRebuildDays = $sitemapGenerationService->getPeriodicRebuildDays();
+        $lastFullRebuildAt = $sitemapGenerationService->getLastFullRebuildAt();
+        $shouldDoFullRebuild = $sitemapGenerationService->shouldDoFullRebuild();
+        
+        $activeGroups = \App\Models\SitemapGroup::query()
+            ->where('version', $currentVersion)
+            ->where('is_active', true)
+            ->orderBy('group_index')
+            ->get();
+        
+        $totalGroups = $activeGroups->count();
+        $completeGroups = $activeGroups->where('is_complete', true)->count();
+        $incompleteGroups = $activeGroups->where('is_complete', false)->count();
+        $totalUrlsInGroups = $activeGroups->sum('url_count');
+        $draftUrlsInGroups = $activeGroups->where('is_complete', false)->sum('url_count');
+        $pendingNeededForNextGroup = $sitemapGenerationService->pendingProductsNeededForNextGroup($currentVersion);
+
+        $queueSettings = $settings->get('queue.settings', []);
+        $sitemapQueueName = (string) config('queue.sitemap_queue', 'default');
+        $pendingSitemapJobs = Schema::hasTable('jobs')
+            ? DB::table('jobs')
+                ->where('queue', $sitemapQueueName)
+                ->where('payload', 'like', '%Sitemap%')
+                ->count()
+            : 0;
+        $lastQueueRun = QueueExecutionLog::query()->latest('executed_at')->first();
+
         return view('dash.admin.sitemap-hub', compact(
             'isRunning',
             'currentRun',
@@ -4010,6 +4039,22 @@ class AdminDashboardController extends Controller
             'currentBatchesPerHour',
             'currentDelaySeconds',
             'avgSpeed',
+            'currentVersion',
+            'periodicRebuildEnabled',
+            'periodicRebuildDays',
+            'lastFullRebuildAt',
+            'shouldDoFullRebuild',
+            'totalGroups',
+            'completeGroups',
+            'incompleteGroups',
+            'totalUrlsInGroups',
+            'draftUrlsInGroups',
+            'pendingNeededForNextGroup',
+            'activeGroups',
+            'queueSettings',
+            'sitemapQueueName',
+            'pendingSitemapJobs',
+            'lastQueueRun',
         ));
     }
 
@@ -4128,5 +4173,105 @@ class AdminDashboardController extends Controller
                 ? 'تمامی فایل‌های سایت‌مپ حذف و فرآیند تولید از نو آغاز شد.'
                 : 'تمامی فایل‌های سایت‌مپ حذف شدند اما ماژول غیرفعال است یا در حال اجراست.',
         );
+    }
+
+    public function saveSitemapRebuildSettings(Request $request, ActivityLogger $activityLogger, SitemapGenerationService $sitemapGenerationService): RedirectResponse
+    {
+        $request->validate([
+            'periodic_rebuild_enabled' => 'nullable|boolean',
+            'periodic_rebuild_days' => 'required|integer|min:30|max:90',
+        ]);
+
+        $sitemapGenerationService->setPeriodicRebuildEnabled((bool) $request->input('periodic_rebuild_enabled', false));
+        $sitemapGenerationService->setPeriodicRebuildDays((int) $request->input('periodic_rebuild_days', 75));
+
+        $activityLogger->log(
+            'sitemap.rebuild_settings',
+            auth('admin')->user(),
+            'تنظیمات بازسازی دوره‌ای سایت‌مپ به‌روزرسانی شد',
+        );
+
+        return back()->with('message', 'تنظیمات بازسازی دوره‌ای ذخیره شد.');
+    }
+
+    public function forceFullRebuild(Request $request, SitemapGenerationService $sitemapGenerationService, ActivityLogger $activityLogger): RedirectResponse
+    {
+        if (Cache::get('sitemap:running')) {
+            return back()->withErrors(['message' => 'یک فرآیند سایت‌مپ در حال اجراست. لطفاً ابتدا آن را متوقف کنید.']);
+        }
+
+        $run = $sitemapGenerationService->start(true);
+
+        if (!$run) {
+            return back()->withErrors(['message' => 'امکان شروع بازسازی کامل وجود ندارد.']);
+        }
+
+        $activityLogger->log(
+            'sitemap.full_rebuild',
+            auth('admin')->user(),
+            'بازسازی کامل سایت‌مپ آغاز شد (نسخه جدید: ' . $run->version . ')',
+        );
+
+        return back()->with('message', "بازسازی کامل سایت‌مپ آغاز شد. نسخه جدید: {$run->version}");
+    }
+
+    public function getSitemapGroups(SitemapGenerationService $sitemapGenerationService): JsonResponse
+    {
+        $currentVersion = $sitemapGenerationService->getCurrentVersion();
+        
+        $groups = \App\Models\SitemapGroup::query()
+            ->where('version', $currentVersion)
+            ->where('is_active', true)
+            ->orderBy('group_index')
+            ->get()
+            ->map(function ($group) {
+                return [
+                    'group_index' => $group->group_index,
+                    'filename' => $group->filename,
+                    'url_count' => $group->url_count,
+                    'is_complete' => $group->is_complete,
+                    'first_product_id' => $group->first_product_id,
+                    'last_product_id' => $group->last_product_id,
+                    'created_at' => $group->created_at ? persianDateTime($group->created_at) : null,
+                    'completed_at' => $group->completed_at ? persianDateTime($group->completed_at) : null,
+                ];
+            });
+
+        return response()->json([
+            'current_version' => $currentVersion,
+            'groups' => $groups,
+            'total_groups' => $groups->count(),
+            'total_urls' => $groups->sum('url_count'),
+            'incomplete_groups' => $groups->where('is_complete', false)->count(),
+        ]);
+    }
+
+    public function cleanSitemapLogs(Request $request, ActivityLogger $activityLogger): RedirectResponse
+    {
+        $request->validate([
+            'keep_count' => 'nullable|integer|min:5|max:100',
+        ]);
+
+        $keepCount = (int) $request->input('keep_count', 15);
+
+        $keepIds = SitemapRunLog::query()
+            ->latest('id')
+            ->limit($keepCount)
+            ->pluck('id');
+
+        $deletedCount = 0;
+        if ($keepIds->isNotEmpty()) {
+            $deletedCount = SitemapRunLog::query()
+                ->whereNotIn('id', $keepIds)
+                ->delete();
+        }
+
+        $activityLogger->log(
+            'sitemap.clean_logs',
+            auth('admin')->user(),
+            "پاکسازی لاگ‌های سایت‌مپ ({$deletedCount} رکورد حذف شد، {$keepCount} رکورد نگه‌داری شد)",
+        );
+
+        return back()->with('message', "تعداد {$deletedCount} رکورد لاگ حذف شد. {$keepCount} رکورد اخیر نگه‌داری شدند.");
     }
 }

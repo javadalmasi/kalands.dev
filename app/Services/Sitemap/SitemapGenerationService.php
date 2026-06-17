@@ -236,17 +236,28 @@ class SitemapGenerationService
 
     public function shouldStartAutomatically(): bool
     {
-        return $this->getMode() === self::MODE_AUTO
-            && ! Cache::get('sitemap:running')
-            && $this->getCurrentRate() > 0
-            && $this->getCachedCounts()['active_products'] > 0;
+        if ($this->getMode() !== self::MODE_AUTO || Cache::get('sitemap:running') || $this->getCurrentRate() <= 0) {
+            return false;
+        }
+
+        $this->bootstrapExistingGroups();
+
+        $counts = $this->getCachedCounts();
+
+        if ($counts['active_products'] > 0 && $this->shouldDoFullRebuild()) {
+            return true;
+        }
+
+        return $counts['pending_products'] >= $this->pendingProductsNeededForNextGroup();
     }
 
     public function start(bool $force = false): ?SitemapRunLog
     {
-        if ($this->getMode() === self::MODE_OFF || Cache::get('sitemap:running')) {
+        if (Cache::get('sitemap:running') || $this->getMode() === self::MODE_OFF) {
             return null;
         }
+
+        $this->bootstrapExistingGroups();
 
         $separateStores = (bool) $this->settings->get('sitemap.separate_stores', false);
         
@@ -256,7 +267,10 @@ class SitemapGenerationService
         if ($force || $this->shouldDoFullRebuild()) {
             $rebuildType = 'full';
             $version = $this->generateNewVersion();
-            $this->setCurrentVersion($version);
+        }
+
+        if ($rebuildType === 'incremental' && $this->pendingProductsCount() < $this->pendingProductsNeededForNextGroup($version)) {
+            return null;
         }
         
         $runId = now()->format('Ymd_His');
@@ -272,7 +286,7 @@ class SitemapGenerationService
             'meta' => [
                 'trigger' => 'queue_auto_continuous',
                 'batch_size' => ProcessSitemapChunkJob::CHUNK_SIZE,
-                'urls_per_gzip' => ProcessSitemapChunkJob::URLS_PER_GZIP,
+                'urls_per_group' => ProcessSitemapChunkJob::URLS_PER_GROUP,
             ],
         ]);
 
@@ -300,11 +314,93 @@ class SitemapGenerationService
     {
         return Product::query()
             ->where('is_active', true)
-            ->where(function ($q) {
-                $q->whereNull('sitemapped_at')
-                    ->orWhereColumn('updated_at', '>', 'sitemapped_at');
-            })
+            ->whereNull('sitemapped_at')
             ->count();
+    }
+
+    public function bootstrapExistingGroups(?string $version = null): void
+    {
+        $version ??= $this->getCurrentVersion();
+
+        if (SitemapGroup::query()->where('version', $version)->exists()) {
+            return;
+        }
+
+        $files = glob(public_path('sitemaps/sitemap-*.xml.gz')) ?: [];
+        sort($files, SORT_NATURAL);
+
+        if (empty($files)) {
+            return;
+        }
+
+        foreach ($files as $index => $file) {
+            $stats = $this->readGzipStats($file);
+            $isComplete = $stats['url_count'] >= self::URLS_PER_GROUP;
+            $timestamp = Carbon::createFromTimestamp(filemtime($file));
+            $productIds = $stats['product_ids'];
+
+            if (! $isComplete) {
+                $draftPath = storage_path('app/sitemap_drafts/'.basename($file));
+                $draftDir = dirname($draftPath);
+
+                if (! is_dir($draftDir)) {
+                    mkdir($draftDir, 0755, true);
+                }
+
+                if (! file_exists($draftPath)) {
+                    rename($file, $draftPath);
+                } else {
+                    @unlink($file);
+                }
+            }
+
+            SitemapGroup::query()->create([
+                'version' => $version,
+                'group_index' => $index,
+                'filename' => basename($file),
+                'url_count' => $stats['url_count'],
+                'first_product_id' => $stats['first_product_id'],
+                'last_product_id' => $stats['last_product_id'],
+                'is_complete' => $isComplete,
+                'is_active' => true,
+                'created_at' => $timestamp,
+                'completed_at' => $isComplete ? $timestamp : null,
+            ]);
+
+            collect($productIds)
+                ->chunk(1000)
+                ->each(function ($ids) use ($timestamp) {
+                    Product::query()
+                        ->whereIn('id', $ids)
+                        ->whereNull('sitemapped_at')
+                        ->update(['sitemapped_at' => $timestamp]);
+                });
+        }
+
+        $this->rebuildSitemapIndexForVersion($version);
+        $this->refreshCachedCounts();
+    }
+
+    public function completeGroupsCount(string $version): int
+    {
+        return SitemapGroup::query()
+            ->where('version', $version)
+            ->where('is_active', true)
+            ->where('is_complete', true)
+            ->count();
+    }
+
+    public function pendingProductsNeededForNextGroup(?string $version = null): int
+    {
+        $version ??= $this->getCurrentVersion();
+
+        $incompleteGroup = $this->getIncompleteGroup($version);
+
+        if (! $incompleteGroup) {
+            return self::URLS_PER_GROUP;
+        }
+
+        return max(1, $incompleteGroup->remainingCapacity());
     }
 
     public function getCachedCounts(): array
@@ -420,6 +516,81 @@ class SitemapGenerationService
         return $ids;
     }
 
+    public function countGzipUrls(string $filePath): int
+    {
+        return $this->readGzipStats($filePath)['url_count'];
+    }
+
+    public function readGzipStats(string $filePath): array
+    {
+        if (! file_exists($filePath)) {
+            return [
+                'url_count' => 0,
+                'first_product_id' => null,
+                'last_product_id' => null,
+                'product_ids' => [],
+            ];
+        }
+
+        $content = gzdecode(file_get_contents($filePath));
+        if ($content === false) {
+            return [
+                'url_count' => 0,
+                'first_product_id' => null,
+                'last_product_id' => null,
+                'product_ids' => [],
+            ];
+        }
+
+        $sxml = @simplexml_load_string($content);
+        if ($sxml === false) {
+            return [
+                'url_count' => 0,
+                'first_product_id' => null,
+                'last_product_id' => null,
+                'product_ids' => [],
+            ];
+        }
+
+        $firstProductId = null;
+        $lastProductId = null;
+        $productIds = [];
+
+        foreach ($sxml->url as $url) {
+            $loc = (string) $url->loc;
+            if (! preg_match('#/product/(\d+)#', $loc, $m)) {
+                continue;
+            }
+
+            $productId = (string) $m[1];
+            $firstProductId = $firstProductId === null || $this->compareProductIds($productId, $firstProductId) < 0
+                ? $productId
+                : $firstProductId;
+            $lastProductId = $lastProductId === null || $this->compareProductIds($productId, $lastProductId) > 0
+                ? $productId
+                : $lastProductId;
+            $productIds[] = $productId;
+        }
+
+        return [
+            'url_count' => count($sxml->url),
+            'first_product_id' => $firstProductId,
+            'last_product_id' => $lastProductId,
+            'product_ids' => $productIds,
+        ];
+    }
+
+    private function compareProductIds(string $left, string $right): int
+    {
+        if (ctype_digit($left) && ctype_digit($right)) {
+            return strlen($left) === strlen($right)
+                ? strcmp($left, $right)
+                : strlen($left) <=> strlen($right);
+        }
+
+        return strcmp($left, $right);
+    }
+
     public function productToUrlData(Product $product): array
     {
         $slug = str_slug_persian($product->title ?? '');
@@ -477,6 +648,11 @@ class SitemapGenerationService
             if (file_exists($path)) {
                 @unlink($path);
             }
+
+            $draftPath = storage_path("app/sitemap_drafts/{$group->filename}");
+            if (file_exists($draftPath)) {
+                @unlink($draftPath);
+            }
         }
         
         SitemapGroup::query()
@@ -515,8 +691,9 @@ class SitemapGenerationService
 
     public function reset(): ?SitemapRunLog
     {
-        foreach (glob(public_path('sitemaps/sitemap-*.xml.gz')) as $f) @unlink($f);
-        foreach (glob(storage_path('app/sitemap_chunks/*.json')) as $f) @unlink($f);
+        foreach (glob(public_path('sitemaps/sitemap-*.xml.gz')) ?: [] as $f) @unlink($f);
+        foreach (glob(storage_path('app/sitemap_chunks/*.json')) ?: [] as $f) @unlink($f);
+        foreach (glob(storage_path('app/sitemap_drafts/*.xml.gz')) ?: [] as $f) @unlink($f);
 
         $indexFiles = [
             public_path('sitemap.xml'),
@@ -547,6 +724,8 @@ class SitemapGenerationService
 
         $this->refreshCachedCounts();
         $this->clearTailGzip();
+        SitemapGroup::query()->delete();
+        $this->setCurrentVersion('v1');
 
         return $this->start();
     }

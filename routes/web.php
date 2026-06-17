@@ -308,6 +308,10 @@ Route::prefix('dash/admin/{authkey}')
         Route::post('/modules/sitemap/settings', [AdminDashboardController::class, 'saveSitemapSettings'])->name('sitemap.settings')->middleware('permission:sitemap.view');
         Route::post('/modules/sitemap/stop', [AdminDashboardController::class, 'stopSitemap'])->name('sitemap.stop')->middleware('permission:sitemap.view');
         Route::post('/modules/sitemap/reset', [AdminDashboardController::class, 'resetSitemap'])->name('sitemap.reset')->middleware('permission:sitemap.view');
+        Route::post('/modules/sitemap/rebuild-settings', [AdminDashboardController::class, 'saveSitemapRebuildSettings'])->name('sitemap.rebuild-settings')->middleware('permission:sitemap.view');
+        Route::post('/modules/sitemap/force-full-rebuild', [AdminDashboardController::class, 'forceFullRebuild'])->name('sitemap.force-full-rebuild')->middleware('permission:sitemap.view');
+        Route::get('/modules/sitemap/groups', [AdminDashboardController::class, 'getSitemapGroups'])->name('sitemap.groups')->middleware('permission:sitemap.view');
+        Route::post('/modules/sitemap/clean-logs', [AdminDashboardController::class, 'cleanSitemapLogs'])->name('sitemap.clean-logs')->middleware('permission:sitemap.view');
 
         Route::post('/modules/indexnow/settings', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'saveSettings'])->name('indexnow.settings.save')->middleware('permission:indexnow.edit');
         Route::post('/modules/indexnow/regenerate-key', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'regenerateKey'])->name('indexnow.key.regenerate')->middleware('permission:indexnow.edit');

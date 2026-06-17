@@ -56,9 +56,10 @@ class QueueProcessController extends Controller
             }
 
             if ($sitemapGenerationService->shouldStartAutomatically()) {
-                $run = $sitemapGenerationService->start(true);
+                $run = $sitemapGenerationService->start(false);
                 if ($run) {
-                    $meta['tasks'][] = "شروع خودکار تولید سایت مپ: اجرای {$run->run_id} در صف قرار گرفت.";
+                    $type = $run->rebuild_type === 'full' ? 'بازسازی کامل دوره‌ای' : 'اجرای افزایشی';
+                    $meta['tasks'][] = "شروع خودکار تولید سایت مپ ({$type}): اجرای {$run->run_id} در صف قرار گرفت.";
                 }
             }
 

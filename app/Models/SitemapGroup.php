@@ -26,8 +26,6 @@ class SitemapGroup extends Model
         return [
             'group_index' => 'integer',
             'url_count' => 'integer',
-            'first_product_id' => 'integer',
-            'last_product_id' => 'integer',
             'is_complete' => 'boolean',
             'is_active' => 'boolean',
             'created_at' => 'datetime',

@@ -29,9 +29,9 @@ class QueueSitemapAutoStartServiceProvider extends ServiceProvider
                 }
 
                 if ($service->shouldStartAutomatically()) {
-                    $run = $service->start(true);
+                    $run = $service->start(false);
                     if ($run) {
-                        Log::info("SitemapGenerator: Auto-started from queue worker loop ({$run->run_id}).");
+                        Log::info("SitemapGenerator: Auto-started from queue worker loop ({$run->run_id}, {$run->rebuild_type}).");
                     }
                 }
 

@@ -63,14 +63,7 @@ class ProcessSitemapChunkJob implements ShouldQueue
                 $query->where('id', '>', $this->lastId);
             }
         } else {
-            $query->where(function ($q) {
-                $q->whereNull('sitemapped_at')
-                    ->orWhereColumn('updated_at', '>', 'sitemapped_at');
-            });
-
-            if ($this->lastId !== null) {
-                $query->where('id', '>', $this->lastId);
-            }
+            $query->whereNull('sitemapped_at');
         }
 
         $products = $query->limit(self::CHUNK_SIZE)->get();
@@ -144,11 +137,18 @@ class ProcessSitemapChunkJob implements ShouldQueue
                 'processed_products' => DB::raw('processed_products + '.(int) $processedCount),
             ]);
         
+        $groupWasFinalized = false;
+
         if ($currentGroup->url_count >= self::URLS_PER_GROUP) {
             $this->finalizeGroup($sitemapService, $currentGroup);
+            $groupWasFinalized = true;
         }
         
         $hasMoreProducts = $products->count() >= self::CHUNK_SIZE;
+
+        if ($groupWasFinalized && ! $this->force) {
+            $hasMoreProducts = $sitemapService->pendingProductsCount() >= $sitemapService->pendingProductsNeededForNextGroup($this->version);
+        }
         
         if ($hasMoreProducts) {
             self::dispatch(
@@ -161,17 +161,13 @@ class ProcessSitemapChunkJob implements ShouldQueue
                 chunkIndex: $this->chunkIndex + 1,
             )->delay(now()->addSeconds($sitemapService->getDelaySecondsForNextBatch()));
         } else {
-            if ($currentGroup && !$currentGroup->is_complete) {
-                $this->finalizeGroup($sitemapService, $currentGroup);
-            }
-            
             $this->handleCompletion($sitemapService);
         }
     }
 
     private function appendToGroupFile(SitemapGroup $group, array $newUrls): void
     {
-        $path = public_path("sitemaps/{$group->filename}");
+        $path = $this->draftPath($group);
         
         $existingUrls = [];
         if (file_exists($path)) {
@@ -236,11 +232,31 @@ class ProcessSitemapChunkJob implements ShouldQueue
     
     private function finalizeGroup(SitemapGenerationService $sitemapService, SitemapGroup $group): void
     {
+        $draftPath = $this->draftPath($group);
+        $publicPath = $this->publicPath($group);
+        $dir = dirname($publicPath);
+
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        if (file_exists($draftPath)) {
+            rename($draftPath, $publicPath);
+        }
+
         $group->is_complete = true;
         $group->completed_at = now();
         $group->save();
-        
-        $sitemapService->rebuildSitemapIndexForVersion($this->version);
+
+        SitemapRunLog::query()
+            ->where('run_id', $this->runId)
+            ->update([
+                'total_chunks' => $sitemapService->completeGroupsCount($this->version),
+            ]);
+
+        if (! $this->force) {
+            $sitemapService->rebuildSitemapIndexForVersion($this->version);
+        }
         
         $this->info("Group {$group->group_index} finalized with {$group->url_count} URLs");
     }
@@ -248,7 +264,7 @@ class ProcessSitemapChunkJob implements ShouldQueue
     private function handleEmptyProducts(SitemapGenerationService $sitemapService): void
     {
         $currentGroup = $sitemapService->getIncompleteGroup($this->version);
-        if ($currentGroup && $currentGroup->url_count > 0) {
+        if ($this->force && $currentGroup && $currentGroup->url_count >= self::URLS_PER_GROUP) {
             $this->finalizeGroup($sitemapService, $currentGroup);
         }
         
@@ -282,10 +298,20 @@ class ProcessSitemapChunkJob implements ShouldQueue
         $run = SitemapRunLog::where('run_id', $this->runId)->first();
         
         if ($run && $run->rebuild_type === 'full') {
+            $sitemapService->setCurrentVersion($this->version);
+            $sitemapService->rebuildSitemapIndexForVersion($this->version);
             $sitemapService->deactivateOldVersionGroups($this->version);
             $sitemapService->cleanupOldVersionFiles($this->version);
             $sitemapService->setLastFullRebuildAt(now());
+        } else {
+            $sitemapService->rebuildSitemapIndexForVersion($this->version);
         }
+
+        SitemapRunLog::query()
+            ->where('run_id', $this->runId)
+            ->update([
+                'total_chunks' => $sitemapService->completeGroupsCount($this->version),
+            ]);
         
         FinalizeSitemapJob::dispatch(
             $this->runId,
@@ -334,5 +360,15 @@ class ProcessSitemapChunkJob implements ShouldQueue
     private function info(string $message): void
     {
         Log::info("SitemapGenerator: {$message}");
+    }
+
+    private function draftPath(SitemapGroup $group): string
+    {
+        return storage_path("app/sitemap_drafts/{$group->filename}");
+    }
+
+    private function publicPath(SitemapGroup $group): string
+    {
+        return public_path("sitemaps/{$group->filename}");
     }
 }
