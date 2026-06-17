@@ -436,9 +436,10 @@
                 </div>
                 <button type="button"
                     onclick="document.getElementById('sitemap-clean-logs-modal').showModal()"
-                    class="admin-btn admin-btn-secondary border-warning/20 text-warning hover:bg-warning/10 text-xs">
+                    class="admin-btn admin-btn-secondary border-danger/20 text-danger hover:bg-danger/10 text-xs"
+                    {{ $isRunning ? 'disabled' : '' }}>
                     <span class="material-icons text-sm">delete_sweep</span>
-                    پاک‌سازی لاگ‌ها
+                    حذف همه لاگ‌ها
                 </button>
             </div>
             <div class="space-y-3 max-h-[700px] overflow-y-auto pr-2 custom-scrollbar">
@@ -1154,24 +1155,26 @@
     <dialog id="sitemap-clean-logs-modal" class="admin-dialog w-[min(100vw-32px,450px)]">
         <div class="admin-dialog-body">
             <div class="flex items-start gap-4 p-2">
-                <div class="w-12 h-12 rounded-full bg-warning/10 text-warning flex items-center justify-center shrink-0">
+                <div class="w-12 h-12 rounded-full bg-danger/10 text-danger flex items-center justify-center shrink-0">
                     <span class="material-icons !text-2xl">delete_sweep</span>
                 </div>
                 <div class="flex-1">
-                    <h3 class="font-black text-slate-800 dark:text-white mb-2">پاک‌سازی لاگ‌های سایت‌مپ</h3>
+                    <h3 class="font-black text-slate-800 dark:text-white mb-2">حذف همه لاگ‌های سایت‌مپ</h3>
                     <p class="text-xs leading-6 text-slate-500 dark:text-slate-400">
-                        رکوردهای قدیمی‌تر از تعداد انتخاب‌شده حذف می‌شوند و اجرای فعلی تغییری نمی‌کند.
+                        با تایید این عملیات، تمام رکوردهای گزارش اجرای سایت‌مپ حذف می‌شوند.
+                        فایل‌های sitemap و گروه‌های ساخته‌شده تغییری نمی‌کنند.
+                    </p>
+                    <p class="text-xs leading-6 text-danger mt-2 font-bold">
+                        این عملیات قابل بازگشت نیست و هنگام اجرای فعال سایت‌مپ انجام نمی‌شود.
                     </p>
                     <form method="POST" action="{{ route('dash.admin.sitemap.clean-logs', ['authkey' => $authkey]) }}" class="mt-4" id="sitemap-clean-logs-form">
                         @csrf
-                        <label class="text-xs font-bold text-slate/70 mb-2 block">تعداد لاگ‌های اخیر برای نگه‌داری</label>
-                        <input type="number" name="keep_count" value="15" min="5" max="100" class="admin-input max-w-32 text-center admin-ltr">
                     </form>
                 </div>
             </div>
             <div class="admin-dialog-actions">
                 <button type="button" onclick="this.closest('dialog').close()" class="admin-btn admin-btn-secondary">انصراف</button>
-                <button type="submit" form="sitemap-clean-logs-form" class="admin-btn bg-warning text-white hover:bg-warning/90 px-8">تایید پاک‌سازی</button>
+                <button type="submit" form="sitemap-clean-logs-form" class="admin-btn bg-danger text-white hover:bg-danger/90 px-8">حذف همه لاگ‌ها</button>
             </div>
         </div>
     </dialog>

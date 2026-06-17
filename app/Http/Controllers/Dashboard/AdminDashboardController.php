@@ -4246,32 +4246,20 @@ class AdminDashboardController extends Controller
         ]);
     }
 
-    public function cleanSitemapLogs(Request $request, ActivityLogger $activityLogger): RedirectResponse
+    public function cleanSitemapLogs(ActivityLogger $activityLogger): RedirectResponse
     {
-        $request->validate([
-            'keep_count' => 'nullable|integer|min:5|max:100',
-        ]);
-
-        $keepCount = (int) $request->input('keep_count', 15);
-
-        $keepIds = SitemapRunLog::query()
-            ->latest('id')
-            ->limit($keepCount)
-            ->pluck('id');
-
-        $deletedCount = 0;
-        if ($keepIds->isNotEmpty()) {
-            $deletedCount = SitemapRunLog::query()
-                ->whereNotIn('id', $keepIds)
-                ->delete();
+        if (Cache::get('sitemap:running') || SitemapRunLog::query()->where('status', 'running')->exists()) {
+            return back()->withErrors(['message' => 'برای حذف همه لاگ‌ها ابتدا اجرای فعلی سایت‌مپ را متوقف کنید.']);
         }
+
+        $deletedCount = SitemapRunLog::query()->delete();
 
         $activityLogger->log(
             'sitemap.clean_logs',
             auth('admin')->user(),
-            "پاکسازی لاگ‌های سایت‌مپ ({$deletedCount} رکورد حذف شد، {$keepCount} رکورد نگه‌داری شد)",
+            "حذف همه لاگ‌های سایت‌مپ ({$deletedCount} رکورد حذف شد)",
         );
 
-        return back()->with('message', "تعداد {$deletedCount} رکورد لاگ حذف شد. {$keepCount} رکورد اخیر نگه‌داری شدند.");
+        return back()->with('message', "تمامی لاگ‌های سایت‌مپ حذف شدند. ({$deletedCount} رکورد)");
     }
 }
