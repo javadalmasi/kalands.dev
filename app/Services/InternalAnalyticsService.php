@@ -175,9 +175,8 @@ class InternalAnalyticsService
             $visitor->timestamps = false;
             $visitor->increment('pageviews_count');
             $visitor->updateQuietly(['is_bounced' => false]);
-            return false;
         }
-        return true;
+        return false;
     }
 
     private function getSessionDuration(string $sessionId, array $payload): ?int
@@ -371,6 +370,7 @@ class InternalAnalyticsService
         foreach ($expiredVisitors as $visitor) {
             $duration = $visitor->first_seen_at->diffInSeconds($visitor->last_seen_at);
             $date = $visitor->first_seen_at->toDateString();
+            $isBounce = $visitor->pageviews_count <= 1;
 
             AnalyticsSession::query()->updateOrCreate(
                 ['session_id' => $visitor->session_id],
@@ -382,7 +382,7 @@ class InternalAnalyticsService
                     'ended_at' => $visitor->last_seen_at,
                     'duration_seconds' => $duration,
                     'pageviews_count' => $visitor->pageviews_count,
-                    'is_bounce' => $visitor->is_bounced,
+                    'is_bounce' => $isBounce,
                     'entry_path' => $this->getFirstPath($visitor->session_id),
                     'exit_path' => $visitor->path,
                     'device_type' => $visitor->device_type,
@@ -390,7 +390,7 @@ class InternalAnalyticsService
                 ]
             );
 
-            $this->aggregateSessionMetrics($date, $duration, $visitor->is_bounced);
+            $this->aggregateSessionMetrics($date, $duration, $isBounce);
 
             $visitor->delete();
         }
@@ -575,6 +575,8 @@ class InternalAnalyticsService
 
     public function userJourney(string $sessionId, int $limit = 50): array
     {
+        $session = AnalyticsSession::query()->where('session_id', $sessionId)->first();
+
         $events = AnalyticsEvent::query()
             ->where('session_id', $sessionId)
             ->where('event_type', '!=', 'heartbeat')
@@ -582,17 +584,45 @@ class InternalAnalyticsService
             ->limit($limit)
             ->get()
             ->map(fn($e) => [
+                'id' => $e->id,
                 'type' => $e->event_type,
+                'url' => $e->url,
                 'path' => $e->path,
                 'title' => $e->title,
                 'time' => $e->occurred_at->toDateTimeString(),
                 'time_ago' => $e->occurred_at->diffForHumans(),
                 'goal' => $e->goal_label,
+                'goal_key' => $e->goal_key,
                 'funnel' => $e->funnel_key ? [
                     'key' => $e->funnel_key,
                     'step' => $e->funnel_step,
                     'step_name' => $e->funnel_step_name,
                 ] : null,
+                'ip' => $e->ip_address,
+                'country' => $e->country_name ?: $e->country_code,
+                'city' => $e->city,
+                'region' => $e->region,
+                'device' => $e->device_type,
+                'device_brand' => $e->device_brand,
+                'browser' => $e->browser,
+                'platform' => $e->platform,
+                'user_agent' => $e->user_agent,
+                'referrer_type' => $e->referrer_type,
+                'referrer_host' => $e->referrer_host,
+                'referrer_url' => $e->referrer_url,
+                'search_engine' => $e->search_engine,
+                'utm' => array_filter([
+                    'source' => $e->utm_source,
+                    'medium' => $e->utm_medium,
+                    'campaign' => $e->utm_campaign,
+                    'term' => $e->utm_term,
+                    'content' => $e->utm_content,
+                ]),
+                'duration' => $e->session_duration,
+                'scroll' => $e->scroll_depth_pct,
+                'error_message' => $e->error_message,
+                'error_source' => $e->error_source,
+                'error_line' => $e->error_line,
             ]);
 
         $paths = AnalyticsEvent::query()
@@ -602,10 +632,55 @@ class InternalAnalyticsService
             ->pluck('path')
             ->toArray();
 
+        $baseQuery = null;
+        if ($session?->visitor_hash) {
+            $baseQuery = AnalyticsSession::query()->where('visitor_hash', $session->visitor_hash);
+        } elseif ($session?->user_id) {
+            $baseQuery = AnalyticsSession::query()->where('user_id', $session->user_id);
+        }
+
+        $relatedSessions = $baseQuery
+            ? (clone $baseQuery)
+                ->where('session_id', '!=', $sessionId)
+                ->latest('started_at')
+                ->limit(8)
+                ->get()
+                ->map(fn ($item) => [
+                    'session_id' => $item->session_id,
+                    'started_at' => $item->started_at?->toISOString(),
+                    'ended_at' => $item->ended_at?->toISOString(),
+                    'duration_seconds' => $item->duration_seconds,
+                    'pageviews_count' => $item->pageviews_count,
+                    'entry_path' => $item->entry_path,
+                    'exit_path' => $item->exit_path,
+                    'landing_source' => $item->landing_source,
+                    'referrer_type' => $item->referrer_type,
+                    'country_code' => $item->country_code,
+                    'device_type' => $item->device_type,
+                    'browser' => $item->browser,
+                    'platform' => $item->platform,
+                ])
+                ->all()
+            : [];
+
+        $goalCount = $events->where('type', 'goal')->count();
+        $errorCount = $events->where('type', 'error')->count();
+        $pageviewCount = $events->where('type', 'pageview')->count();
+        $lastEvent = $events->last();
+
         return [
             'events' => $events,
             'path_sequence' => $paths,
-            'session' => AnalyticsSession::query()->where('session_id', $sessionId)->first(),
+            'session' => $session,
+            'summary' => [
+                'pageviews' => $pageviewCount,
+                'goals' => $goalCount,
+                'errors' => $errorCount,
+                'events' => $events->count(),
+                'last_event_at' => $lastEvent['time'] ?? null,
+                'last_event_ago' => $lastEvent['time_ago'] ?? null,
+            ],
+            'related_sessions' => $relatedSessions,
         ];
     }
 
@@ -965,11 +1040,7 @@ class InternalAnalyticsService
                 'yesterday' => $this->topEventsDimension(array_merge($filters, ['start' => now()->subDay()->startOfDay(), 'end' => now()->subDay()->endOfDay()]), 'goal_key', 'goal_label', 20, null, 'goal'),
                 'month' => $this->topEventsDimension($filters, 'goal_key', 'goal_label', 50, null, 'goal'),
             ]),
-            'live' => [
-                'count' => $this->liveUsersCount(),
-                'users' => $this->liveUsers(),
-                'map' => $this->liveCountryMap(),
-            ],
+            'live' => $this->cachedLiveData(),
             'users' => $this->cachedReport('users:' . $cacheKey, $cacheTtl, fn () => [
                 'filters' => $this->publicFilters($filters),
                 'users' => $this->topEventsDimension($filters, 'user_id', null, 50, fn ($value) => $this->userLabel((int) $value)),
@@ -1592,7 +1663,21 @@ class InternalAnalyticsService
         return $this->countryMap($rows);
     }
 
-    private function liveUsersCount(): int
+    private function cachedLiveData(): array
+    {
+        $cacheKey = 'internal_analytics:live_data';
+        $ttl = 10;
+
+        return Cache::remember($cacheKey, $ttl, function () {
+            return [
+                'count' => $this->liveUsersCount(),
+                'users' => $this->liveUsers(),
+                'map' => $this->liveCountryMap(),
+            ];
+        });
+    }
+
+    public function liveUsersCount(): int
     {
         return AnalyticsLiveVisitor::query()
             ->where('last_seen_at', '>=', now()->subMinutes((int) $this->settings()['live_user_window_minutes']))
@@ -1601,25 +1686,72 @@ class InternalAnalyticsService
 
     private function liveUsers(): array
     {
-        return AnalyticsLiveVisitor::query()
+        $visitors = AnalyticsLiveVisitor::query()
             ->where('last_seen_at', '>=', now()->subMinutes((int) $this->settings()['live_user_window_minutes']))
             ->latest('last_seen_at')
-            ->limit(50)
+            ->limit(30)
+            ->get();
+
+        if ($visitors->isEmpty()) {
+            return [];
+        }
+
+        $sessionIds = $visitors->pluck('session_id')->filter()->values()->all();
+        $latestEvents = AnalyticsEvent::query()
+            ->whereIn('session_id', $sessionIds)
+            ->orderByDesc('occurred_at')
             ->get()
-            ->map(fn (AnalyticsLiveVisitor $visitor) => [
+            ->unique('session_id')
+            ->keyBy('session_id');
+
+        $sessions = AnalyticsSession::query()
+            ->whereIn('session_id', $sessionIds)
+            ->get()
+            ->keyBy('session_id');
+
+        return $visitors
+            ->map(function (AnalyticsLiveVisitor $visitor) use ($latestEvents, $sessions) {
+                $event = $latestEvents->get($visitor->session_id);
+                $session = $sessions->get($visitor->session_id);
+                $searchEngine = $event?->search_engine;
+                $utmSource = $event?->utm_source;
+                $utmMedium = $event?->utm_medium;
+                $utmCampaign = $event?->utm_campaign;
+                $referrerType = $event?->referrer_type ?: $session?->referrer_type;
+                $referrerHost = $event?->referrer_host;
+                $sourceLabel = $searchEngine
+                    ?: $utmSource
+                    ?: $referrerHost
+                    ?: ($session?->landing_source ?: ($referrerType && $referrerType !== 'direct' ? $referrerType : 'direct'));
+
+                return [
+                'session_id' => $visitor->session_id,
                 'path' => $visitor->path,
                 'title' => $visitor->title,
                 'product_id' => $visitor->product_id,
                 'user_id' => $visitor->user_id,
                 'user' => $visitor->user_id ? $this->userLabel((int) $visitor->user_id) : 'مهمان',
                 'ip' => $visitor->ip_address ?: '-',
-                'country' => $visitor->country_name ?: $visitor->country_code ?: '-',
-                'device' => $visitor->device_type ?: '-',
+                'country' => $event?->country_name ?: $visitor->country_name ?: $event?->country_code ?: $visitor->country_code ?: '-',
+                'city' => $event?->city ?: '-',
+                'device' => $visitor->device_type ?: $event?->device_type ?: $session?->device_type ?: '-',
                 'device_brand' => $visitor->device_brand ?: '-',
                 'user_agent' => $visitor->user_agent ?: '-',
                 'last_seen' => $visitor->last_seen_at?->diffForHumans(),
+                'last_seen_at' => $visitor->last_seen_at?->toISOString(),
+                'first_seen_at' => $visitor->first_seen_at?->toISOString(),
                 'pageviews' => $visitor->pageviews_count,
-            ])
+                'referrer_type' => $referrerType,
+                'referrer_host' => $referrerHost,
+                'search_engine' => $searchEngine,
+                'browser' => $event?->browser ?: $session?->browser ?: '-',
+                'platform' => $event?->platform ?: $session?->platform ?: '-',
+                'utm_source' => $utmSource,
+                'utm_medium' => $utmMedium,
+                'utm_campaign' => $utmCampaign,
+                'source_label' => $sourceLabel,
+            ];
+            })
             ->all();
     }
 

@@ -113,6 +113,14 @@ class InternalAnalyticsController extends Controller
         ]);
     }
 
+    public function liveCount(InternalAnalyticsService $analytics): JsonResponse
+    {
+        return response()->json([
+            'ok' => true,
+            'data' => ['count' => $analytics->liveUsersCount()],
+        ]);
+    }
+
     public function dashboard(InternalAnalyticsService $analytics): JsonResponse
     {
         return response()->json([

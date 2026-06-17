@@ -74,6 +74,7 @@
     <div id="analytics-hub-root"
          data-report-url="{{ route('dash.admin.analytics_report', ['authkey' => $authkey]) }}"
          data-user-activity-url="{{ route('dash.admin.analytics_user_details', ['authkey' => $authkey, 'userId' => ':id']) }}"
+         data-user-journey-url="{{ route('dash.admin.analytics_user_journey', ['authkey' => $authkey]) }}"
          data-funnel-delete-url="{{ route('dash.admin.analytics_funnels_delete', ['authkey' => $authkey, 'key' => ':key']) }}">
         <div class="admin-card mb-6" id="analytics-filter-card">
             <form data-analytics-filters>
@@ -255,46 +256,177 @@
             </div>
         </dialog>
 
-        <div id="tab-live" class="analytics-tab-content hidden space-y-6">
-            <div class="admin-card !p-0 overflow-hidden border-success/20">
-                <div class="flex items-center justify-between gap-4 p-5 border-b border-slate/10 bg-slate/5">
-                    <h3 class="font-bold text-slate flex items-center gap-2">
-                        <span class="material-icons text-success">public</span>
-                        <span>نقشه زنده بازدیدها</span>
-                    </h3>
-                    <div class="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950">
-                        <button type="button" data-live-map-mode="2d" class="flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 text-xs font-black text-white shadow-sm ring-1 ring-emerald-500/20 transition-all dark:bg-emerald-400 dark:text-slate-950 dark:ring-emerald-300/30">
-                            <span class="material-icons text-base">map</span>
-                            <span>2D Map</span>
-                        </button>
-                        <button type="button" data-live-map-mode="3d" class="flex items-center gap-2 rounded-lg px-6 py-2.5 text-xs font-black text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">
-                            <span class="material-icons text-base">language</span>
-                            <span>3D Globe</span>
-                        </button>
+        <div id="tab-live" class="analytics-tab-content hidden space-y-5">
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="admin-card border-success/20 bg-success/[0.03]">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-[10px] text-slate/50">کاربران زنده</p>
+                            <p id="live-summary-users" class="mt-1 text-3xl font-black text-success">0</p>
+                        </div>
+                        <span class="material-icons text-success/70 text-3xl">sensors</span>
                     </div>
                 </div>
-                <div id="live-map-container" class="relative bg-slate/5 h-[600px] lg:h-[720px] w-full">
-                    <div data-map="live" class="w-full h-full">
-                        <div class="flex flex-col items-center justify-center h-full gap-4 opacity-50">
-                            <div class="w-12 h-12 border-4 border-success/20 border-t-success rounded-full animate-spin"></div>
-                            <p class="text-sm">در حال بارگذاری نقشه زنده...</p>
+                <div class="admin-card">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-[10px] text-slate/50">Pageviews همین حالا</p>
+                            <p id="live-summary-pageviews" class="mt-1 text-3xl font-black text-info">0</p>
+                        </div>
+                        <span class="material-icons text-info/70 text-3xl">stacked_line_chart</span>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-[10px] text-slate/50">میانگین زمان فعال بودن</p>
+                            <p id="live-summary-avg-time" class="mt-1 text-3xl font-black text-primary">0:00</p>
+                        </div>
+                        <span class="material-icons text-primary/70 text-3xl">timer</span>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-[10px] text-slate/50">غالب‌ترین منبع</p>
+                            <p id="live-summary-top-source" class="mt-1 text-lg font-black text-amber-600 dark:text-amber-300 truncate">-</p>
+                        </div>
+                        <span class="material-icons text-amber-500/70 text-3xl">traffic</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid gap-4 xl:grid-cols-12">
+                <div class="xl:col-span-6 space-y-4 min-w-0">
+                    <div class="admin-card !p-0 overflow-hidden border-success/20">
+                        <div class="flex items-center justify-between gap-4 p-4 border-b border-slate/10 bg-slate/5">
+                            <div>
+                                <h3 class="font-bold text-slate flex items-center gap-2">
+                                    <span class="material-icons text-success">public</span>
+                                    <span>نقشه زنده بازدیدها</span>
+                                </h3>
+                                <p class="text-xs text-slate/55 mt-1">نمای بلادرنگ پراکندگی کاربران فعال و توزیع کشورها</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-950">
+                                    <button type="button" data-live-map-mode="2d" class="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-sm ring-1 ring-emerald-500/20 transition-all dark:bg-emerald-400 dark:text-slate-950 dark:ring-emerald-300/30">
+                                        <span class="material-icons text-sm">map</span>
+                                        <span>2D</span>
+                                    </button>
+                                    <button type="button" data-live-map-mode="3d" class="flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-black text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">
+                                        <span class="material-icons text-sm">language</span>
+                                        <span>3D</span>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2 rounded-xl border border-slate/10 bg-white/70 px-3 py-2 dark:bg-slate-950/70">
+                                    <span class="text-xs text-slate/60 hidden sm:inline">به‌روزرسانی هر ۳۰ ثانیه</span>
+                                    <span id="live-update-indicator" class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="live-map-container" class="relative bg-slate/5 h-[420px] lg:h-[520px] w-full">
+                            <div data-map="live" class="w-full h-full">
+                                <div class="flex flex-col items-center justify-center h-full gap-4 opacity-50">
+                                    <div class="w-12 h-12 border-4 border-success/20 border-t-success rounded-full animate-spin"></div>
+                                    <p class="text-sm">در حال بارگذاری نقشه زنده...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="admin-card">
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <h3 class="font-bold text-slate flex items-center gap-2 text-sm">
+                                    <span class="material-icons text-success text-base">flag</span>
+                                    <span>کشورهای فعال</span>
+                                </h3>
+                                <span class="text-[10px] text-slate/50">Top realtime</span>
+                            </div>
+                            <div id="live-country-breakdown" class="space-y-2 min-h-[180px]">
+                                <p class="text-center py-10 opacity-50 text-xs">در حال بارگذاری...</p>
+                            </div>
+                        </div>
+                        <div class="admin-card">
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <h3 class="font-bold text-slate flex items-center gap-2 text-sm">
+                                    <span class="material-icons text-success text-base">hub</span>
+                                    <span>منابع ورود</span>
+                                </h3>
+                                <span class="text-[10px] text-slate/50">Search / UTM / Referrer</span>
+                            </div>
+                            <div id="live-source-breakdown" class="space-y-2 min-h-[180px]">
+                                <p class="text-center py-10 opacity-50 text-xs">در حال بارگذاری...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:col-span-6 space-y-4 min-w-0">
+                    <div class="admin-card !p-0 overflow-hidden border-slate/10">
+                        <div class="p-4 border-b border-slate/10 bg-slate/5">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <h3 class="font-bold text-slate flex items-center gap-2">
+                                        <span class="material-icons text-success">sensors</span>
+                                        <span>کاربران فعال در چند دقیقه اخیر</span>
+                                        <span id="live-users-count" class="ml-2 px-2 py-0.5 rounded-full bg-success/10 text-success text-xs font-bold">0</span>
+                                    </h3>
+                                    <p class="text-xs text-slate/55 mt-1">۱۰ سشن اخیر نمایش داده می‌شود. برای مشاهده جزئیات کامل روی هر آیتم کلیک کنید.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="live-users-list" data-live-list class="min-h-[680px] max-h-[760px] overflow-y-visible xl:overflow-y-auto custom-scrollbar p-4 space-y-4">
+                            <p class="text-center py-10 opacity-50">در حال بارگذاری...</p>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                        <div class="admin-card">
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <h3 class="font-bold text-slate flex items-center gap-2 text-sm">
+                                    <span class="material-icons text-success text-base">devices</span>
+                                    <span>دستگاه‌ها</span>
+                                </h3>
+                                <span class="text-[10px] text-slate/50">برند / نوع</span>
+                            </div>
+                            <div id="live-device-breakdown" class="space-y-2 min-h-[170px]">
+                                <p class="text-center py-10 opacity-50 text-xs">در حال بارگذاری...</p>
+                            </div>
+                        </div>
+                        <div class="admin-card">
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <h3 class="font-bold text-slate flex items-center gap-2 text-sm">
+                                    <span class="material-icons text-success text-base">language</span>
+                                    <span>مرورگرها</span>
+                                </h3>
+                                <span class="text-[10px] text-slate/50">Browser / Platform</span>
+                            </div>
+                            <div id="live-browser-breakdown" class="space-y-2 min-h-[170px]">
+                                <p class="text-center py-10 opacity-50 text-xs">در حال بارگذاری...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="admin-card">
-                <div class="flex items-center justify-between gap-4 mb-4">
-                    <h3 class="font-bold text-slate flex items-center gap-2">
-                        <span class="material-icons text-success">sensors</span>
-                        <span>کاربران فعال در چند دقیقه اخیر</span>
+        </div>
+
+        <dialog id="live-user-detail-modal" class="admin-dialog w-[99vw] max-w-[99vw] h-[98vh] max-h-[98vh]">
+            <div class="admin-dialog-body !p-0">
+                <div class="admin-dialog-head p-4 border-b border-slate/10">
+                    <h3 class="admin-dialog-title flex items-center gap-2">
+                        <span class="material-icons text-success">person_pin</span>
+                        <span id="live-user-detail-title">جزئیات کاربر زنده</span>
                     </h3>
-                    <span class="text-xs text-slate/60">به‌روزرسانی خودکار هر ۳۰ ثانیه</span>
+                    <button type="button" onclick="this.closest('dialog').close()" class="admin-toggle !w-8 !h-8 !rounded-lg border-none hover:bg-slate/10">
+                        <span class="material-icons text-sm">close</span>
+                    </button>
                 </div>
-                <div data-live-list class="space-y-2">
-                    <p class="text-center py-10 opacity-50">در حال بارگذاری...</p>
+                <div class="overflow-y-auto h-[calc(98vh-88px)] custom-scrollbar px-1" id="live-user-detail-content">
+                    <p class="text-center py-10 opacity-50">در حال دریافت اطلاعات...</p>
                 </div>
             </div>
-        </div>
+        </dialog>
 
         <div id="tab-reports" class="analytics-tab-content hidden space-y-5">
             <div class="admin-card !p-0 overflow-hidden border-success/20">
@@ -303,16 +435,6 @@
                         <span class="material-icons text-success">public</span>
                         <span>نقشه جهانی بازدیدها</span>
                     </h3>
-                    <div class="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-0.5 shadow-sm dark:border-slate-700 dark:bg-slate-950">
-                        <button type="button" data-live-map-mode="2d" class="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-[11px] font-black text-white shadow-sm ring-1 ring-emerald-500/20 transition-all dark:bg-emerald-400 dark:text-slate-950 dark:ring-emerald-300/30">
-                            <span class="material-icons text-sm">map</span>
-                            <span>2D</span>
-                        </button>
-                        <button type="button" data-live-map-mode="3d" class="flex items-center gap-1.5 rounded-lg px-4 py-2 text-[11px] font-black text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">
-                            <span class="material-icons text-sm">language</span>
-                            <span>3D</span>
-                        </button>
-                    </div>
                 </div>
                 <div id="reports-map-container" class="relative bg-slate/5 h-[400px] lg:h-[500px] w-full">
                     <div data-map="reports" class="w-full h-full">

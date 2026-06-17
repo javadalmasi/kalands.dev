@@ -44,6 +44,170 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
     }[char]));
 
+    const decodeUrl = (value) => {
+        try {
+            return decodeURIComponent(String(value ?? ''));
+        } catch {
+            return String(value ?? '');
+        }
+    };
+
+    const displayPath = (value) => escapeHtml(decodeUrl(value));
+
+    const renderLabel = (row) => {
+        if (row && row.htmlLabel) return row.htmlLabel;
+        return displayPath(row?.label || '-');
+    };
+
+    const countryFlag = (code) => {
+        const cc = String(code || '').trim().toUpperCase();
+        if (!/^[A-Z]{2}$/.test(cc)) return '🌐';
+        return String.fromCodePoint(...[...cc].map((char) => 127397 + char.charCodeAt(0)));
+    };
+
+    const iconWrap = (inner, classes = 'bg-transparent') => `
+        <span class="inline-flex h-7 w-7 items-center justify-center rounded-md shrink-0 overflow-hidden ${classes}">${inner}</span>
+    `;
+
+    const simpleIcon = (slug, fallback = 'public') => iconWrap(
+        `<i class="si si-${slug} si--color text-[19px] leading-none"></i>`,
+        'bg-transparent'
+    );
+
+    const fallbackMaterial = (name = 'public') => iconWrap(
+        `<span class="material-icons text-[20px] text-slate-500">${name}</span>`,
+        'bg-transparent'
+    );
+
+    const firstMatchingIcon = (value, pairs, fallback = 'public') => {
+        for (const [matcher, slug] of pairs) {
+            if (matcher.test(value)) return simpleIcon(slug, fallback);
+        }
+        return fallbackMaterial(fallback);
+    };
+
+    const browserIcon = (label) => {
+        const value = String(label || '').toLowerCase();
+        return firstMatchingIcon(value, [
+            [/google chrome|^chrome$|chromium/, 'googlechrome'],
+            [/firefox/, 'firefoxbrowser'],
+            [/tor/, 'torbrowser'],
+            [/microsoft edge|^edge$/, 'microsoftedge'],
+            [/safari/, 'safari'],
+            [/opera/, 'opera'],
+            [/brave/, 'brave'],
+            [/vivaldi/, 'vivaldi'],
+            [/arc/, 'arc'],
+            [/duckduckgo/, 'duckduckgo'],
+            [/samsung internet/, 'samsung'],
+            [/internet explorer|\bie\b|^ie$/, 'internetexplorer'],
+            [/claude|anthropic/, 'claude'],
+            [/qwen/, 'qwen'],
+            [/deepseek/, 'deepseek'],
+            [/github/, 'github'],
+            [/openai|chatgpt|gpt/, 'openai'],
+            [/perplexity/, 'perplexity'],
+        ], 'language');
+    };
+
+    const platformIcon = (label) => {
+        const value = String(label || '').toLowerCase();
+        return firstMatchingIcon(value, [
+            [/windows/, 'windows'],
+            [/android/, 'android'],
+            [/ios|iphone|ipad/, 'ios'],
+            [/mac|os x|macos/, 'apple'],
+            [/ubuntu/, 'ubuntu'],
+            [/debian/, 'debian'],
+            [/fedora/, 'fedora'],
+            [/arch/, 'archlinux'],
+            [/linux/, 'linux'],
+            [/chrome ?os/, 'googlechrome'],
+        ], 'devices');
+    };
+
+    const searchEngineIcon = (label) => {
+        const value = String(label || '').toLowerCase();
+        return firstMatchingIcon(value, [
+            [/google/, 'google'],
+            [/bing/, 'bing'],
+            [/yahoo/, 'yahoo'],
+            [/duckduckgo/, 'duckduckgo'],
+            [/yandex/, 'yandex'],
+            [/baidu/, 'baidu'],
+            [/qwant/, 'qwant'],
+            [/ecosia/, 'ecosia'],
+            [/naver/, 'naver'],
+            [/searx/, 'searxng'],
+            [/startpage/, 'startpage'],
+            [/claude|anthropic/, 'claude'],
+            [/qwen/, 'qwen'],
+            [/deepseek/, 'deepseek'],
+            [/github/, 'github'],
+            [/openai|chatgpt|gpt/, 'openai'],
+            [/perplexity/, 'perplexity'],
+        ], 'search');
+    };
+
+    const aiBrandIcon = (label) => {
+        const value = String(label || '').toLowerCase();
+        return firstMatchingIcon(value, [
+            [/claude|anthropic/, 'claude'],
+            [/qwen/, 'qwen'],
+            [/deepseek/, 'deepseek'],
+            [/github/, 'github'],
+            [/openai|chatgpt|gpt/, 'openai'],
+            [/perplexity/, 'perplexity'],
+            [/gemini/, 'googlegemini'],
+            [/copilot/, 'githubcopilot'],
+            [/mistral/, 'mistralai'],
+            [/meta|llama/, 'meta'],
+        ], 'smart_toy');
+    };
+
+    const deviceBrandIcon = (label) => {
+        const value = String(label || '').toLowerCase();
+        return firstMatchingIcon(value, [
+            [/apple|iphone|ipad|mac/, 'apple'],
+            [/samsung/, 'samsung'],
+            [/xiaomi|\bmi\b|redmi|poco/, 'xiaomi'],
+            [/huawei/, 'huawei'],
+            [/honor/, 'honor'],
+            [/oppo/, 'oppo'],
+            [/vivo/, 'vivo'],
+            [/realme/, 'realme'],
+            [/oneplus/, 'oneplus'],
+            [/google|pixel/, 'google'],
+            [/sony/, 'sony'],
+            [/nokia/, 'nokia'],
+            [/asus/, 'asus'],
+            [/lenovo/, 'lenovo'],
+            [/dell/, 'dell'],
+            [/hp|hewlett/, 'hp'],
+            [/acer/, 'acer'],
+            [/msi/, 'msi'],
+            [/intel/, 'intel'],
+            [/amd/, 'amd'],
+            [/motorola/, 'motorola'],
+            [/lg/, 'lg'],
+            [/meizu/, 'meizu'],
+            [/zte/, 'zte'],
+            [/claude|anthropic/, 'claude'],
+            [/qwen/, 'qwen'],
+            [/deepseek/, 'deepseek'],
+            [/github/, 'github'],
+            [/openai|chatgpt|gpt/, 'openai'],
+            [/perplexity/, 'perplexity'],
+        ], 'smartphone');
+    };
+
+    const withIconLabel = (iconHtml, label) => `
+        <span class="inline-flex items-center gap-2 min-w-0">
+            <span class="shrink-0">${iconHtml}</span>
+            <span class="truncate">${displayPath(label)}</span>
+        </span>
+    `;
+
     const renderBars = (container, rows, isNegative = false) => {
         if (!container) return;
         const items = Array.isArray(rows) ? rows : [];
@@ -55,7 +219,7 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
         container.innerHTML = items.map((row) => `
             <div class="space-y-1">
                 <div class="flex items-center justify-between text-xs">
-                    <span class="truncate ml-4" title="${escapeHtml(row.label)}">${escapeHtml(row.label)}</span>
+                    <span class="truncate ml-4" title="${escapeHtml(row.label || '-')}">${renderLabel(row)}</span>
                     <span class="font-bold ${colorClass} shrink-0">${number(row.count)}</span>
                 </div>
                 <div class="w-full bg-slate/5 h-1.5 rounded-full overflow-hidden">
@@ -76,9 +240,9 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
 
             return `
                 <div class="flex items-center justify-between text-[11px] border-b border-slate/5 pb-2 gap-4">
-                    <span class="truncate flex items-center" title="${escapeHtml(row.label)}">
+                    <span class="truncate flex items-center" title="${escapeHtml(row.label || '-')}">
                         ${openLinkHtml}
-                        <span class="truncate">${escapeHtml(row.label)}</span>
+                        <span class="truncate">${renderLabel(row)}</span>
                     </span>
                     <span class="font-bold ${colorClass} shrink-0">${number(row.count)} ${suffix}</span>
                 </div>
@@ -500,7 +664,7 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             }
             table.innerHTML = data.month.map((goal) => `
                 <tr class="hover:bg-slate/5 transition-colors">
-                    <td class="p-4 font-medium text-xs">${escapeHtml(goal.label)}</td>
+                    <td class="p-4 font-medium text-xs">${displayPath(goal.label)}</td>
                     <td class="p-4 text-center font-bold text-success text-xs">${number(goal.count)}</td>
                 </tr>
             `).join('');
@@ -510,50 +674,139 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
     const loadLive = () => {
         fetchJson(sectionUrl('live')).then((data) => {
             if (!data) return;
-            const container = root.querySelector('[data-live-list]');
+            const container = root.querySelector('#live-users-list');
+            const countEl = root.querySelector('#live-users-count');
+            const indicator = root.querySelector('#live-update-indicator');
+            const summaryUsers = root.querySelector('#live-summary-users');
+            const summaryPageviews = root.querySelector('#live-summary-pageviews');
+            const summaryAvgTime = root.querySelector('#live-summary-avg-time');
+            const summaryTopSource = root.querySelector('#live-summary-top-source');
+            const countryBreakdown = root.querySelector('#live-country-breakdown');
+            const sourceBreakdown = root.querySelector('#live-source-breakdown');
+            const deviceBreakdown = root.querySelector('#live-device-breakdown');
+            const browserBreakdown = root.querySelector('#live-browser-breakdown');
             renderWorldMap(root.querySelector('[data-map="live"]'), data.map, 'live', true);
             if (!container) return;
-            if (!data.users || !data.users.length) { container.innerHTML = empty; return; }
-            container.innerHTML = data.users.map((user) => `
-                <div class="rounded-xl border border-success/10 bg-success/5 p-4 text-xs space-y-3 relative overflow-hidden shadow-sm">
-                    <div class="absolute inset-y-0 right-0 w-1 bg-success opacity-30"></div>
-                    <div class="flex flex-wrap items-center justify-between gap-4">
-                        <div class="min-w-0 flex-1">
-                            <p class="font-bold text-slate truncate flex items-center gap-2 mb-1">
-                                <a href="${user.path}" target="_blank" class="material-icons text-base opacity-40 hover:opacity-100 hover:text-success" title="باز کردن لینک">open_in_new</a>
-                                <span class="text-sm">${escapeHtml(user.title || user.path || '-')}</span>
-                            </p>
-                            <p class="admin-ltr text-left text-slate/50 truncate text-[10px]">${escapeHtml(user.path || '-')}</p>
+            
+            if (countEl) {
+                countEl.textContent = data.count || 0;
+            }
+            if (summaryUsers) {
+                summaryUsers.textContent = number(data.count || 0);
+            }
+            if (indicator) {
+                indicator.classList.remove('animate-pulse');
+                void indicator.offsetWidth;
+                indicator.classList.add('animate-pulse');
+            }
+
+            if (!data.users || !data.users.length) { 
+                container.innerHTML = empty; 
+                if (summaryPageviews) summaryPageviews.textContent = '0';
+                if (summaryAvgTime) summaryAvgTime.textContent = '0:00';
+                if (summaryTopSource) summaryTopSource.textContent = '-';
+                renderLiveMiniBars(countryBreakdown, []);
+                renderLiveMiniBars(sourceBreakdown, []);
+                renderLiveMiniBars(deviceBreakdown, []);
+                renderLiveMiniBars(browserBreakdown, []);
+                return; 
+            }
+
+            const visibleUsers = data.users.slice(0, 10);
+            const totalPageviews = visibleUsers.reduce((sum, user) => sum + (Number(user.pageviews) || 0), 0);
+            const avgActiveSeconds = Math.round(visibleUsers.reduce((sum, user) => {
+                if (!user.first_seen_at) return sum;
+                const first = new Date(user.first_seen_at).getTime();
+                const last = user.last_seen_at ? new Date(user.last_seen_at).getTime() : Date.now();
+                return sum + Math.max(0, Math.floor((last - first) / 1000));
+            }, 0) / Math.max(visibleUsers.length, 1));
+
+            const sourceRows = aggregateLiveRows(visibleUsers, (row) => row.source_label, (row) => row.source_label || 'مستقیم', 6);
+            const deviceRows = aggregateLiveRows(visibleUsers, (row) => `${row.device_brand || '-'}|${row.device || '-'}`, (row) => [row.device_brand, row.device].filter(Boolean).join(' / ') || '-', 6)
+                .map((row) => ({ ...row, htmlLabel: withIconLabel(deviceBrandIcon(row.label), row.label) }));
+            const browserRows = aggregateLiveRows(visibleUsers, (row) => `${row.browser || '-'}|${row.platform || '-'}`, (row) => [row.browser, row.platform].filter(Boolean).join(' / ') || '-', 6)
+                .map((row) => ({ ...row, htmlLabel: withIconLabel(browserIcon(row.label), row.label) }));
+
+            if (summaryPageviews) {
+                summaryPageviews.textContent = number(totalPageviews);
+            }
+            if (summaryAvgTime) {
+                summaryAvgTime.textContent = compactDuration(avgActiveSeconds);
+            }
+            if (summaryTopSource) {
+                summaryTopSource.textContent = sourceRows[0]?.label || '-';
+            }
+
+            renderLiveMiniBars(countryBreakdown, (data.map || []).slice(0, 6).map((row) => ({
+                label: row.label || row.code || '-',
+                count: row.count || 0,
+            })), 'success');
+            renderLiveMiniBars(sourceBreakdown, sourceRows, 'amber');
+            renderLiveMiniBars(deviceBreakdown, deviceRows, 'info');
+            renderLiveMiniBars(browserBreakdown, browserRows, 'violet');
+            
+            container.innerHTML = visibleUsers.map((user, index) => `
+                <button type="button"
+                    class="live-user-item group w-full text-right rounded-2xl border border-slate/10 bg-white/80 dark:bg-slate-900/80 p-3 text-xs relative overflow-visible transition-all hover:border-success/30 hover:shadow-lg hover:shadow-success/5"
+                    data-session-id="${escapeHtml(user.session_id)}"
+                    title="${buildLiveUserTooltip(user)}"
+                    style="min-width: 0;">
+                    <div class="flex items-start gap-3">
+                        <div class="pt-0.5 flex items-center gap-2 shrink-0">
+                            <span class="inline-flex h-2.5 w-2.5 rounded-full bg-success animate-pulse shadow-[0_0_0_4px_rgba(16,185,129,0.12)]" aria-hidden="true"></span>
+                            <span class="text-[10px] font-black text-slate/35">${String(index + 1).padStart(2, '0')}</span>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <span class="px-2 py-1 rounded bg-success/10 text-success font-bold text-[10px]">${user.last_seen}</span>
-                            <span class="px-2 py-1 rounded bg-info/10 text-info font-bold text-[10px]">${user.pageviews || 1} PV</span>
+                        <div class="min-w-0 flex-1 space-y-2">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <p class="font-bold text-slate truncate flex-1">${escapeHtml(truncateText(user.title || decodeUrl(user.path) || '-', 52))}</p>
+                                        <span class="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${sourceTone(user)}">${escapeHtml(truncateText(user.source_label || 'مستقیم', 24))}</span>
+                                    </div>
+                                    <p class="admin-ltr text-left text-slate/45 truncate text-[10px] mt-1">${displayPath(user.path || '-')}</p>
+                                </div>
+                                <div class="shrink-0 flex items-center gap-1.5">
+                                    <span class="px-2 py-1 rounded-lg bg-info/10 text-info font-bold text-[10px]">${number(user.pageviews || 1)} PV</span>
+                                    <span class="px-2 py-1 rounded-lg bg-success/10 text-success font-bold text-[10px] live-timer" data-first-seen="${escapeHtml(user.first_seen_at || '')}" data-last-seen="${escapeHtml(user.last_seen_at || '')}">${user.last_seen || 'همین الان'}</span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-1.5 text-[10px] text-slate/60">
+                                <span class="inline-flex items-center gap-1 rounded-lg bg-slate/5 px-2 py-1">
+                                    <span class="material-icons text-[12px] text-success/60">person</span>
+                                    <span class="truncate max-w-[140px]">${escapeHtml(truncateText(user.user, 20))}</span>
+                                </span>
+                                <span class="inline-flex items-center gap-1 rounded-lg bg-slate/5 px-2 py-1">
+                                    <span class="material-icons text-[12px] text-success/60">public</span>
+                                    <span>${escapeHtml(truncateText([user.country, user.city && user.city !== '-' ? user.city : null].filter(Boolean).join(' / '), 22))}</span>
+                                </span>
+                                <span class="inline-flex items-center gap-1 rounded-lg bg-slate/5 px-2 py-1">
+                                    <span class="material-icons text-[12px] text-success/60">devices</span>
+                                    <span>${escapeHtml(truncateText([user.device_brand, user.device].filter(Boolean).join(' / '), 20))}</span>
+                                </span>
+                                <span class="inline-flex items-center gap-1 rounded-lg bg-slate/5 px-2 py-1">
+                                    <span class="material-icons text-[12px] text-success/60">language</span>
+                                    <span>${escapeHtml(truncateText([user.browser, user.platform].filter(Boolean).join(' / '), 18))}</span>
+                                </span>
+                            </div>
+
+                            <div class="pointer-events-none absolute inset-x-2 top-full z-30 mt-3 opacity-0 translate-y-1 transition-all duration-150 group-hover:opacity-100 group-hover:translate-y-0">
+                                <div class="rounded-2xl border border-cyan-400/20 bg-[linear-gradient(135deg,rgba(8,145,178,0.10),rgba(59,130,246,0.08),rgba(245,158,11,0.08))] dark:bg-[linear-gradient(135deg,rgba(8,145,178,0.16),rgba(30,41,59,0.96),rgba(124,58,237,0.16))] backdrop-blur-md shadow-2xl p-3 text-[10px] leading-5 text-slate/80">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                        <div><span class="font-bold text-cyan-700 dark:text-cyan-300">User-Agent:</span> ${escapeHtml(user.user_agent || '-')}</div>
+                                        <div><span class="font-bold text-sky-700 dark:text-sky-300">IP:</span> <span class="admin-ltr">${escapeHtml(user.ip || '-')}</span></div>
+                                        <div><span class="font-bold text-amber-700 dark:text-amber-300">سورس:</span> ${escapeHtml(sessionSourceSummary(user))}</div>
+                                        <div><span class="font-bold text-violet-700 dark:text-violet-300">آخرین فعالیت:</span> ${escapeHtml(user.last_seen || 'همین الان')}</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-slate/5">
-                        <div class="flex items-center gap-2">
-                            <span class="material-icons text-success/40 text-sm">person</span>
-                            <span class="text-slate/70 truncate">${escapeHtml(user.user)}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="material-icons text-success/40 text-sm">lan</span>
-                            <span class="admin-ltr text-slate/70 text-[10px]">${escapeHtml(user.ip)}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="material-icons text-success/40 text-sm">public</span>
-                            <span class="text-slate/70">${escapeHtml(user.country)}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="material-icons text-success/40 text-sm">devices</span>
-                            <span class="text-slate/70 truncate">${escapeHtml(user.device_brand)} / ${escapeHtml(user.device)}</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 text-[10px] text-slate/40 admin-ltr bg-white/50 dark:bg-slate-900/50 p-1.5 rounded">
-                        <span class="material-icons text-xs">info</span>
-                        <span class="truncate">${escapeHtml(user.user_agent)}</span>
-                    </div>
-                </div>
+                </button>
             `).join('');
+
+            startLiveTimers();
+            attachLiveUserClickHandlers();
         });
     };
 
@@ -617,16 +870,16 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
 
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${e.type === 'goal' ? 'bg-success/10 text-success' : (e.type === 'error' ? 'bg-danger/10 text-danger' : 'bg-slate/10 text-slate/70')}">
-                                            ${e.type === 'goal' ? 'تحقق هدف' : (e.type === 'error' ? 'خطا' : 'بازدید')}
-                                        </span>
-                                        <p class="font-bold text-slate truncate text-sm">${escapeHtml(e.title || e.path || '-')}</p>
-                                    </div>
-                                    <div class="flex items-center gap-2 text-[10px] text-slate/50 admin-ltr">
-                                        <a href="${e.path}" target="_blank" class="material-icons text-xs hover:text-success">open_in_new</a>
-                                        <span>${escapeHtml(e.path || '-')}</span>
-                                    </div>
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${e.type === 'goal' ? 'bg-success/10 text-success' : (e.type === 'error' ? 'bg-danger/10 text-danger' : 'bg-slate/10 text-slate/70')}">
+                                                ${e.type === 'goal' ? 'تحقق هدف' : (e.type === 'error' ? 'خطا' : 'بازدید')}
+                                            </span>
+                                            <p class="font-bold text-slate truncate text-sm">${escapeHtml(e.title || decodeUrl(e.path) || '-')}</p>
+                                        </div>
+                                        <div class="flex items-center gap-2 text-[10px] text-slate/50 admin-ltr">
+                                            <a href="${e.path}" target="_blank" class="material-icons text-xs hover:text-success">open_in_new</a>
+                                            <span>${displayPath(e.path || '-')}</span>
+                                        </div>
                                 </div>
                                 <div class="text-left shrink-0">
                                     <p class="text-[10px] font-bold text-slate/70">${e.time}</p>
@@ -855,7 +1108,7 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                         <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${e.type === 'goal' ? 'bg-success/10 text-success' : (e.type === 'error' ? 'bg-danger/10 text-danger' : 'bg-slate/10 text-slate/70')} shrink-0">
                             ${e.type === 'goal' ? 'هدف' : (e.type === 'error' ? 'خطا' : 'بازدید')}
                         </span>
-                        <span class="truncate" title="${escapeHtml(e.path)}">${escapeHtml(e.path || '-')}</span>
+                        <span class="truncate" title="${displayPath(e.path)}">${displayPath(e.path || '-')}</span>
                     </div>
                     <div class="flex items-center gap-3 shrink-0 text-slate/50">
                         <span>${escapeHtml(e.country || '-')}</span>
@@ -897,7 +1150,7 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                                 <a href="${error.path}" target="_blank" class="material-icons text-sm opacity-40 hover:opacity-100 hover:text-danger">open_in_new</a>
                                 <span>${escapeHtml(error.message)}</span>
                             </p>
-                            <p class="admin-ltr text-left text-slate/60 truncate mt-1">${escapeHtml(error.path || '-')}</p>
+                            <p class="admin-ltr text-left text-slate/60 truncate mt-1">${displayPath(error.path || '-')}</p>
                         </div>
                         <div class="text-slate/70 flex flex-wrap gap-2">
                             <span>${escapeHtml(error.user)}</span>
@@ -914,22 +1167,433 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
         });
     };
 
+    const formatDuration = (seconds) => {
+        if (seconds < 60) return `${seconds}s`;
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        if (mins < 60) return `${mins}m ${secs}s`;
+        const hours = Math.floor(mins / 60);
+        const remainingMins = mins % 60;
+        return `${hours}h ${remainingMins}m`;
+    };
+
+    const compactDuration = (seconds) => {
+        const total = Math.max(0, Number(seconds) || 0);
+        const hours = Math.floor(total / 3600);
+        const mins = Math.floor((total % 3600) / 60);
+        const secs = total % 60;
+        if (hours > 0) return `${hours}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        return `${mins}:${String(secs).padStart(2, '0')}`;
+    };
+
+    const truncateText = (value, max = 42) => {
+        const str = String(value || '').trim();
+        if (!str) return '-';
+        return str.length > max ? `${str.slice(0, max - 1)}…` : str;
+    };
+
+    const sourceTone = (user) => {
+        if (user.search_engine) return 'bg-blue-500/10 text-blue-600 dark:text-blue-300 border-blue-500/20';
+        if (user.utm_source) return 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/20';
+        if (user.referrer_type && user.referrer_type !== 'direct') return 'bg-violet-500/10 text-violet-600 dark:text-violet-300 border-violet-500/20';
+        return 'bg-slate/10 text-slate/70 border-slate/10';
+    };
+
+    const sessionSourceSummary = (user) => {
+        if (user.search_engine) return user.search_engine;
+        if (user.utm_source) return [user.utm_source, user.utm_medium, user.utm_campaign].filter(Boolean).join(' / ');
+        if (user.referrer_host) return user.referrer_host;
+        if (user.referrer_type && user.referrer_type !== 'direct') return user.referrer_type;
+        return 'مستقیم';
+    };
+
+    const buildLiveUserTooltip = (user) => {
+        return [
+            `کاربر: ${escapeHtml(user.user || 'مهمان')}`,
+            `مسیر: ${escapeHtml(user.path || '-')}`,
+            `مرورگر: ${escapeHtml(user.browser || '-')}`,
+            `سیستم‌عامل: ${escapeHtml(user.platform || '-')}`,
+            `دستگاه: ${escapeHtml([user.device_brand, user.device].filter(Boolean).join(' / ') || '-')}`,
+            `مکان: ${escapeHtml([user.country, user.city && user.city !== '-' ? user.city : null].filter(Boolean).join(' / ') || '-')}`,
+            `سورس: ${escapeHtml(sessionSourceSummary(user))}`,
+            `User-Agent: ${escapeHtml(user.user_agent || '-')}`,
+        ].join('&#10;');
+    };
+
+    const aggregateLiveRows = (rows, getKey, getLabel, limit = 5) => {
+        const map = new Map();
+        (rows || []).forEach((row) => {
+            const key = String(getKey(row) || '').trim();
+            if (!key) return;
+            const current = map.get(key) || { key, label: getLabel(row), count: 0 };
+            current.count += 1;
+            map.set(key, current);
+        });
+
+        return Array.from(map.values())
+            .sort((a, b) => b.count - a.count)
+            .slice(0, limit);
+    };
+
+    const renderLiveMiniBars = (container, rows, tone = 'success') => {
+        if (!container) return;
+        if (!rows || !rows.length) {
+            container.innerHTML = '<p class="text-center py-8 opacity-50 text-xs">داده‌ای موجود نیست.</p>';
+            return;
+        }
+
+        const max = Math.max(...rows.map((row) => Number(row.count) || 0), 1);
+        const toneClass = tone === 'amber'
+            ? 'bg-amber-500'
+            : tone === 'info'
+                ? 'bg-sky-500'
+                : tone === 'violet'
+                    ? 'bg-violet-500'
+                    : 'bg-emerald-500';
+
+        container.innerHTML = rows.map((row) => `
+            <div class="space-y-1.5">
+                <div class="flex items-center justify-between gap-3 text-[11px]">
+                    <span class="truncate text-slate/75" title="${escapeHtml(row.label || '-')}">${renderLabel(row)}</span>
+                    <span class="font-bold text-slate shrink-0">${number(row.count)}</span>
+                </div>
+                <div class="h-1.5 rounded-full bg-slate/5 overflow-hidden">
+                    <div class="${toneClass} h-full rounded-full" style="width:${Math.max(8, Math.round((row.count / max) * 100))}%"></div>
+                </div>
+            </div>
+        `).join('');
+    };
+
+    const startLiveTimers = () => {
+        document.querySelectorAll('.live-timer').forEach(el => {
+            const firstSeen = el.dataset.firstSeen;
+            const lastSeen = el.dataset.lastSeen;
+            if (!firstSeen) return;
+            if (el._timerInterval) {
+                clearInterval(el._timerInterval);
+                el._timerInterval = null;
+            }
+            
+            const start = new Date(firstSeen).getTime();
+            const end = lastSeen ? new Date(lastSeen).getTime() : Date.now();
+            let duration = Math.max(0, Math.floor((end - start) / 1000));
+            el.textContent = compactDuration(duration);
+            
+            const update = () => {
+                duration++;
+                el.textContent = compactDuration(duration);
+            };
+            
+            el._timerInterval = setInterval(update, 1000);
+        });
+    };
+
+    const stopLiveTimers = () => {
+        document.querySelectorAll('.live-timer').forEach(el => {
+            if (el._timerInterval) {
+                clearInterval(el._timerInterval);
+                el._timerInterval = null;
+            }
+        });
+    };
+
+    const showLiveUserDetail = async (sessionId) => {
+        const dialog = document.getElementById('live-user-detail-modal');
+        const content = document.getElementById('live-user-detail-content');
+        const title = document.getElementById('live-user-detail-title');
+        
+        if (!dialog || !content) return;
+        
+        title.textContent = 'جزئیات جلسه کاربر';
+        content.innerHTML = '<p class="text-center py-10 opacity-50">در حال دریافت اطلاعات...</p>';
+        dialog.showModal();
+        
+        const url = new URL(root.dataset.userJourneyUrl, window.location.origin);
+        url.searchParams.set('session_id', sessionId);
+        
+        try {
+            const response = await fetch(url.toString(), {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            const result = await response.json();
+            const data = result.data || {};
+            
+            if (!data.events || !data.events.length) {
+                content.innerHTML = '<p class="text-center py-10 opacity-50">هیچ فعالیتی ثبت نشده است.</p>';
+                return;
+            }
+            
+            const session = data.session;
+            const events = data.events;
+            const pathSequence = data.path_sequence || [];
+            const summary = data.summary || {};
+            const relatedSessions = data.related_sessions || [];
+            const sessionSource = session?.landing_source
+                || events.find((e) => e.search_engine)?.search_engine
+                || events.find((e) => e.utm?.source)?.utm?.source
+                || events.find((e) => e.referrer_host)?.referrer_host
+                || (session?.referrer_type && session.referrer_type !== 'direct' ? session.referrer_type : 'مستقیم');
+
+            content.innerHTML = `
+                <div class="p-5 space-y-5">
+                    <div class="rounded-[20px] border border-slate/10 bg-slate/5 p-4">
+                        <div class="flex flex-col gap-4 2xl:flex-row 2xl:items-start 2xl:justify-between">
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-success/10 px-3 py-1 text-[10px] font-bold text-success">
+                                        <span class="material-icons text-[12px]">sensors</span>
+                                        سشن زنده
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-slate/10 px-3 py-1 text-[10px] font-bold text-slate/70">
+                                        ${escapeHtml(sessionSource || 'مستقیم')}
+                                    </span>
+                                </div>
+                                <h3 class="mt-3 text-lg font-black text-slate">${escapeHtml(events[0]?.title || decodeUrl(session?.entry_path || events[0]?.path || 'جلسه فعال'))}</h3>
+                                <p class="admin-ltr text-left text-xs text-slate/50 mt-1 break-all">${displayPath(session?.entry_path || events[0]?.path || '-')}</p>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-6 gap-3 min-w-0 w-full 2xl:w-auto 2xl:min-w-[760px]">
+                                <div class="rounded-2xl border border-slate/10 bg-white dark:bg-slate-950 p-3">
+                                    <p class="text-[10px] text-slate/50">آی‌دی جلسه</p>
+                                    <p class="font-mono text-xs admin-ltr break-all mt-1" title="${escapeHtml(session?.session_id || sessionId)}">${escapeHtml(session?.session_id || sessionId)}</p>
+                                </div>
+                                <div class="rounded-2xl border border-slate/10 bg-white dark:bg-slate-950 p-3">
+                                    <p class="text-[10px] text-slate/50">شروع</p>
+                                    <p class="font-medium text-xs mt-1">${session?.started_at ? new Date(session.started_at).toLocaleString('fa-IR') : '-'}</p>
+                                </div>
+                                <div class="rounded-2xl border border-slate/10 bg-white dark:bg-slate-950 p-3">
+                                    <p class="text-[10px] text-slate/50">مدت</p>
+                                    <p class="font-medium text-xs text-success mt-1">${session?.duration_seconds ? compactDuration(session.duration_seconds) : compactDuration(summary.pageviews ? 0 : 0)}</p>
+                                </div>
+                                <div class="rounded-2xl border border-slate/10 bg-white dark:bg-slate-950 p-3">
+                                    <p class="text-[10px] text-slate/50">Pageviews</p>
+                                    <p class="font-medium text-xs mt-1">${number(summary.pageviews || session?.pageviews_count || pathSequence.length || 0)}</p>
+                                </div>
+                                <div class="rounded-2xl border border-slate/10 bg-white dark:bg-slate-950 p-3">
+                                    <p class="text-[10px] text-slate/50">Goals / Errors</p>
+                                    <p class="font-medium text-xs mt-1">${number(summary.goals || 0)} / ${number(summary.errors || 0)}</p>
+                                </div>
+                                <div class="rounded-2xl border border-slate/10 bg-white dark:bg-slate-950 p-3">
+                                    <p class="text-[10px] text-slate/50">آخرین رویداد</p>
+                                    <p class="font-medium text-xs mt-1">${escapeHtml(summary.last_event_ago || '-')}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-4 xl:grid-cols-2 2xl:grid-cols-[minmax(280px,0.9fr)_minmax(0,1.55fr)_minmax(280px,0.9fr)] items-start">
+                        <div class="space-y-4 min-w-0">
+                            <div class="rounded-2xl border border-slate/10 bg-white dark:bg-slate-950 p-4 space-y-3">
+                                <h4 class="font-bold text-slate flex items-center gap-2">
+                                    <span class="material-icons text-info text-sm">hub</span>
+                                    پروفایل جلسه
+                                </h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                    <div><span class="text-slate/40 block mb-1">منبع ورود</span><span class="font-medium">${escapeHtml(sessionSource || 'مستقیم')}</span></div>
+                                    <div><span class="text-slate/40 block mb-1">نرخ پرش</span><span class="font-medium">${session?.is_bounce ? 'بله' : 'خیر'}</span></div>
+                                    <div><span class="text-slate/40 block mb-1">نوع دستگاه</span><span class="font-medium">${escapeHtml(session?.device_type || events[0]?.device || '-')}</span></div>
+                                    <div><span class="text-slate/40 block mb-1">مرورگر</span><span class="font-medium">${escapeHtml(session?.browser || events[0]?.browser || '-')}</span></div>
+                                    <div><span class="text-slate/40 block mb-1">پلتفرم</span><span class="font-medium">${escapeHtml(session?.platform || events[0]?.platform || '-')}</span></div>
+                                    <div><span class="text-slate/40 block mb-1">کشور</span><span class="font-medium">${escapeHtml(events[0]?.country || session?.country_code || '-')}</span></div>
+                                </div>
+                                <div class="rounded-xl bg-slate/5 border border-slate/10 p-3 text-[11px] text-slate/65 space-y-2">
+                                    <div><span class="text-slate/40">ورود:</span> <span class="admin-ltr">${escapeHtml(session?.entry_path || '-')}</span></div>
+                                    <div><span class="text-slate/40">خروج:</span> <span class="admin-ltr">${escapeHtml(session?.exit_path || '-')}</span></div>
+                                    <div><span class="text-slate/40">User-Agent:</span> <span class="admin-ltr break-all">${escapeHtml(events[0]?.user_agent || '-')}</span></div>
+                                </div>
+                            </div>
+
+                            ${pathSequence.length > 0 ? `
+                                <div class="rounded-2xl border border-slate/10 bg-white dark:bg-slate-950 p-4">
+                                    <h4 class="font-bold text-slate mb-3 flex items-center gap-2">
+                                        <span class="material-icons text-info text-sm">call_split</span>
+                                        مسیر صفحات
+                                    </h4>
+                                    <div class="space-y-2 max-h-[280px] overflow-y-auto custom-scrollbar pr-1">
+                                        ${pathSequence.map((p, idx) => `
+                                            <div class="flex items-center gap-2 rounded-xl bg-slate/5 px-3 py-2 text-[11px]">
+                                                <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-success/10 text-success font-bold">${idx + 1}</span>
+                                                <span class="truncate admin-ltr">${displayPath(p)}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="space-y-4 min-w-0 xl:col-span-1 2xl:col-span-1">
+                            <div class="rounded-2xl border border-slate/10 bg-white dark:bg-slate-950">
+                                <div class="flex items-center justify-between p-4 border-b border-slate/10">
+                                    <h4 class="font-bold text-slate flex items-center gap-2">
+                                        <span class="material-icons text-success text-sm">timeline</span>
+                                        Timeline رویدادها
+                                    </h4>
+                                    <span class="text-xs text-slate/50">${events.length} رویداد</span>
+                                </div>
+                                <div class="space-y-2 max-h-[58vh] overflow-y-auto custom-scrollbar p-4">
+                                    ${events.map((e) => `
+                                        <div class="p-3 rounded-xl border border-slate/10 bg-slate/5 space-y-3 relative overflow-hidden ${e.type === 'goal' ? 'border-r-2 border-success' : (e.type === 'error' ? 'border-r-2 border-danger' : '')}">
+                                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${e.type === 'goal' ? 'bg-success/10 text-success' : (e.type === 'error' ? 'bg-danger/10 text-danger' : 'bg-slate/10 text-slate/70')}">
+                                                            ${e.type === 'goal' ? 'تحقق هدف' : (e.type === 'error' ? 'خطا' : 'بازدید')}
+                                                        </span>
+                                                        <p class="font-bold text-slate truncate text-sm">${escapeHtml(e.title || decodeUrl(e.path) || '-')}</p>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 text-[10px] text-slate/50 admin-ltr">
+                                                        <a href="${e.url || e.path}" target="_blank" class="material-icons text-xs hover:text-success">open_in_new</a>
+                                                        <span>${displayPath(e.path || '-')}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="text-left shrink-0">
+                                                    <p class="text-[10px] font-bold text-slate/70">${e.time_ago}</p>
+                                                    <p class="text-[9px] text-slate/40">${e.time}</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-[10px]">
+                                                <div><span class="text-slate/40">مرورگر</span><div class="mt-1 font-medium">${escapeHtml(e.browser || '-')}</div></div>
+                                                <div><span class="text-slate/40">پلتفرم</span><div class="mt-1 font-medium">${escapeHtml(e.platform || '-')}</div></div>
+                                                <div><span class="text-slate/40">موقعیت</span><div class="mt-1 font-medium">${escapeHtml([e.country, e.city].filter(Boolean).join(' / ') || '-')}</div></div>
+                                                <div><span class="text-slate/40">اسکرول / مدت</span><div class="mt-1 font-medium">${e.scroll ? `${e.scroll}%` : '-'}${e.duration ? ` / ${compactDuration(e.duration)}` : ''}</div></div>
+                                            </div>
+
+                                            ${(e.goal || e.funnel || e.search_engine || Object.keys(e.utm || {}).length || e.referrer_host) ? `
+                                                <div class="flex flex-wrap gap-2">
+                                                    ${e.goal ? `<span class="px-2 py-1 rounded-lg bg-success/10 border border-success/20 text-success text-[9px] font-bold flex items-center gap-1"><span class="material-icons text-[10px]">emoji_events</span>${escapeHtml(e.goal)}</span>` : ''}
+                                                    ${e.funnel ? `<span class="px-2 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-300 text-[9px] flex items-center gap-1"><span class="font-bold">قیف</span>${escapeHtml(e.funnel.key)} / ${escapeHtml(e.funnel.step_name)}</span>` : ''}
+                                                    ${e.search_engine ? `<span class="px-2 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-300 text-[9px]">${escapeHtml(e.search_engine)}</span>` : ''}
+                                                    ${e.referrer_host ? `<span class="px-2 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-300 text-[9px]">${escapeHtml(e.referrer_host)}</span>` : ''}
+                                                    ${Object.entries(e.utm || {}).map(([k, v]) => `<span class="px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-[9px]">${escapeHtml(k)}: ${escapeHtml(v)}</span>`).join('')}
+                                                </div>
+                                            ` : ''}
+
+                                            ${e.user_agent ? `<div class="rounded-lg bg-slate/5 border border-slate/10 p-2 text-[10px] text-slate/55 admin-ltr text-left break-all">${escapeHtml(e.user_agent)}</div>` : ''}
+                                            ${e.error_message ? `<div class="rounded-lg bg-danger/5 border border-danger/20 p-2 text-[10px] text-danger/80 admin-ltr text-left break-all">${escapeHtml(e.error_message)}${e.error_source ? ` | ${escapeHtml(e.error_source)}` : ''}${e.error_line ? `:${escapeHtml(String(e.error_line))}` : ''}</div>` : ''}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 min-w-0 xl:col-span-2 2xl:col-span-1">
+                            <div class="rounded-2xl border border-slate/10 bg-white dark:bg-slate-950 p-4">
+                                <h4 class="font-bold text-slate mb-3 flex items-center gap-2">
+                                    <span class="material-icons text-warning text-sm">insights</span>
+                                    مشخصات فنی و Attribution
+                                </h4>
+                                <div class="space-y-3 text-xs">
+                                    <div class="rounded-xl bg-slate/5 border border-slate/10 p-3">
+                                        <p class="text-slate/40 mb-2">UTM / Search / Referrer</p>
+                                        <div class="flex flex-wrap gap-2">
+                                            ${events.flatMap((e) => {
+                                                const badges = [];
+                                                if (e.search_engine) badges.push(`<span class="px-2 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-300 text-[10px]">${escapeHtml(e.search_engine)}</span>`);
+                                                if (e.referrer_host) badges.push(`<span class="px-2 py-1 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-300 text-[10px]">${escapeHtml(e.referrer_host)}</span>`);
+                                                Object.entries(e.utm || {}).forEach(([k, v]) => {
+                                                    badges.push(`<span class="px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px]">${escapeHtml(k)}: ${escapeHtml(v)}</span>`);
+                                                });
+                                                return badges;
+                                            }).slice(0, 12).join('') || '<span class="text-slate/45">موردی ثبت نشده است.</span>'}
+                                        </div>
+                                    </div>
+                                    <div class="rounded-xl bg-slate/5 border border-slate/10 p-3">
+                                        <p class="text-slate/40 mb-2">شناسه‌ها و شبکه</p>
+                                        <div class="space-y-2 text-[11px]">
+                                            <div><span class="text-slate/40">Session:</span> <span class="admin-ltr break-all">${escapeHtml(session?.session_id || sessionId)}</span></div>
+                                            <div><span class="text-slate/40">IP:</span> <span class="admin-ltr break-all">${escapeHtml(events[0]?.ip || '-')}</span></div>
+                                            <div><span class="text-slate/40">Visitor/User:</span> <span class="break-all">${escapeHtml(events[0]?.user_id || session?.user_id || 'مهمان')}</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="rounded-2xl border border-slate/10 bg-white dark:bg-slate-950 p-4">
+                                <h4 class="font-bold text-slate mb-3 flex items-center gap-2">
+                                    <span class="material-icons text-success text-sm">history</span>
+                                    سایر نشست‌های این کاربر
+                                </h4>
+                                ${relatedSessions.length ? `
+                                    <div class="space-y-2 max-h-[320px] overflow-y-auto custom-scrollbar">
+                                        ${relatedSessions.map((item) => `
+                                            <div class="rounded-xl border border-slate/10 bg-slate/5 p-3 text-xs space-y-2">
+                                                <div class="flex items-start justify-between gap-3">
+                                                    <div class="min-w-0">
+                                                        <p class="font-bold admin-ltr truncate">${escapeHtml(item.session_id)}</p>
+                                                        <p class="text-[10px] text-slate/50 mt-1">${item.started_at ? new Date(item.started_at).toLocaleString('fa-IR') : '-'}</p>
+                                                    </div>
+                                                    <div class="text-left">
+                                                        <p class="text-success font-bold">${compactDuration(item.duration_seconds || 0)}</p>
+                                                        <p class="text-[10px] text-slate/50">${number(item.pageviews_count || 0)} صفحه</p>
+                                                    </div>
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-2 text-[10px] text-slate/65">
+                                                    <div>ورود: ${escapeHtml(item.entry_path || '-')}</div>
+                                                    <div>خروج: ${escapeHtml(item.exit_path || '-')}</div>
+                                                    <div>سورس: ${escapeHtml(item.landing_source || item.referrer_type || '-')}</div>
+                                                    <div>${escapeHtml([item.browser, item.platform].filter(Boolean).join(' / ') || '-')}</div>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : '<p class="text-xs text-slate/50">نشست دیگری برای این کاربر پیدا نشد.</p>'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } catch (err) {
+            content.innerHTML = '<p class="text-center py-10 text-danger">خطا در دریافت اطلاعات</p>';
+        }
+    };
+
+    const attachLiveUserClickHandlers = () => {
+        document.querySelectorAll('.live-user-item').forEach(item => {
+            item.onclick = () => {
+                const sessionId = item.dataset.sessionId;
+                if (sessionId) showLiveUserDetail(sessionId);
+            };
+        });
+    };
+
     const loaders = {
         'tab-overview': loadOverview,
         'tab-live': loadLive,
         'tab-reports': () => {
             fetchJson(sectionUrl('reports')).then((data) => {
                 if (!data) return;
-                renderBars(root.querySelector('[data-list="countries"]'), data.countries);
+                const countries = (data.countries || []).map((row) => ({
+                    ...row,
+                    htmlLabel: withIconLabel(`<span class="text-base">${countryFlag(row.key)}</span>`, row.label),
+                }));
+                const deviceBrands = (data.device_brands || []).map((row) => ({
+                    ...row,
+                    htmlLabel: withIconLabel(deviceBrandIcon(row.label), row.label),
+                }));
+                const browsers = (data.browsers || []).map((row) => ({
+                    ...row,
+                    htmlLabel: withIconLabel(browserIcon(row.label), row.label),
+                }));
+                const platforms = (data.platforms || []).map((row) => ({
+                    ...row,
+                    htmlLabel: withIconLabel(platformIcon(row.label), row.label),
+                }));
+                const searchEngines = (data.search_engines || []).map((row) => ({
+                    ...row,
+                    htmlLabel: withIconLabel(searchEngineIcon(row.label), row.label),
+                }));
+
+                renderBars(root.querySelector('[data-list="countries"]'), countries);
                 renderBars(root.querySelector('[data-list="referrers"]'), data.referrers);
                 renderBars(root.querySelector('[data-list="device-types"]'), data.device_types);
-                renderBars(root.querySelector('[data-list="device-brands"]'), data.device_brands);
-                renderBars(root.querySelector('[data-list="browsers"]'), data.browsers);
-                renderBars(root.querySelector('[data-list="platforms"]'), data.platforms);
+                renderBars(root.querySelector('[data-list="device-brands"]'), deviceBrands);
+                renderBars(root.querySelector('[data-list="browsers"]'), browsers);
+                renderBars(root.querySelector('[data-list="platforms"]'), platforms);
                 renderBars(root.querySelector('[data-list="utm-sources"]'), data.utm_sources);
                 renderBars(root.querySelector('[data-list="utm-mediums"]'), data.utm_mediums);
                 renderBars(root.querySelector('[data-list="utm-campaigns"]'), data.utm_campaigns);
-                renderBars(root.querySelector('[data-list="search-engines"]'), data.search_engines);
+                renderBars(root.querySelector('[data-list="search-engines"]'), searchEngines);
 
                 const activitiesData = Array.isArray(data.activities) ? data.activities : (Array.isArray(data.activity) ? data.activity : []);
                 renderBars(root.querySelector('[data-list="activities"]'), activitiesData.map(a => {
@@ -1011,14 +1675,14 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             root.querySelectorAll('[data-live-map-mode]').forEach(b => {
                 const isActive = b.dataset.liveMapMode === liveMapMode;
                 if (isActive) {
-                    b.className = 'flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 text-xs font-black text-white shadow-sm ring-1 ring-emerald-500/20 transition-all dark:bg-emerald-400 dark:text-slate-950 dark:ring-emerald-300/30';
+                    b.className = 'flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-sm ring-1 ring-emerald-500/20 transition-all dark:bg-emerald-400 dark:text-slate-950 dark:ring-emerald-300/30';
                 } else {
-                    b.className = 'flex items-center gap-2 rounded-lg px-6 py-2.5 text-xs font-black text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white';
+                    b.className = 'flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-black text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white';
                 }
             });
 
             const activeTab = document.querySelector('.analytics-tab-content:not(.hidden)')?.id;
-            if (activeTab === 'tab-live' || activeTab === 'tab-reports') {
+            if (activeTab === 'tab-live') {
                 loaders[activeTab]?.();
             }
         };
@@ -1026,9 +1690,42 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
 
     root.querySelector('[data-raw-search]')?.addEventListener('click', () => loadRawEvents(1));
 
-    setInterval(() => {
-        if (!document.getElementById('tab-live')?.classList.contains('hidden')) {
-            loadLive();
+    let livePollingInterval = null;
+    const startLivePolling = () => {
+        if (livePollingInterval) return;
+        livePollingInterval = setInterval(() => {
+            const liveTab = document.getElementById('tab-live');
+            const isVisible = liveTab && !liveTab.classList.contains('hidden') && document.visibilityState === 'visible';
+            if (isVisible) {
+                loadLive();
+            }
+        }, 30000);
+    };
+
+    const stopLivePolling = () => {
+        if (livePollingInterval) {
+            clearInterval(livePollingInterval);
+            livePollingInterval = null;
         }
-    }, 30000);
+        stopLiveTimers();
+    };
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            startLivePolling();
+        } else {
+            stopLivePolling();
+        }
+    });
+
+    window.addEventListener('analytics-tab-switched', (event) => {
+        if (event.detail.tab === 'tab-live') {
+            startLivePolling();
+            loadLive();
+        } else {
+            stopLivePolling();
+        }
+    });
+
+    startLivePolling();
 })();
