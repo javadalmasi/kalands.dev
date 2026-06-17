@@ -4248,11 +4248,7 @@ class AdminDashboardController extends Controller
 
     public function cleanSitemapLogs(ActivityLogger $activityLogger): RedirectResponse
     {
-        if (Cache::get('sitemap:running') || SitemapRunLog::query()->where('status', 'running')->exists()) {
-            return back()->withErrors(['message' => 'برای حذف همه لاگ‌ها ابتدا اجرای فعلی سایت‌مپ را متوقف کنید.']);
-        }
-
-        $deletedCount = SitemapRunLog::query()->delete();
+        $deletedCount = DB::table('sitemap_run_logs')->delete();
 
         $activityLogger->log(
             'sitemap.clean_logs',

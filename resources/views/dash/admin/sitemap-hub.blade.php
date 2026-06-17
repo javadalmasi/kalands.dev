@@ -436,8 +436,7 @@
                 </div>
                 <button type="button"
                     onclick="document.getElementById('sitemap-clean-logs-modal').showModal()"
-                    class="admin-btn admin-btn-secondary border-danger/20 text-danger hover:bg-danger/10 text-xs"
-                    {{ $isRunning ? 'disabled' : '' }}>
+                    class="admin-btn admin-btn-secondary border-danger/20 text-danger hover:bg-danger/10 text-xs">
                     <span class="material-icons text-sm">delete_sweep</span>
                     حذف همه لاگ‌ها
                 </button>
@@ -1165,7 +1164,7 @@
                         فایل‌های sitemap و گروه‌های ساخته‌شده تغییری نمی‌کنند.
                     </p>
                     <p class="text-xs leading-6 text-danger mt-2 font-bold">
-                        این عملیات قابل بازگشت نیست و هنگام اجرای فعال سایت‌مپ انجام نمی‌شود.
+                        این عملیات قابل بازگشت نیست و همه لاگ‌ها، از جمله لاگ اجرای جاری، حذف می‌شوند.
                     </p>
                     <form method="POST" action="{{ route('dash.admin.sitemap.clean-logs', ['authkey' => $authkey]) }}" class="mt-4" id="sitemap-clean-logs-form">
                         @csrf
