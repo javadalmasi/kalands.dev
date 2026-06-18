@@ -12,8 +12,87 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
     const endpoint = dashboardRoot ? root.dataset.dashboardUrl : root.dataset.reportUrl;
     const loadedSections = new Set();
     const filterForm = hubRoot ? root.querySelector('[data-analytics-filters]') : null;
+    const liveRefreshMs = 30000;
+    let overviewLivePrevious = null;
+    let overviewLiveCountdownTimer = null;
+    let overviewLiveCountdownStartedAt = 0;
+    let liveSummaryPrevious = null;
+    let liveSummaryCountdownTimer = null;
+    let liveSummaryCountdownStartedAt = 0;
+    let isFilterPanelOpen = false;
+    let currentTab = 'tab-overview';
+
+    const tabFilterConfig = {
+        'tab-overview': {
+            title: 'فیلترهای نمای کلی',
+            description: 'فیلترهای بازه، رفتار و کیفیت ترافیک برای KPIها و نمودارهای خلاصه.',
+            fields: ['from', 'to', 'period', 'search', 'country', 'device_type', 'activity', 'source', 'session_status'],
+        },
+        'tab-live': {
+            title: 'فیلترهای نمای زنده',
+            description: 'تمرکز روی کاربران فعال، منبع ورود، دستگاه، مرورگر و وضعیت جلسات زنده.',
+            fields: ['country', 'device_type', 'source', 'browser', 'platform', 'session_status', 'search'],
+        },
+        'tab-reports': {
+            title: 'فیلترهای گزارش‌ها',
+            description: 'تحلیل عمیق کشور، دستگاه، مرورگر، سیستم‌عامل، موتور جستجو و UTM.',
+            fields: ['from', 'to', 'period', 'country', 'device_type', 'activity', 'source', 'campaign', 'browser', 'platform', 'search'],
+        },
+        'tab-content': {
+            title: 'فیلترهای محتوا',
+            description: 'تمرکز روی مسیر، صفحه، محصول، دسته‌بندی، فروشنده و رفتار محتوایی.',
+            fields: ['from', 'to', 'period', 'path', 'country', 'device_type', 'source', 'search'],
+        },
+        'tab-goals': {
+            title: 'فیلترهای اهداف',
+            description: 'تحلیل دقیق goalها بر اساس کلید هدف، منبع، کمپین و نوع کاربر.',
+            fields: ['from', 'to', 'period', 'goal_key', 'source', 'campaign', 'country', 'device_type', 'session_status'],
+        },
+        'tab-funnels': {
+            title: 'فیلترهای قیف',
+            description: 'تمرکز روی بازه تحلیل و کیفیت ترافیک ورودی برای قیف‌های تبدیل.',
+            fields: ['from', 'to', 'source', 'campaign', 'country', 'device_type', 'session_status'],
+        },
+        'tab-sessions': {
+            title: 'فیلترهای جلسات',
+            description: 'فیلترهای نرخ پرش، بازگشتی بودن، دستگاه و کیفیت جلسه.',
+            fields: ['from', 'to', 'period', 'country', 'device_type', 'source', 'browser', 'platform', 'session_status'],
+        },
+        'tab-users': {
+            title: 'فیلترهای کاربران',
+            description: 'تمرکز روی کاربران لاگین‌شده، منبع، دستگاه، مرورگر و مسیرهای مهم.',
+            fields: ['from', 'to', 'country', 'device_type', 'source', 'browser', 'platform', 'path', 'search'],
+        },
+        'tab-errors': {
+            title: 'فیلترهای خطا',
+            description: 'تفکیک خطاها بر اساس مرورگر، سیستم‌عامل، مسیر، کشور و نوع ترافیک.',
+            fields: ['from', 'to', 'country', 'device_type', 'browser', 'platform', 'path', 'source', 'search'],
+        },
+        'tab-cohort': {
+            title: 'فیلترهای Cohort',
+            description: 'تمرکز روی بازه‌های زمانی و کیفیت ترافیک برای تحلیل بازگشت کاربران.',
+            fields: ['from', 'to', 'period', 'country', 'device_type', 'source', 'campaign'],
+        },
+        'tab-compare': {
+            title: 'فیلترهای مقایسه',
+            description: 'فیلترهای تحلیلی برای مقایسه بازه‌ها بر اساس رفتار و کیفیت ورودی.',
+            fields: ['from', 'to', 'period', 'country', 'device_type', 'activity', 'source', 'campaign', 'search'],
+        },
+        'tab-raw': {
+            title: 'فیلترهای رویداد خام',
+            description: 'فیلترهای ریز برای جستجوی رویدادها، مسیرها، مرورگرها و سشن‌ها.',
+            fields: ['from', 'to', 'activity', 'country', 'device_type', 'path', 'goal_key', 'source', 'browser', 'platform', 'search'],
+        },
+    };
 
     const number = (value) => new Intl.NumberFormat('fa-IR').format(value || 0);
+    const syncLiveCounters = (count) => {
+        const liveValue = number(count || 0);
+        root.querySelectorAll('[data-stat="live"], #live-summary-users, #live-users-count').forEach((el) => {
+            if (!el) return;
+            el.textContent = liveValue;
+        });
+    };
 
     const fetchJson = (url) => fetch(url, {
         headers: { 'Accept': 'application/json' },
@@ -36,6 +115,125 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             });
         }
         return url.toString();
+    };
+
+    const updateLiveProgress = (count, selectors, state) => {
+        const progressEl = root.querySelector(selectors.progress);
+        const statusEl = root.querySelector(selectors.status);
+        const deltaEl = root.querySelector(selectors.delta);
+        if (!progressEl || !statusEl || !deltaEl) return;
+
+        const current = Number(count) || 0;
+        const previous = state.previous;
+        const delta = previous === null ? 0 : current - previous;
+
+        let tone = {
+            bar: 'bg-sky-500/12',
+            status: 'bg-sky-500/[0.04]',
+            text: 'بدون تغییر نسبت به نوبت قبل',
+        };
+
+        if (previous === null) {
+            tone.text = 'اولین اسنپ‌شات زنده ثبت شد';
+        } else if (delta > 0) {
+            tone = {
+                bar: 'bg-emerald-500/14',
+                status: 'bg-emerald-500/[0.05]',
+                text: `+${number(delta)} کاربر نسبت به نوبت قبل`,
+            };
+        } else if (delta < 0) {
+            tone = {
+                bar: 'bg-rose-500/14',
+                status: 'bg-rose-500/[0.05]',
+                text: `${number(delta)} کاربر نسبت به نوبت قبل`,
+            };
+        }
+
+        progressEl.className = `absolute inset-y-0 right-0 w-full transition-all duration-700 ease-linear ${tone.bar}`;
+        statusEl.className = `absolute inset-0 transition-colors duration-500 ${tone.status}`;
+        deltaEl.textContent = tone.text;
+        state.previous = current;
+        state.startedAt = Date.now();
+
+        if (state.timer) {
+            clearInterval(state.timer);
+        }
+
+        const tick = () => {
+            const elapsed = Date.now() - state.startedAt;
+            const remainingRatio = Math.max(0, 1 - (elapsed / liveRefreshMs));
+            progressEl.style.width = `${Math.max(6, remainingRatio * 100)}%`;
+            if (remainingRatio <= 0 && state.timer) {
+                clearInterval(state.timer);
+                state.timer = null;
+            }
+        };
+
+        progressEl.style.width = '100%';
+        tick();
+        state.timer = setInterval(tick, 250);
+    };
+
+    const updateOverviewLiveProgress = (count) => {
+        updateLiveProgress(count, {
+            progress: '#overview-live-progress',
+            status: '#overview-live-status',
+            delta: '#overview-live-delta',
+        }, {
+            get previous() { return overviewLivePrevious; },
+            set previous(value) { overviewLivePrevious = value; },
+            get timer() { return overviewLiveCountdownTimer; },
+            set timer(value) { overviewLiveCountdownTimer = value; },
+            get startedAt() { return overviewLiveCountdownStartedAt; },
+            set startedAt(value) { overviewLiveCountdownStartedAt = value; },
+        });
+    };
+
+    const updateLiveSummaryProgress = (count) => {
+        updateLiveProgress(count, {
+            progress: '#live-summary-progress',
+            status: '#live-summary-status',
+            delta: '#live-summary-delta',
+        }, {
+            get previous() { return liveSummaryPrevious; },
+            set previous(value) { liveSummaryPrevious = value; },
+            get timer() { return liveSummaryCountdownTimer; },
+            set timer(value) { liveSummaryCountdownTimer = value; },
+            get startedAt() { return liveSummaryCountdownStartedAt; },
+            set startedAt(value) { liveSummaryCountdownStartedAt = value; },
+        });
+    };
+
+    const syncFilterVisibility = (tab) => {
+        if (!filterForm) return;
+        const filterCard = root.querySelector('#analytics-filter-card');
+        const panel = root.querySelector('#analytics-filter-panel');
+        const title = root.querySelector('#analytics-filter-title');
+        const description = root.querySelector('#analytics-filter-description');
+        const toggleIcon = root.querySelector('#analytics-filter-toggle-icon');
+        const config = tabFilterConfig[tab];
+
+        if (!filterCard || !panel || !toggleIcon) return;
+
+        if (!config) {
+            filterCard.classList.add('hidden');
+            return;
+        }
+
+        filterCard.classList.remove('hidden');
+        if (title) title.textContent = config.title;
+        if (description) description.textContent = config.description;
+
+        filterForm.querySelectorAll('[data-filter-field]').forEach((field) => {
+            const shouldShow = config.fields.includes(field.dataset.filterField);
+            field.classList.toggle('hidden', !shouldShow);
+            field.querySelectorAll('input, select').forEach((input) => {
+                input.disabled = !shouldShow;
+            });
+        });
+
+        panel.classList.toggle('hidden', !isFilterPanelOpen);
+        toggleIcon.textContent = isFilterPanelOpen ? 'expand_less' : 'expand_more';
     };
 
     const empty = '<p class="text-center py-10 opacity-50">داده‌ای یافت نشد.</p>';
@@ -207,6 +405,53 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             <span class="truncate">${displayPath(label)}</span>
         </span>
     `;
+
+    const referrerIcon = (label) => {
+        const value = String(label || '').toLowerCase();
+        if (/google|bing|duckduckgo|yahoo|yandex|search|organic/.test(value)) return searchEngineIcon(label);
+        if (/instagram|facebook|linkedin|youtube|telegram|twitter|x|social/.test(value)) return deviceBrandIcon(label);
+        if (/direct/.test(value)) return fallbackMaterial('south_west');
+        if (/email/.test(value)) return fallbackMaterial('mail');
+        if (/referral|partner|affiliate/.test(value)) return fallbackMaterial('link');
+        return fallbackMaterial('hub');
+    };
+
+    const iconizeRows = (rows, kind) => {
+        const items = Array.isArray(rows) ? rows : [];
+        return items.map((row) => {
+            switch (kind) {
+                case 'countries':
+                    return { ...row, htmlLabel: withIconLabel(`<span class="text-base">${countryFlag(row.key)}</span>`, row.label) };
+                case 'device-brands':
+                    return { ...row, htmlLabel: withIconLabel(deviceBrandIcon(row.label), row.label) };
+                case 'browsers':
+                    return { ...row, htmlLabel: withIconLabel(browserIcon(row.label), row.label) };
+                case 'platforms':
+                    return { ...row, htmlLabel: withIconLabel(platformIcon(row.label), row.label) };
+                case 'search-engines':
+                    return { ...row, htmlLabel: withIconLabel(searchEngineIcon(row.label), row.label) };
+                case 'referrers':
+                case 'utm':
+                    return { ...row, htmlLabel: withIconLabel(referrerIcon(row.label), row.label) };
+                case 'pages':
+                    return { ...row, htmlLabel: withIconLabel(fallbackMaterial('description'), row.label) };
+                case 'products':
+                    return { ...row, htmlLabel: withIconLabel(fallbackMaterial('inventory_2'), row.label) };
+                case 'categories':
+                    return { ...row, htmlLabel: withIconLabel(fallbackMaterial('category'), row.label) };
+                case 'sellers':
+                    return { ...row, htmlLabel: withIconLabel(fallbackMaterial('storefront'), row.label) };
+                case 'keywords':
+                    return { ...row, htmlLabel: withIconLabel(fallbackMaterial('search'), row.label) };
+                case 'goals':
+                    return { ...row, htmlLabel: withIconLabel(fallbackMaterial('emoji_events'), row.label) };
+                case 'users':
+                    return { ...row, htmlLabel: withIconLabel(fallbackMaterial('person'), row.label) };
+                default:
+                    return row;
+            }
+        });
+    };
 
     const renderBars = (container, rows, isNegative = false) => {
         if (!container) return;
@@ -580,6 +825,8 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             if (weekEl) weekEl.textContent = number(data.week);
             if (monthEl) monthEl.textContent = number(data.month);
             if (liveEl) liveEl.textContent = number(data.live);
+            syncLiveCounters(data.live);
+            updateOverviewLiveProgress(data.live);
             if (uniquesEl) uniquesEl.textContent = number(data.today_uniques);
             if (sessionsEl) sessionsEl.textContent = number(data.sessions);
             if (bounceEl) bounceEl.textContent = (data.bounce_rate || 0) + '%';
@@ -602,16 +849,22 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
     const loadReports = () => {
         fetchJson(sectionUrl('reports')).then((data) => {
             if (!data) return;
-            renderBars(root.querySelector('[data-list="countries"]'), data.countries);
-            renderBars(root.querySelector('[data-list="referrers"]'), data.referrers);
+            const countryCountEl = root.querySelector('[data-reports-country-count]');
+            const browserCountEl = root.querySelector('[data-reports-browser-count]');
+            const sourceCountEl = root.querySelector('[data-reports-source-count]');
+            if (countryCountEl) countryCountEl.textContent = number((data.countries || []).length);
+            if (browserCountEl) browserCountEl.textContent = number((data.browsers || []).length);
+            if (sourceCountEl) sourceCountEl.textContent = number((data.referrers || []).length);
+            renderBars(root.querySelector('[data-list="countries"]'), iconizeRows(data.countries, 'countries'));
+            renderBars(root.querySelector('[data-list="referrers"]'), iconizeRows(data.referrers, 'referrers'));
             renderBars(root.querySelector('[data-list="device-types"]'), data.device_types);
-            renderBars(root.querySelector('[data-list="device-brands"]'), data.device_brands);
-            renderBars(root.querySelector('[data-list="browsers"]'), data.browsers);
-            renderBars(root.querySelector('[data-list="platforms"]'), data.platforms);
-            renderBars(root.querySelector('[data-list="utm-sources"]'), data.utm_sources);
-            renderBars(root.querySelector('[data-list="utm-mediums"]'), data.utm_mediums);
-            renderBars(root.querySelector('[data-list="utm-campaigns"]'), data.utm_campaigns);
-            renderBars(root.querySelector('[data-list="search-engines"]'), data.search_engines);
+            renderBars(root.querySelector('[data-list="device-brands"]'), iconizeRows(data.device_brands, 'device-brands'));
+            renderBars(root.querySelector('[data-list="browsers"]'), iconizeRows(data.browsers, 'browsers'));
+            renderBars(root.querySelector('[data-list="platforms"]'), iconizeRows(data.platforms, 'platforms'));
+            renderBars(root.querySelector('[data-list="utm-sources"]'), iconizeRows(data.utm_sources, 'utm'));
+            renderBars(root.querySelector('[data-list="utm-mediums"]'), iconizeRows(data.utm_mediums, 'utm'));
+            renderBars(root.querySelector('[data-list="utm-campaigns"]'), iconizeRows(data.utm_campaigns, 'utm'));
+            renderBars(root.querySelector('[data-list="search-engines"]'), iconizeRows(data.search_engines, 'search-engines'));
 
             const activitiesData = Array.isArray(data.activities) ? data.activities : (Array.isArray(data.activity) ? data.activity : []);
             renderBars(root.querySelector('[data-list="activities"]'), activitiesData.map(a => {
@@ -624,17 +877,17 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
     const loadContent = () => {
         fetchJson(sectionUrl('content')).then((data) => {
             if (!data) return;
-            renderSimpleList(root.querySelector('[data-list="pages"]'), data.pages);
-            renderSimpleList(root.querySelector('[data-list="products"]'), data.products);
-            renderSimpleList(root.querySelector('[data-list="categories"]'), data.categories);
-            renderSimpleList(root.querySelector('[data-list="sellers"]'), data.sellers);
+            renderSimpleList(root.querySelector('[data-list="pages"]'), iconizeRows(data.pages, 'pages'));
+            renderSimpleList(root.querySelector('[data-list="products"]'), iconizeRows(data.products, 'products'));
+            renderSimpleList(root.querySelector('[data-list="categories"]'), iconizeRows(data.categories, 'categories'));
+            renderSimpleList(root.querySelector('[data-list="sellers"]'), iconizeRows(data.sellers, 'sellers'));
         });
     };
 
     const loadSearch = () => {
         fetchJson(sectionUrl('search')).then((data) => {
             if (!data) return;
-            renderSimpleList(root.querySelector('[data-list="keywords"]'), data.keywords, 'بار جستجو');
+            renderSimpleList(root.querySelector('[data-list="keywords"]'), iconizeRows(data.keywords, 'keywords'), 'بار جستجو');
         });
     };
 
@@ -662,9 +915,9 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                 table.innerHTML = '<tr><td colspan="2" class="p-10 text-center opacity-50">هدفی یافت نشد.</td></tr>';
                 return;
             }
-            table.innerHTML = data.month.map((goal) => `
+            table.innerHTML = iconizeRows(data.month, 'goals').map((goal) => `
                 <tr class="hover:bg-slate/5 transition-colors">
-                    <td class="p-4 font-medium text-xs">${displayPath(goal.label)}</td>
+                    <td class="p-4 font-medium text-xs">${renderLabel(goal)}</td>
                     <td class="p-4 text-center font-bold text-success text-xs">${number(goal.count)}</td>
                 </tr>
             `).join('');
@@ -688,12 +941,8 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             renderWorldMap(root.querySelector('[data-map="live"]'), data.map, 'live', true);
             if (!container) return;
             
-            if (countEl) {
-                countEl.textContent = data.count || 0;
-            }
-            if (summaryUsers) {
-                summaryUsers.textContent = number(data.count || 0);
-            }
+            syncLiveCounters(data.count || 0);
+            updateLiveSummaryProgress(data.count || 0);
             if (indicator) {
                 indicator.classList.remove('animate-pulse');
                 void indicator.offsetWidth;
@@ -713,15 +962,11 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             }
 
             const visibleUsers = data.users.slice(0, 10);
-            const totalPageviews = visibleUsers.reduce((sum, user) => sum + (Number(user.pageviews) || 0), 0);
-            const avgActiveSeconds = Math.round(visibleUsers.reduce((sum, user) => {
-                if (!user.first_seen_at) return sum;
-                const first = new Date(user.first_seen_at).getTime();
-                const last = user.last_seen_at ? new Date(user.last_seen_at).getTime() : Date.now();
-                return sum + Math.max(0, Math.floor((last - first) / 1000));
-            }, 0) / Math.max(visibleUsers.length, 1));
-
-            const sourceRows = aggregateLiveRows(visibleUsers, (row) => row.source_label, (row) => row.source_label || 'مستقیم', 6);
+            const totalPageviews = Number(data.stats?.pageviews_now || 0);
+            const avgActiveSeconds = Number(data.stats?.avg_active_seconds || 0);
+            const sourceRows = Array.isArray(data.sources) && data.sources.length
+                ? data.sources
+                : aggregateLiveRows(data.users, (row) => row.source_label, (row) => row.source_label || 'مستقیم', 6);
             const deviceRows = aggregateLiveRows(visibleUsers, (row) => `${row.device_brand || '-'}|${row.device || '-'}`, (row) => [row.device_brand, row.device].filter(Boolean).join(' / ') || '-', 6)
                 .map((row) => ({ ...row, htmlLabel: withIconLabel(deviceBrandIcon(row.label), row.label) }));
             const browserRows = aggregateLiveRows(visibleUsers, (row) => `${row.browser || '-'}|${row.platform || '-'}`, (row) => [row.browser, row.platform].filter(Boolean).join(' / ') || '-', 6)
@@ -734,7 +979,7 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                 summaryAvgTime.textContent = compactDuration(avgActiveSeconds);
             }
             if (summaryTopSource) {
-                summaryTopSource.textContent = sourceRows[0]?.label || '-';
+                summaryTopSource.textContent = data.stats?.top_source || sourceRows[0]?.label || '-';
             }
 
             renderLiveMiniBars(countryBreakdown, (data.map || []).slice(0, 6).map((row) => ({
@@ -747,7 +992,7 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             
             container.innerHTML = visibleUsers.map((user, index) => `
                 <button type="button"
-                    class="live-user-item group w-full text-right rounded-2xl border border-slate/10 bg-white/80 dark:bg-slate-900/80 p-3 text-xs relative overflow-visible transition-all hover:border-success/30 hover:shadow-lg hover:shadow-success/5"
+                    class="live-user-item group block w-full min-h-[172px] text-right rounded-2xl border border-slate/15 bg-white/80 dark:bg-slate-900/80 p-4 text-xs relative overflow-visible transition-all hover:border-success/30 hover:shadow-lg hover:shadow-success/5"
                     data-session-id="${escapeHtml(user.session_id)}"
                     title="${buildLiveUserTooltip(user)}"
                     style="min-width: 0;">
@@ -817,9 +1062,9 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             if (!container) return;
             if (!data.users || !data.users.length) { container.innerHTML = empty; return; }
 
-            container.innerHTML = data.users.map((row) => `
+            container.innerHTML = iconizeRows(data.users, 'users').map((row) => `
                 <div class="flex items-center justify-between text-[11px] border-b border-slate/5 pb-2 gap-4">
-                    <span class="truncate" title="${escapeHtml(row.label)}">${escapeHtml(row.label)}</span>
+                    <span class="truncate" title="${escapeHtml(row.label)}">${renderLabel(row)}</span>
                     <div class="flex items-center gap-3 shrink-0">
                         <span class="font-bold text-success">${number(row.count)} بازدید</span>
                         <button type="button" data-user-id="${row.key}" data-user-name="${escapeHtml(row.label)}" class="admin-btn !h-7 !px-2 !bg-slate/10 hover:!bg-success/20 !text-slate hover:!text-success !text-[10px] !gap-1 !rounded-md">
@@ -842,6 +1087,12 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
         const title = document.getElementById('activity-modal-title');
 
         if (!dialog || !content) return;
+        if (!userId || Number(userId) <= 0) {
+            title.textContent = `فعالیت کاربر: ${userName}`;
+            content.innerHTML = '<p class="text-center py-10 opacity-50">برای این آیتم شناسه کاربر معتبری ثبت نشده است.</p>';
+            dialog.showModal();
+            return;
+        }
 
         title.textContent = `فعالیت کاربر: ${userName}`;
         content.innerHTML = '<p class="text-center py-10 opacity-50">در حال دریافت اطلاعات...</p>';
@@ -1563,36 +1814,21 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
         'tab-reports': () => {
             fetchJson(sectionUrl('reports')).then((data) => {
                 if (!data) return;
-                const countries = (data.countries || []).map((row) => ({
-                    ...row,
-                    htmlLabel: withIconLabel(`<span class="text-base">${countryFlag(row.key)}</span>`, row.label),
-                }));
-                const deviceBrands = (data.device_brands || []).map((row) => ({
-                    ...row,
-                    htmlLabel: withIconLabel(deviceBrandIcon(row.label), row.label),
-                }));
-                const browsers = (data.browsers || []).map((row) => ({
-                    ...row,
-                    htmlLabel: withIconLabel(browserIcon(row.label), row.label),
-                }));
-                const platforms = (data.platforms || []).map((row) => ({
-                    ...row,
-                    htmlLabel: withIconLabel(platformIcon(row.label), row.label),
-                }));
-                const searchEngines = (data.search_engines || []).map((row) => ({
-                    ...row,
-                    htmlLabel: withIconLabel(searchEngineIcon(row.label), row.label),
-                }));
+                const countries = iconizeRows(data.countries, 'countries');
+                const deviceBrands = iconizeRows(data.device_brands, 'device-brands');
+                const browsers = iconizeRows(data.browsers, 'browsers');
+                const platforms = iconizeRows(data.platforms, 'platforms');
+                const searchEngines = iconizeRows(data.search_engines, 'search-engines');
 
                 renderBars(root.querySelector('[data-list="countries"]'), countries);
-                renderBars(root.querySelector('[data-list="referrers"]'), data.referrers);
+                renderBars(root.querySelector('[data-list="referrers"]'), iconizeRows(data.referrers, 'referrers'));
                 renderBars(root.querySelector('[data-list="device-types"]'), data.device_types);
                 renderBars(root.querySelector('[data-list="device-brands"]'), deviceBrands);
                 renderBars(root.querySelector('[data-list="browsers"]'), browsers);
                 renderBars(root.querySelector('[data-list="platforms"]'), platforms);
-                renderBars(root.querySelector('[data-list="utm-sources"]'), data.utm_sources);
-                renderBars(root.querySelector('[data-list="utm-mediums"]'), data.utm_mediums);
-                renderBars(root.querySelector('[data-list="utm-campaigns"]'), data.utm_campaigns);
+                renderBars(root.querySelector('[data-list="utm-sources"]'), iconizeRows(data.utm_sources, 'utm'));
+                renderBars(root.querySelector('[data-list="utm-mediums"]'), iconizeRows(data.utm_mediums, 'utm'));
+                renderBars(root.querySelector('[data-list="utm-campaigns"]'), iconizeRows(data.utm_campaigns, 'utm'));
                 renderBars(root.querySelector('[data-list="search-engines"]'), searchEngines);
 
                 const activitiesData = Array.isArray(data.activities) ? data.activities : (Array.isArray(data.activity) ? data.activity : []);
@@ -1654,16 +1890,32 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             }
         });
 
-        filterForm.querySelectorAll('select').forEach((select) => {
-            select.addEventListener('change', () => {
+        root.querySelector('#analytics-filter-toggle')?.addEventListener('click', () => {
+            isFilterPanelOpen = !isFilterPanelOpen;
+            syncFilterVisibility(currentTab);
+        });
+
+        root.querySelector('#analytics-filter-reset')?.addEventListener('click', () => {
+            window.setTimeout(() => {
+                if (fromInput) {
+                    fromInput.value = startPd.format('YYYY/MM/DD');
+                    fromInput.dataset.gregorian = toGregorianFromShamsi(fromInput.value);
+                }
+                if (toInput) {
+                    toInput.value = todayPd.format('YYYY/MM/DD');
+                    toInput.dataset.gregorian = toGregorianFromShamsi(toInput.value);
+                }
                 filterForm.requestSubmit();
-            });
+            }, 0);
         });
     }
 
+    syncFilterVisibility(currentTab);
     loadOverview();
     window.addEventListener('analytics-tab-switched', (event) => {
         const tab = event.detail.tab;
+        currentTab = tab;
+        syncFilterVisibility(tab);
         if (loadedSections.has(tab) && tab !== 'tab-live') return;
         loadedSections.add(tab);
         loaders[tab]?.();
@@ -1699,7 +1951,7 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             if (isVisible) {
                 loadLive();
             }
-        }, 30000);
+        }, liveRefreshMs);
     };
 
     const stopLivePolling = () => {

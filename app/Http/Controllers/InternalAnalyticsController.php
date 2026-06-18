@@ -8,6 +8,7 @@ use App\Repositories\SettingsRepository;
 use App\Services\ActivityLogger;
 use App\Services\InternalAnalyticsService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -77,7 +78,7 @@ class InternalAnalyticsController extends Controller
         return response()->json(['ok' => true, 'tracked' => $tracked]);
     }
 
-    private function pixelCollect(Request $request, InternalAnalyticsService $analytics): JsonResponse
+    private function pixelCollect(Request $request, InternalAnalyticsService $analytics): Response
     {
         if ($request->has('data')) {
             $payload = json_decode((string) $request->input('data'), true);
@@ -86,10 +87,14 @@ class InternalAnalyticsController extends Controller
             }
         }
 
-        return response()->json(['ok' => true])
+        $gif = base64_decode('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==');
+
+        return response($gif, 200)
             ->header('Content-Type', 'image/gif')
-            ->header('Content-Length', '43')
-            ->setStatusCode(200);
+            ->header('Content-Length', (string) strlen($gif))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     public function report(Request $request, InternalAnalyticsService $analytics): JsonResponse
@@ -103,6 +108,13 @@ class InternalAnalyticsController extends Controller
             'device_type' => ['nullable', 'string', 'in:desktop,mobile,tablet'],
             'activity' => ['nullable', 'string', 'in:pageview,goal,error'],
             'search' => ['nullable', 'string', 'max:190'],
+            'path' => ['nullable', 'string', 'max:500'],
+            'goal_key' => ['nullable', 'string', 'max:80'],
+            'source' => ['nullable', 'string', 'max:120'],
+            'browser' => ['nullable', 'string', 'max:120'],
+            'platform' => ['nullable', 'string', 'max:120'],
+            'campaign' => ['nullable', 'string', 'max:120'],
+            'session_status' => ['nullable', 'string', 'in:new,returning,bounce,long'],
             'page' => ['nullable', 'integer', 'min:1'],
         ]);
         $section = (string) ($data['section'] ?? 'overview');

@@ -76,101 +76,143 @@
          data-user-activity-url="{{ route('dash.admin.analytics_user_details', ['authkey' => $authkey, 'userId' => ':id']) }}"
          data-user-journey-url="{{ route('dash.admin.analytics_user_journey', ['authkey' => $authkey]) }}"
          data-funnel-delete-url="{{ route('dash.admin.analytics_funnels_delete', ['authkey' => $authkey, 'key' => ':key']) }}">
-        <div class="admin-card mb-6" id="analytics-filter-card">
+        <div class="admin-card mb-6 !p-0 overflow-hidden hidden" id="analytics-filter-card">
             <form data-analytics-filters>
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-7" id="analytics-filter-primary">
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate">از تاریخ</label>
-                        <div data-shamsi-datepicker="from">
-                            <input type="text" name="from" placeholder="۱۴۰۳/۰۱/۰۱" autocomplete="off" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate/10 bg-slate/5">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="material-icons text-success text-base">filter_alt</span>
+                            <p class="text-sm font-bold text-slate" id="analytics-filter-title">فیلترهای گزارش</p>
                         </div>
+                        <p class="text-[11px] text-slate/55 mt-1" id="analytics-filter-description">فقط فیلترهای مرتبط با تب فعال نمایش داده می‌شوند.</p>
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate">تا تاریخ</label>
-                        <div data-shamsi-datepicker="to">
-                            <input type="text" name="to" placeholder="۱۴۰۳/۰۱/۰۱" autocomplete="off" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                        </div>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate">نوع گزارش</label>
-                        <select name="period" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                            <option value="day">روزانه</option>
-                            <option value="week">هفتگی</option>
-                            <option value="month">ماهانه</option>
-                        </select>
-                    </div>
-                    <div class="space-y-1 flex items-end gap-2">
-                        <button type="button" id="analytics-filter-toggle" class="admin-btn admin-btn-secondary h-10 px-3 shrink-0 whitespace-nowrap text-xs" title="فیلترهای بیشتر">
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button type="button" id="analytics-filter-toggle" class="admin-btn admin-btn-secondary h-10 px-3 text-xs">
                             <span class="material-icons text-base" id="analytics-filter-toggle-icon">expand_more</span>
-                            <span id="analytics-filter-toggle-text">بیشتر</span>
+                            <span id="analytics-filter-toggle-text">فیلتر</span>
+                        </button>
+                        <button class="admin-btn !bg-success !text-white h-10 px-3" type="submit">
+                            <span class="material-icons text-base">search</span>
                         </button>
                     </div>
-                    <div class="space-y-1 xl:col-span-2">
-                        <label class="text-xs font-bold text-slate">جستجو</label>
-                        <div class="flex gap-2">
-                            <input type="search" name="search" placeholder="مسیر، عنوان، کشور..." class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                            <button class="admin-btn !bg-success !text-white h-10 px-3 shrink-0" type="submit">
-                                <span class="material-icons text-base">filter_alt</span>
-                            </button>
+                </div>
+
+                <div class="px-4 py-4 hidden" id="analytics-filter-panel">
+                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4" id="analytics-filter-primary">
+                        <div class="space-y-1" data-filter-field="from">
+                            <label class="text-xs font-bold text-slate">از تاریخ</label>
+                            <div data-shamsi-datepicker="from">
+                                <input type="text" name="from" placeholder="۱۴۰۳/۰۱/۰۱" autocomplete="off" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            </div>
+                        </div>
+                        <div class="space-y-1" data-filter-field="to">
+                            <label class="text-xs font-bold text-slate">تا تاریخ</label>
+                            <div data-shamsi-datepicker="to">
+                                <input type="text" name="to" placeholder="۱۴۰۳/۰۱/۰۱" autocomplete="off" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            </div>
+                        </div>
+                        <div class="space-y-1" data-filter-field="period">
+                            <label class="text-xs font-bold text-slate">بازه تحلیلی</label>
+                            <select name="period" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <option value="day">روزانه</option>
+                                <option value="week">هفتگی</option>
+                                <option value="month">ماهانه</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1" data-filter-field="search">
+                            <label class="text-xs font-bold text-slate">جستجوی آزاد</label>
+                            <input type="search" name="search" placeholder="مسیر، عنوان، شهر، مرورگر..." class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                        </div>
+                        <div class="space-y-1" data-filter-field="country">
+                            <label class="text-xs font-bold text-slate">کشور</label>
+                            <select name="country" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <option value="">همه</option>
+                                <option value="IR">🇮🇷 ایران</option>
+                                <option value="US">🇺🇸 آمریکا</option>
+                                <option value="CA">🇨🇦 کانادا</option>
+                                <option value="GB">🇬🇧 انگلیس</option>
+                                <option value="DE">🇩🇪 آلمان</option>
+                                <option value="FR">🇫🇷 فرانسه</option>
+                                <option value="IT">🇮🇹 ایتالیا</option>
+                                <option value="ES">🇪🇸 اسپانیا</option>
+                                <option value="NL">🇳🇱 هلند</option>
+                                <option value="RU">🇷🇺 روسیه</option>
+                                <option value="TR">🇹🇷 ترکیه</option>
+                                <option value="AE">🇦🇪 امارات</option>
+                                <option value="SA">🇸🇦 عربستان</option>
+                                <option value="IQ">🇮🇶 عراق</option>
+                                <option value="CN">🇨🇳 چین</option>
+                                <option value="JP">🇯🇵 ژاپن</option>
+                                <option value="KR">🇰🇷 کره</option>
+                                <option value="IN">🇮🇳 هند</option>
+                                <option value="PK">🇵🇰 پاکستان</option>
+                                <option value="AU">🇦🇺 استرالیا</option>
+                                <option value="BR">🇧🇷 برزیل</option>
+                                <option value="MX">🇲🇽 مکزیک</option>
+                                <option value="ZA">🇿🇦 آفریقای جنوبی</option>
+                                <option value="EG">🇪🇬 مصر</option>
+                                <option value="NG">🇳🇬 نیجریه</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1" data-filter-field="device_type">
+                            <label class="text-xs font-bold text-slate">نوع دستگاه</label>
+                            <select name="device_type" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <option value="">همه</option>
+                                <option value="desktop">دسکتاپ</option>
+                                <option value="mobile">موبایل</option>
+                                <option value="tablet">تبلت</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1" data-filter-field="activity">
+                            <label class="text-xs font-bold text-slate">نوع رویداد</label>
+                            <select name="activity" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <option value="">همه</option>
+                                <option value="pageview">بازدید صفحه</option>
+                                <option value="goal">تحقق هدف</option>
+                                <option value="error">خطا</option>
+                            </select>
+                        </div>
+                        <div class="space-y-1" data-filter-field="path">
+                            <label class="text-xs font-bold text-slate">مسیر / URL</label>
+                            <input type="text" name="path" placeholder="/product /result /seller" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                        </div>
+                        <div class="space-y-1" data-filter-field="goal_key">
+                            <label class="text-xs font-bold text-slate">Goal Key</label>
+                            <input type="text" name="goal_key" placeholder="tr_dk / tr_bs / ..." class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                        </div>
+                        <div class="space-y-1" data-filter-field="source">
+                            <label class="text-xs font-bold text-slate">سورس / Referrer</label>
+                            <input type="text" name="source" placeholder="google / direct / instagram" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                        </div>
+                        <div class="space-y-1" data-filter-field="campaign">
+                            <label class="text-xs font-bold text-slate">کمپین / UTM</label>
+                            <input type="text" name="campaign" placeholder="spring_sale / cpc" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                        </div>
+                        <div class="space-y-1" data-filter-field="browser">
+                            <label class="text-xs font-bold text-slate">مرورگر</label>
+                            <input type="text" name="browser" placeholder="Chrome / Safari / Firefox" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                        </div>
+                        <div class="space-y-1" data-filter-field="platform">
+                            <label class="text-xs font-bold text-slate">سیستم‌عامل</label>
+                            <input type="text" name="platform" placeholder="Windows / Android / iOS" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                        </div>
+                        <div class="space-y-1" data-filter-field="session_status">
+                            <label class="text-xs font-bold text-slate">وضعیت جلسه</label>
+                            <select name="session_status" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <option value="">همه</option>
+                                <option value="new">اولین جلسه</option>
+                                <option value="returning">بازگشتی</option>
+                                <option value="bounce">پرش‌دار</option>
+                                <option value="long">بیش از ۵ دقیقه</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mt-4 hidden" id="analytics-filter-secondary">
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate">کشور</label>
-                        <select name="country" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                            <option value="">همه</option>
-                            <option value="IR" data-flag="🇮🇷">🇮🇷 ایران</option>
-                            <option value="US" data-flag="🇺🇸">🇺🇸 آمریکا</option>
-                            <option value="CA" data-flag="🇨🇦">🇨🇦 کانادا</option>
-                            <option value="GB" data-flag="🇬🇧">🇬🇧 انگلیس</option>
-                            <option value="DE" data-flag="🇩🇪">🇩🇪 آلمان</option>
-                            <option value="FR" data-flag="🇫🇷">🇫🇷 فرانسه</option>
-                            <option value="IT" data-flag="🇮🇹">🇮🇹 ایتالیا</option>
-                            <option value="ES" data-flag="🇪🇸">🇪🇸 اسپانیا</option>
-                            <option value="NL" data-flag="🇳🇱">🇳🇱 هلند</option>
-                            <option value="RU" data-flag="🇷🇺">🇷🇺 روسیه</option>
-                            <option value="TR" data-flag="🇹🇷">🇹🇷 ترکیه</option>
-                            <option value="AE" data-flag="🇦🇪">🇦🇪 امارات</option>
-                            <option value="SA" data-flag="🇸🇦">🇸🇦 عربستان</option>
-                            <option value="IQ" data-flag="🇮🇶">🇮🇶 عراق</option>
-                            <option value="CN" data-flag="🇨🇳">🇨🇳 چین</option>
-                            <option value="JP" data-flag="🇯🇵">🇯🇵 ژاپن</option>
-                            <option value="KR" data-flag="🇰🇷">🇰🇷 کره</option>
-                            <option value="IN" data-flag="🇮🇳">🇮🇳 هند</option>
-                            <option value="PK" data-flag="🇵🇰">🇵🇰 پاکستان</option>
-                            <option value="AU" data-flag="🇦🇺">🇦🇺 استرالیا</option>
-                            <option value="BR" data-flag="🇧🇷">🇧🇷 برزیل</option>
-                            <option value="MX" data-flag="🇲🇽">🇲🇽 مکزیک</option>
-                            <option value="ZA" data-flag="🇿🇦">🇿🇦 آفریقای جنوبی</option>
-                            <option value="EG" data-flag="🇪🇬">🇪🇬 مصر</option>
-                            <option value="NG" data-flag="🇳🇬">🇳🇬 نیجریه</option>
-                            <option value="TH" data-flag="🇹🇭">🇹🇭 تایلند</option>
-                            <option value="MY" data-flag="🇲🇾">🇲🇾 مالزی</option>
-                            <option value="SG" data-flag="🇸🇬">🇸🇬 سنگاپور</option>
-                            <option value="ID" data-flag="🇮🇩">🇮🇩 اندونزی</option>
-                            <option value="DZ" data-flag="🇩🇿">🇩🇿 الجزایر</option>
-                            <option value="MA" data-flag="🇲🇦">🇲🇦 مراکش</option>
-                            <option value="AR" data-flag="🇦🇷">🇦🇷 آرژانتین</option>
-                        </select>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate">دستگاه</label>
-                        <select name="device_type" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                            <option value="">همه</option>
-                            <option value="desktop">دسکتاپ</option>
-                            <option value="mobile">موبایل</option>
-                            <option value="tablet">تبلت</option>
-                        </select>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate">فعالیت</label>
-                        <select name="activity" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                            <option value="">همه</option>
-                            <option value="pageview">بازدید صفحه</option>
-                            <option value="goal">تحقق هدف</option>
-                            <option value="error">خطا</option>
-                        </select>
+                    <div class="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-slate/10">
+                        <p class="text-[11px] text-slate/50">فیلترها بر اساس تب فعال تغییر می‌کنند و فقط روی همان داده‌های مرتبط تمرکز دارند.</p>
+                        <button type="reset" id="analytics-filter-reset" class="admin-btn admin-btn-secondary h-10 px-3 text-xs">
+                            <span class="material-icons text-base">restart_alt</span>
+                            <span>پاک‌کردن</span>
+                        </button>
                     </div>
                 </div>
             </form>
@@ -190,9 +232,14 @@
                     <p class="text-[10px] text-slate opacity-60 mb-0.5">بازدید ۳۰ روز</p>
                     <p class="text-xl sm:text-2xl font-bold" data-stat="month">...</p>
                 </div>
-                <div class="admin-card text-center border-success/40 bg-success/[0.02]">
-                    <p class="text-[10px] text-slate opacity-60 mb-0.5">کاربران زنده</p>
-                    <p class="text-xl sm:text-2xl font-bold text-success" data-stat="live">...</p>
+                <div class="admin-card text-center border-success/40 overflow-hidden relative" id="overview-live-card">
+                    <div id="overview-live-progress" class="absolute inset-y-0 right-0 w-full bg-success/10 transition-all duration-700 ease-linear"></div>
+                    <div id="overview-live-status" class="absolute inset-0 bg-success/[0.03] transition-colors duration-500"></div>
+                    <div class="relative z-10 px-1">
+                        <p class="text-[10px] text-slate opacity-60 mb-0.5">کاربران زنده</p>
+                        <p class="text-xl sm:text-2xl font-bold text-success" data-stat="live">...</p>
+                        <p id="overview-live-delta" class="text-[10px] mt-1 text-slate/60">در انتظار اولین به‌روزرسانی</p>
+                    </div>
                 </div>
             </div>
             <div class="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-4">
@@ -258,11 +305,14 @@
 
         <div id="tab-live" class="analytics-tab-content hidden space-y-5">
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div class="admin-card border-success/20 bg-success/[0.03]">
-                    <div class="flex items-center justify-between gap-3">
+                <div class="admin-card border-success/40 overflow-hidden relative" id="live-summary-card">
+                    <div id="live-summary-progress" class="absolute inset-y-0 right-0 w-full bg-success/10 transition-all duration-700 ease-linear"></div>
+                    <div id="live-summary-status" class="absolute inset-0 bg-success/[0.03] transition-colors duration-500"></div>
+                    <div class="relative z-10 flex items-center justify-between gap-3">
                         <div>
                             <p class="text-[10px] text-slate/50">کاربران زنده</p>
                             <p id="live-summary-users" class="mt-1 text-3xl font-black text-success">0</p>
+                            <p id="live-summary-delta" class="text-[10px] mt-1 text-slate/60">در انتظار اولین به‌روزرسانی</p>
                         </div>
                         <span class="material-icons text-success/70 text-3xl">sensors</span>
                     </div>
@@ -429,86 +479,161 @@
         </dialog>
 
         <div id="tab-reports" class="analytics-tab-content hidden space-y-5">
-            <div class="admin-card !p-0 overflow-hidden border-success/20">
-                <div class="flex items-center justify-between gap-4 p-4 border-b border-slate/10 bg-slate/5">
-                    <h3 class="font-bold text-slate flex items-center gap-2">
-                        <span class="material-icons text-success">public</span>
-                        <span>نقشه جهانی بازدیدها</span>
-                    </h3>
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="admin-card border-success/20 bg-success/[0.03]">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-[10px] text-slate/50">کاربران زنده</p>
+                            <p class="mt-1 text-3xl font-black text-success" data-stat="live">0</p>
+                        </div>
+                        <span class="material-icons text-success/70 text-3xl">sensors</span>
+                    </div>
                 </div>
-                <div id="reports-map-container" class="relative bg-slate/5 h-[400px] lg:h-[500px] w-full">
-                    <div data-map="reports" class="w-full h-full">
-                        <div class="flex flex-col items-center justify-center h-full gap-4 opacity-50">
-                            <div class="w-10 h-10 border-4 border-success/20 border-t-success rounded-full animate-spin"></div>
-                            <p class="text-sm">در حال بارگذاری نقشه...</p>
+                <div class="admin-card">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-[10px] text-slate/50">کشورهای فعال</p>
+                            <p class="mt-1 text-3xl font-black text-info" data-reports-country-count>0</p>
+                        </div>
+                        <span class="material-icons text-info/70 text-3xl">flag</span>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-[10px] text-slate/50">مرورگرهای شاخص</p>
+                            <p class="mt-1 text-3xl font-black text-primary" data-reports-browser-count>0</p>
+                        </div>
+                        <span class="material-icons text-primary/70 text-3xl">language</span>
+                    </div>
+                </div>
+                <div class="admin-card">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-[10px] text-slate/50">سورس‌های شاخص</p>
+                            <p class="mt-1 text-3xl font-black text-amber-600 dark:text-amber-300" data-reports-source-count>0</p>
+                        </div>
+                        <span class="material-icons text-amber-500/70 text-3xl">traffic</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid gap-4 xl:grid-cols-12">
+                <div class="xl:col-span-6 space-y-4 min-w-0">
+                    <div class="admin-card !p-0 overflow-hidden border-success/20">
+                        <div class="flex items-center justify-between gap-4 p-4 border-b border-slate/10 bg-slate/5">
+                            <div>
+                                <h3 class="font-bold text-slate flex items-center gap-2">
+                                    <span class="material-icons text-success">public</span>
+                                    <span>نقشه جهانی بازدیدها</span>
+                                </h3>
+                                <p class="text-xs text-slate/55 mt-1">پراکندگی جغرافیایی، کشورها و منبع‌های شاخص در بازه انتخابی</p>
+                            </div>
+                        </div>
+                        <div id="reports-map-container" class="relative bg-slate/5 h-[420px] lg:h-[520px] w-full">
+                            <div data-map="reports" class="w-full h-full">
+                                <div class="flex flex-col items-center justify-center h-full gap-4 opacity-50">
+                                    <div class="w-10 h-10 border-4 border-success/20 border-t-success rounded-full animate-spin"></div>
+                                    <p class="text-sm">در حال بارگذاری نقشه...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="admin-card">
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <h3 class="font-bold text-slate flex items-center gap-2 text-sm">
+                                    <span class="material-icons text-success text-base">flag</span>
+                                    <span>کشورها</span>
+                                </h3>
+                                <span class="text-[10px] text-slate/50">Geo mix</span>
+                            </div>
+                            <div data-list="countries" class="space-y-2 min-h-[180px]">
+                                <p class="text-center py-10 opacity-50 text-xs">در حال بارگذاری...</p>
+                            </div>
+                        </div>
+                        <div class="admin-card">
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <h3 class="font-bold text-slate flex items-center gap-2 text-sm">
+                                    <span class="material-icons text-success text-base">hub</span>
+                                    <span>منابع ترافیک</span>
+                                </h3>
+                                <span class="text-[10px] text-slate/50">Referral mix</span>
+                            </div>
+                            <div data-list="referrers" class="space-y-2 min-h-[180px]">
+                                <p class="text-center py-10 opacity-50 text-xs">در حال بارگذاری...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="grid gap-4 md:grid-cols-3">
-                <div class="admin-card">
-                    <h3 class="font-bold text-slate mb-4 flex items-center gap-2 text-sm border-b border-slate/10 pb-2">
-                        <span class="material-icons text-success text-lg">flag</span>
-                        <span>کشورها</span>
-                    </h3>
-                    <div data-list="countries" class="space-y-2 min-h-[200px]">
-                        <p class="text-center py-10 opacity-50">در حال بارگذاری...</p>
+
+                <div class="xl:col-span-6 space-y-4 min-w-0">
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="admin-card">
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <h3 class="font-bold text-slate flex items-center gap-2 text-sm">
+                                    <span class="material-icons text-success text-base">search</span>
+                                    <span>موتورهای جستجو</span>
+                                </h3>
+                                <span class="text-[10px] text-slate/50">Search mix</span>
+                            </div>
+                            <div data-list="search-engines" class="space-y-2 min-h-[170px]">
+                                <p class="text-center py-10 opacity-50 text-xs">در حال بارگذاری...</p>
+                            </div>
+                        </div>
+                        <div class="admin-card">
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <h3 class="font-bold text-slate flex items-center gap-2 text-sm">
+                                    <span class="material-icons text-success text-base">devices</span>
+                                    <span>نوع دستگاه</span>
+                                </h3>
+                                <span class="text-[10px] text-slate/50">Device type</span>
+                            </div>
+                            <div data-list="device-types" class="space-y-2 min-h-[170px]">
+                                <p class="text-center py-10 opacity-50 text-xs">در حال بارگذاری...</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="admin-card">
-                    <h3 class="font-bold text-slate mb-4 flex items-center gap-2 text-sm border-b border-slate/10 pb-2">
-                        <span class="material-icons text-success text-lg">source</span>
-                        <span>منابع ترافیک</span>
-                    </h3>
-                    <div data-list="referrers" class="space-y-2 min-h-[200px]">
-                        <p class="text-center py-10 opacity-50">در حال بارگذاری...</p>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="admin-card">
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <h3 class="font-bold text-slate flex items-center gap-2 text-sm">
+                                    <span class="material-icons text-success text-base">smartphone</span>
+                                    <span>برند دستگاه</span>
+                                </h3>
+                                <span class="text-[10px] text-slate/50">Brand mix</span>
+                            </div>
+                            <div data-list="device-brands" class="space-y-2 min-h-[170px]">
+                                <p class="text-center py-10 opacity-50 text-xs">در حال بارگذاری...</p>
+                            </div>
+                        </div>
+                        <div class="admin-card">
+                            <div class="flex items-center justify-between gap-3 mb-4">
+                                <h3 class="font-bold text-slate flex items-center gap-2 text-sm">
+                                    <span class="material-icons text-success text-base">language</span>
+                                    <span>مرورگرها</span>
+                                </h3>
+                                <span class="text-[10px] text-slate/50">Browser mix</span>
+                            </div>
+                            <div data-list="browsers" class="space-y-2 min-h-[170px]">
+                                <p class="text-center py-10 opacity-50 text-xs">در حال بارگذاری...</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="admin-card">
-                    <h3 class="font-bold text-slate mb-4 flex items-center gap-2 text-sm border-b border-slate/10 pb-2">
-                        <span class="material-icons text-success text-lg">search</span>
-                        <span>موتورهای جستجو</span>
-                    </h3>
-                    <div data-list="search-engines" class="space-y-2 min-h-[200px]">
-                        <p class="text-center py-10 opacity-50">در حال بارگذاری...</p>
-                    </div>
-                </div>
-            </div>
-            <div class="grid gap-4 md:grid-cols-4">
-                <div class="admin-card">
-                    <h3 class="font-bold text-slate mb-4 flex items-center gap-2 text-sm border-b border-slate/10 pb-2">
-                        <span class="material-icons text-success text-lg">devices</span>
-                        <span>نوع دستگاه</span>
-                    </h3>
-                    <div data-list="device-types" class="space-y-2 min-h-[160px]">
-                        <p class="text-center py-8 opacity-50">در حال بارگذاری...</p>
-                    </div>
-                </div>
-                <div class="admin-card">
-                    <h3 class="font-bold text-slate mb-4 flex items-center gap-2 text-sm border-b border-slate/10 pb-2">
-                        <span class="material-icons text-success text-lg">smartphone</span>
-                        <span>برند دستگاه</span>
-                    </h3>
-                    <div data-list="device-brands" class="space-y-2 min-h-[160px]">
-                        <p class="text-center py-8 opacity-50">در حال بارگذاری...</p>
-                    </div>
-                </div>
-                <div class="admin-card">
-                    <h3 class="font-bold text-slate mb-4 flex items-center gap-2 text-sm border-b border-slate/10 pb-2">
-                        <span class="material-icons text-success text-lg">language</span>
-                        <span>مرورگرها</span>
-                    </h3>
-                    <div data-list="browsers" class="space-y-2 min-h-[160px]">
-                        <p class="text-center py-8 opacity-50">در حال بارگذاری...</p>
-                    </div>
-                </div>
-                <div class="admin-card">
-                    <h3 class="font-bold text-slate mb-4 flex items-center gap-2 text-sm border-b border-slate/10 pb-2">
-                        <span class="material-icons text-success text-lg">developer_board</span>
-                        <span>سیستم‌عامل</span>
-                    </h3>
-                    <div data-list="platforms" class="space-y-2 min-h-[160px]">
-                        <p class="text-center py-8 opacity-50">در حال بارگذاری...</p>
+
+                    <div class="admin-card">
+                        <div class="flex items-center justify-between gap-3 mb-4">
+                            <h3 class="font-bold text-slate flex items-center gap-2 text-sm">
+                                <span class="material-icons text-success text-base">developer_board</span>
+                                <span>سیستم‌عامل</span>
+                            </h3>
+                            <span class="text-[10px] text-slate/50">Platform mix</span>
+                        </div>
+                        <div data-list="platforms" class="space-y-2 min-h-[170px]">
+                            <p class="text-center py-10 opacity-50 text-xs">در حال بارگذاری...</p>
+                        </div>
                     </div>
                 </div>
             </div>

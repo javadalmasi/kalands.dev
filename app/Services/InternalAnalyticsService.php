@@ -1043,7 +1043,10 @@ class InternalAnalyticsService
             'live' => $this->cachedLiveData(),
             'users' => $this->cachedReport('users:' . $cacheKey, $cacheTtl, fn () => [
                 'filters' => $this->publicFilters($filters),
-                'users' => $this->topEventsDimension($filters, 'user_id', null, 50, fn ($value) => $this->userLabel((int) $value)),
+                'users' => collect($this->topEventsDimension($filters, 'user_id', null, 50, fn ($value) => $this->userLabel((int) $value)))
+                    ->filter(fn ($row) => (int) ($row['key'] ?? 0) > 0)
+                    ->values()
+                    ->all(),
             ]),
             'errors' => $this->cachedReport('errors:' . $cacheKey, $cacheTtl, fn () => [
                 'filters' => $this->publicFilters($filters),
@@ -1460,14 +1463,23 @@ class InternalAnalyticsService
             $start = $end->copy()->subDays(731)->startOfDay();
         }
 
+        $period = (string) ($filters['period'] ?? 'day');
+
         return [
             'start' => $start,
             'end' => $end,
-            'period' => in_array($filters['period'] ?? 'day', ['day', 'week', 'month'], true) ? $filters['period'] : 'day',
+            'period' => in_array($period, ['day', 'week', 'month'], true) ? $period : 'day',
             'country' => strtoupper($this->limit((string) ($filters['country'] ?? ''), 8)),
             'device_type' => $this->limit((string) ($filters['device_type'] ?? ''), 40),
             'activity' => $this->limit((string) ($filters['activity'] ?? ''), 40),
             'search' => $this->limit((string) ($filters['search'] ?? ''), 190),
+            'path' => $this->limit((string) ($filters['path'] ?? ''), 500),
+            'goal_key' => $this->limit((string) ($filters['goal_key'] ?? ''), 80),
+            'source' => $this->limit((string) ($filters['source'] ?? ''), 120),
+            'browser' => $this->limit((string) ($filters['browser'] ?? ''), 120),
+            'platform' => $this->limit((string) ($filters['platform'] ?? ''), 120),
+            'campaign' => $this->limit((string) ($filters['campaign'] ?? ''), 120),
+            'session_status' => $this->limit((string) ($filters['session_status'] ?? ''), 40),
             'page' => max(1, (int) ($filters['page'] ?? 1)),
         ];
     }
@@ -1482,6 +1494,13 @@ class InternalAnalyticsService
             'device_type' => $filters['device_type'],
             'activity' => $filters['activity'],
             'search' => $filters['search'],
+            'path' => $filters['path'],
+            'goal_key' => $filters['goal_key'],
+            'source' => $filters['source'],
+            'browser' => $filters['browser'],
+            'platform' => $filters['platform'],
+            'campaign' => $filters['campaign'],
+            'session_status' => $filters['session_status'],
         ];
     }
 
@@ -1496,6 +1515,13 @@ class InternalAnalyticsService
             || $filters['device_type'] !== ''
             || $filters['activity'] !== ''
             || $filters['search'] !== ''
+            || $filters['path'] !== ''
+            || $filters['goal_key'] !== ''
+            || $filters['source'] !== ''
+            || $filters['browser'] !== ''
+            || $filters['platform'] !== ''
+            || $filters['campaign'] !== ''
+            || $filters['session_status'] !== ''
             || $filters['period'] !== 'day';
     }
 
@@ -1517,6 +1543,48 @@ class InternalAnalyticsService
 
         if ($filters['device_type'] !== '') {
             $query->where('device_type', $filters['device_type']);
+        }
+
+        if ($filters['path'] !== '') {
+            $query->where('path', 'like', '%' . str_replace(['%', '_'], ['\%', '\_'], $filters['path']) . '%');
+        }
+
+        if ($filters['goal_key'] !== '') {
+            $query->where('goal_key', $filters['goal_key']);
+        }
+
+        if ($filters['browser'] !== '') {
+            $query->where('browser', $filters['browser']);
+        }
+
+        if ($filters['platform'] !== '') {
+            $query->where('platform', $filters['platform']);
+        }
+
+        if ($filters['campaign'] !== '') {
+            $query->where(function ($nested) use ($filters) {
+                $nested->where('utm_campaign', $filters['campaign'])
+                    ->orWhere('utm_source', $filters['campaign']);
+            });
+        }
+
+        if ($filters['source'] !== '') {
+            $query->where(function ($nested) use ($filters) {
+                $nested->where('referrer_type', $filters['source'])
+                    ->orWhere('search_engine', $filters['source'])
+                    ->orWhere('utm_source', $filters['source'])
+                    ->orWhere('referrer_host', 'like', '%' . str_replace(['%', '_'], ['\%', '\_'], $filters['source']) . '%');
+            });
+        }
+
+        if ($filters['session_status'] !== '') {
+            match ($filters['session_status']) {
+                'new' => $query->where('session_num', 1),
+                'returning' => $query->where('session_num', '>', 1),
+                'bounce' => $query->where('is_bounce', true),
+                'long' => $query->where('session_duration', '>=', 300),
+                default => null,
+            };
         }
 
         if ($filters['search'] !== '') {
@@ -1669,10 +1737,39 @@ class InternalAnalyticsService
         $ttl = 10;
 
         return Cache::remember($cacheKey, $ttl, function () {
+            $users = $this->liveUsers();
+            $activeSeconds = collect($users)->map(function ($user) {
+                if (empty($user['first_seen_at'])) {
+                    return 0;
+                }
+
+                $first = Carbon::parse($user['first_seen_at']);
+                $last = !empty($user['last_seen_at']) ? Carbon::parse($user['last_seen_at']) : now();
+
+                return max(0, $first->diffInSeconds($last));
+            });
+
+            $sources = collect($users)
+                ->groupBy(fn ($user) => (string) ($user['source_label'] ?? 'direct'))
+                ->map(fn ($items, $label) => [
+                    'label' => $label ?: 'direct',
+                    'count' => $items->count(),
+                ])
+                ->sortByDesc('count')
+                ->take(8)
+                ->values()
+                ->all();
+
             return [
-                'count' => $this->liveUsersCount(),
-                'users' => $this->liveUsers(),
+                'count' => count($users),
+                'users' => $users,
                 'map' => $this->liveCountryMap(),
+                'sources' => $sources,
+                'stats' => [
+                    'pageviews_now' => (int) collect($users)->sum(fn ($user) => (int) ($user['pageviews'] ?? 0)),
+                    'avg_active_seconds' => (int) round($activeSeconds->avg() ?: 0),
+                    'top_source' => $sources[0]['label'] ?? '-',
+                ],
             ];
         });
     }

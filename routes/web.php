@@ -31,7 +31,7 @@ Route::get('/api/info', [VisitorInfoController::class, 'index'])->name('visitor.
 Route::get('/api/assets/js', [LivewireAssetController::class, 'serveJs'])->name('livewire.asset');
 Route::get('/api/services/autocomplete/', [AutocompleteController::class, 'search'])->name('autocomplete.search');
 Route::get('/api/queue/process', [QueueProcessController::class, 'process'])->name('api.queue.process');
-Route::post('/api/analytics/collect', [InternalAnalyticsController::class, 'collect'])->name('analytics.collect');
+Route::match(['get', 'post'], '/api/analytics/collect', [InternalAnalyticsController::class, 'collect'])->name('analytics.collect');
 Route::get('/go/{slug}', [AffiliateRedirectController::class, 'redirect'])->name('affiliate.go');
 Route::get('/api/bslm/{productId}', [AffiliateRedirectController::class, 'fetchAndRedirect'])->name('affiliate.redirect');
 
