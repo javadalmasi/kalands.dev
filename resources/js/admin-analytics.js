@@ -931,8 +931,9 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             const countEl = root.querySelector('#live-users-count');
             const indicator = root.querySelector('#live-update-indicator');
             const summaryUsers = root.querySelector('#live-summary-users');
-            const summaryPageviews = root.querySelector('#live-summary-pageviews');
-            const summaryAvgTime = root.querySelector('#live-summary-avg-time');
+            const summaryBrowserIcon = root.querySelector('#live-summary-browser-icon');
+            const summaryBrowserName = root.querySelector('#live-summary-browser-name');
+            const summaryGoals = root.querySelector('#live-summary-goals');
             const summaryTopSource = root.querySelector('#live-summary-top-source');
             const countryBreakdown = root.querySelector('#live-country-breakdown');
             const sourceBreakdown = root.querySelector('#live-source-breakdown');
@@ -951,8 +952,9 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
 
             if (!data.users || !data.users.length) { 
                 container.innerHTML = empty; 
-                if (summaryPageviews) summaryPageviews.textContent = '0';
-                if (summaryAvgTime) summaryAvgTime.textContent = '0:00';
+                if (summaryBrowserIcon) summaryBrowserIcon.innerHTML = '';
+                if (summaryBrowserName) summaryBrowserName.textContent = '-';
+                if (summaryGoals) summaryGoals.textContent = '0';
                 if (summaryTopSource) summaryTopSource.textContent = '-';
                 renderLiveMiniBars(countryBreakdown, []);
                 renderLiveMiniBars(sourceBreakdown, []);
@@ -962,8 +964,6 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             }
 
             const visibleUsers = data.users.slice(0, 10);
-            const totalPageviews = Number(data.stats?.pageviews_now || 0);
-            const avgActiveSeconds = Number(data.stats?.avg_active_seconds || 0);
             const sourceRows = Array.isArray(data.sources) && data.sources.length
                 ? data.sources
                 : aggregateLiveRows(data.users, (row) => row.source_label, (row) => row.source_label || 'مستقیم', 6);
@@ -972,12 +972,14 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             const browserRows = aggregateLiveRows(visibleUsers, (row) => `${row.browser || '-'}|${row.platform || '-'}`, (row) => [row.browser, row.platform].filter(Boolean).join(' / ') || '-', 6)
                 .map((row) => ({ ...row, htmlLabel: withIconLabel(browserIcon(row.label), row.label) }));
 
-            if (summaryPageviews) {
-                summaryPageviews.textContent = number(totalPageviews);
+            if (summaryBrowserIcon || summaryBrowserName) {
+                const topBrowser = data.stats?.top_browser || null;
+                const browserLabel = [topBrowser?.browser, topBrowser?.platform].filter(Boolean).join(' / ') || '-';
+                const browserIconHtml = browserIcon(browserLabel);
+                if (summaryBrowserIcon) summaryBrowserIcon.innerHTML = browserIconHtml;
+                if (summaryBrowserName) summaryBrowserName.textContent = browserLabel;
             }
-            if (summaryAvgTime) {
-                summaryAvgTime.textContent = compactDuration(avgActiveSeconds);
-            }
+            if (summaryGoals) summaryGoals.textContent = number(data.stats?.goals_last_10m || 0);
             if (summaryTopSource) {
                 summaryTopSource.textContent = data.stats?.top_source || sourceRows[0]?.label || '-';
             }

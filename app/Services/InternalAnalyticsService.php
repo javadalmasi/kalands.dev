@@ -1760,6 +1760,24 @@ class InternalAnalyticsService
                 ->values()
                 ->all();
 
+            $browsers = collect($users)
+                ->groupBy(fn ($user) => trim((string) (($user['browser'] ?? '-') . '|' . ($user['platform'] ?? '-'))))
+                ->map(function ($items, $key) {
+                    [$browser, $platform] = array_pad(explode('|', $key, 2), 2, '-');
+                    return [
+                        'browser' => $browser ?: '-',
+                        'platform' => $platform ?: '-',
+                        'count' => $items->count(),
+                    ];
+                })
+                ->sortByDesc('count')
+                ->values();
+
+            $goalsLast10m = (int) AnalyticsEvent::query()
+                ->where('event_type', 'goal')
+                ->where('occurred_at', '>=', now()->subMinutes(10))
+                ->count();
+
             return [
                 'count' => count($users),
                 'users' => $users,
@@ -1769,6 +1787,8 @@ class InternalAnalyticsService
                     'pageviews_now' => (int) collect($users)->sum(fn ($user) => (int) ($user['pageviews'] ?? 0)),
                     'avg_active_seconds' => (int) round($activeSeconds->avg() ?: 0),
                     'top_source' => $sources[0]['label'] ?? '-',
+                    'top_browser' => $browsers->first() ?: ['browser' => '-', 'platform' => '-', 'count' => 0],
+                    'goals_last_10m' => $goalsLast10m,
                 ],
             ];
         });

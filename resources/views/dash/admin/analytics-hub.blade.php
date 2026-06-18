@@ -320,19 +320,22 @@
                 <div class="admin-card">
                     <div class="flex items-center justify-between gap-3">
                         <div>
-                            <p class="text-[10px] text-slate/50">Pageviews همین حالا</p>
-                            <p id="live-summary-pageviews" class="mt-1 text-3xl font-black text-info">0</p>
+                            <p class="text-[10px] text-slate/50">بیشترین مرورگر در حال استفاده</p>
+                            <div id="live-summary-browser" class="mt-1 flex items-center gap-2 text-info">
+                                <span id="live-summary-browser-icon" class="shrink-0"></span>
+                                <p id="live-summary-browser-name" class="text-xl font-black truncate">-</p>
+                            </div>
                         </div>
-                        <span class="material-icons text-info/70 text-3xl">stacked_line_chart</span>
+                        <span class="material-icons text-info/70 text-3xl">language</span>
                     </div>
                 </div>
                 <div class="admin-card">
                     <div class="flex items-center justify-between gap-3">
                         <div>
-                            <p class="text-[10px] text-slate/50">میانگین زمان فعال بودن</p>
-                            <p id="live-summary-avg-time" class="mt-1 text-3xl font-black text-primary">0:00</p>
+                            <p class="text-[10px] text-slate/50">Goal های ۱۰ دقیقه اخیر</p>
+                            <p id="live-summary-goals" class="mt-1 text-3xl font-black text-primary">0</p>
                         </div>
-                        <span class="material-icons text-primary/70 text-3xl">timer</span>
+                        <span class="material-icons text-primary/70 text-3xl">emoji_events</span>
                     </div>
                 </div>
                 <div class="admin-card">
