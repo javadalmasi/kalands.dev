@@ -4,14 +4,51 @@
     $markdownContent = app(\App\Services\ModuleRegistry::class)->helpManifest($moduleKey);
     $randomId = 'help-' . $moduleKey . '-' . \Illuminate\Support\Str::random(8);
 
-    // Convert markdown to HTML
+    // Convert markdown to HTML with table support
     $html = '';
     if ($markdownContent) {
+        // Convert markdown tables to HTML
+        $markdownContent = convertMarkdownTablesToHtml($markdownContent);
+
         $converter = new \League\CommonMark\CommonMarkConverter([
             'allow_unsafe_links' => false,
             'html_input' => 'strip',
         ]);
         $html = $converter->convert($markdownContent)->getContent();
+    }
+
+    function convertMarkdownTablesToHtml($markdown) {
+        // Pattern to match markdown tables
+        $pattern = '/\|(.+?)\n\|[-\s|:]+\n((?:\|.+\n)*)/s';
+
+        return preg_replace_callback($pattern, function($matches) {
+            $header = trim($matches[1]);
+            $rows = trim($matches[2]);
+
+            $headerCells = array_map('trim', explode('|', $header));
+            $headerCells = array_filter($headerCells, fn($cell) => $cell !== '');
+
+            $rowsArray = array_filter(array_map('trim', explode("\n", $rows)));
+
+            $html = '<table><thead><tr>';
+            foreach ($headerCells as $cell) {
+                $html .= '<th>' . htmlspecialchars($cell, ENT_QUOTES, 'UTF-8') . '</th>';
+            }
+            $html .= '</tr></thead><tbody>';
+
+            foreach ($rowsArray as $row) {
+                $cells = array_map('trim', explode('|', $row));
+                $cells = array_filter($cells, fn($cell) => $cell !== '');
+                $html .= '<tr>';
+                foreach ($cells as $cell) {
+                    $html .= '<td>' . htmlspecialchars($cell, ENT_QUOTES, 'UTF-8') . '</td>';
+                }
+                $html .= '</tr>';
+            }
+
+            $html .= '</tbody></table>';
+            return $html;
+        }, $markdown);
     }
 
     // Extract title from markdown (first h1)
@@ -90,64 +127,66 @@
 
     /* Markdown Styling */
     .markdown-content {
-        color: rgb(71, 85, 105);
+        color: rgb(30, 41, 59);
     }
 
     .markdown-content h2 {
-        font-size: 0.875rem;
+        font-size: 1rem;
         font-weight: 700;
-        color: rgb(15, 23, 42);
+        color: rgb(0, 0, 0);
         margin-top: 0.75rem;
-        margin-bottom: 0.5rem;
-        padding-bottom: 0.375rem;
-        border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+        margin-bottom: 0.625rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid rgba(59, 130, 246, 0.4);
     }
 
     .markdown-content h3 {
-        font-size: 0.8125rem;
+        font-size: 0.9375rem;
         font-weight: 600;
-        color: rgb(30, 41, 59);
-        margin-top: 0.5rem;
-        margin-bottom: 0.375rem;
+        color: rgb(15, 23, 42);
+        margin-top: 0.625rem;
+        margin-bottom: 0.5rem;
     }
 
     .markdown-content p {
-        font-size: 0.75rem;
-        line-height: 1.4;
-        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin-bottom: 0.625rem;
+        color: rgb(30, 41, 59);
     }
 
     .markdown-content ul,
     .markdown-content ol {
-        margin-left: 1rem;
-        margin-bottom: 0.5rem;
+        margin-left: 1.25rem;
+        margin-bottom: 0.625rem;
     }
 
     .markdown-content li {
-        font-size: 0.75rem;
-        line-height: 1.4;
-        margin-bottom: 0.25rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin-bottom: 0.375rem;
+        color: rgb(30, 41, 59);
     }
 
     .markdown-content code {
-        background-color: rgb(241, 245, 249);
-        color: rgb(30, 41, 59);
-        padding: 0.125rem 0.375rem;
-        border-radius: 0.25rem;
-        font-size: 0.7rem;
+        background-color: rgb(240, 243, 247);
+        color: rgb(15, 23, 42);
+        padding: 0.1875rem 0.4375rem;
+        border-radius: 0.3rem;
+        font-size: 0.8125rem;
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     }
 
     .markdown-content pre {
-        background-color: rgb(241, 245, 249);
+        background-color: rgb(240, 243, 247);
         color: rgb(15, 23, 42);
-        padding: 0.75rem;
+        padding: 1rem;
         border-radius: 0.5rem;
         overflow-x: auto;
-        margin-bottom: 0.5rem;
+        margin: 0.625rem 0;
         border: 1px solid rgb(226, 232, 240);
-        font-size: 0.7rem;
-        line-height: 1.3;
+        font-size: 0.8125rem;
+        line-height: 1.4;
     }
 
     .markdown-content pre code {
@@ -155,49 +194,65 @@
         color: inherit;
         padding: 0;
         border-radius: 0;
+        font-size: inherit;
     }
 
     .markdown-content table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 0.5rem;
-        font-size: 0.75rem;
+        margin: 0.875rem 0;
+        font-size: 0.875rem;
+        background-color: white;
+        border: 1px solid rgb(226, 232, 240);
+        border-radius: 0.375rem;
+        overflow: hidden;
     }
 
     .markdown-content table th {
-        background-color: rgb(241, 245, 249);
-        color: rgb(15, 23, 42);
+        background-color: rgb(248, 250, 252);
+        color: rgb(0, 0, 0);
         font-weight: 600;
-        padding: 0.5rem;
+        padding: 0.625rem 0.75rem;
         text-align: right;
-        border: 1px solid rgb(226, 232, 240);
+        border-bottom: 2px solid rgb(200, 210, 220);
+        font-size: 0.875rem;
     }
 
     .markdown-content table td {
-        padding: 0.5rem;
-        border: 1px solid rgb(226, 232, 240);
-        color: rgb(71, 85, 105);
+        padding: 0.625rem 0.75rem;
+        border-bottom: 1px solid rgb(226, 232, 240);
+        color: rgb(30, 41, 59);
+        font-size: 0.875rem;
+    }
+
+    .markdown-content table tbody tr:last-child td {
+        border-bottom: none;
     }
 
     .markdown-content table tr:hover {
-        background-color: rgba(241, 245, 249, 0.5);
+        background-color: rgb(249, 250, 251);
     }
 
     .markdown-content blockquote {
         border-right: 3px solid rgb(59, 130, 246);
-        padding-right: 0.75rem;
-        margin: 0.5rem 0;
-        color: rgb(100, 116, 139);
-        font-size: 0.75rem;
-        font-style: italic;
+        padding-right: 0.875rem;
+        margin: 0.625rem 0;
+        color: rgb(30, 41, 59);
+        font-size: 0.875rem;
+        background-color: rgb(240, 245, 250);
+        padding: 0.75rem;
+        padding-right: 0.875rem;
+        border-radius: 0.375rem;
     }
 
     .markdown-content em {
         font-style: italic;
+        color: rgb(30, 41, 59);
     }
 
     .markdown-content strong {
         font-weight: 600;
+        color: rgb(15, 23, 42);
     }
 
     /* Dark mode */
@@ -218,9 +273,18 @@
             color: rgb(203, 213, 225);
         }
 
-        .markdown-content h2,
+        .markdown-content h2 {
+            color: rgb(255, 255, 255);
+            border-bottom-color: rgba(59, 130, 246, 0.5);
+        }
+
         .markdown-content h3 {
             color: rgb(226, 232, 240);
+        }
+
+        .markdown-content p,
+        .markdown-content li {
+            color: rgb(203, 213, 225);
         }
 
         .markdown-content code {
@@ -234,23 +298,34 @@
             border-color: rgb(51, 65, 85);
         }
 
-        .markdown-content table th {
-            background-color: rgb(30, 41, 59);
-            color: rgb(226, 232, 240);
+        .markdown-content table {
+            background-color: rgb(20, 28, 40);
             border-color: rgb(51, 65, 85);
         }
 
+        .markdown-content table th {
+            background-color: rgb(30, 41, 59);
+            color: rgb(226, 232, 240);
+            border-bottom-color: rgb(71, 85, 105);
+        }
+
         .markdown-content table td {
-            border-color: rgb(51, 65, 85);
+            border-bottom-color: rgb(51, 65, 85);
             color: rgb(203, 213, 225);
         }
 
         .markdown-content table tr:hover {
-            background-color: rgba(30, 41, 59, 0.5);
+            background-color: rgba(30, 41, 59, 0.6);
         }
 
         .markdown-content blockquote {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-right-color: rgb(59, 130, 246);
             color: rgb(148, 163, 184);
+        }
+
+        .markdown-content strong {
+            color: rgb(226, 232, 240);
         }
     }
 </style>
