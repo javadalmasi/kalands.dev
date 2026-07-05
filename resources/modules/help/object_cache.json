@@ -1,0 +1,31 @@
+{
+  "module": "object_cache",
+  "version": "1.0",
+  "help": {
+    "title": "راهنمای مدیریت Object Cache",
+    "sections": [
+      {
+        "heading": "معرفی",
+        "type": "text",
+        "content": "Object Cache برای ذخیره‌سازی اشیاء و داده‌ها در حافظه (Redis یا Memcached) استفاده می‌شود تا سرعت سایت بهبود یابد."
+      },
+      {
+        "heading": "درایورهای دستیاب",
+        "type": "table",
+        "data": {
+          "headers": ["درایور", "توضیح"],
+          "rows": [
+            ["Redis", "سریع‌تر و پایدار‌تر (توصیه شده)"],
+            ["Memcached", "سریع اما کم‌توان‌تر"],
+            ["Array", "فقط برای توسعه (در حافظه)]"
+          ]
+        }
+      },
+      {
+        "heading": "نکات نگهداری",
+        "type": "warning",
+        "content": "اگر Redis یا Memcached قطع شود، سایت باید بدون آن کار کند. ہمیشه فالبک داشته باشید."
+      }
+    ]
+  }
+}

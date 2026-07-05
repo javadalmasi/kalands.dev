@@ -1,0 +1,24 @@
+{
+  "module": "sitemap",
+  "version": "1.0",
+  "help": {
+    "title": "راهنمای مدیریت Sitemap",
+    "sections": [
+      {
+        "heading": "معرفی",
+        "type": "text",
+        "content": "Sitemap.xml فایلی است که تمام صفحات سایت را برای موتورهای جستجو فهرست می‌کند. تولید خودکار sitemap مهم است."
+      },
+      {
+        "heading": "ویژگی‌ها",
+        "type": "text",
+        "content": "- تولید خودکای Sitemap\n- فشرده‌سازی Gzip\n- Sitemap Index برای سایت‌های بزرگ\n- ثبت خودکار در Robots.txt"
+      },
+      {
+        "heading": "نکات مهم",
+        "type": "warning",
+        "content": "بعد از ایجاد Sitemap، آن را در Google Search Console و Bing Webmaster ثبت کنید."
+      }
+    ]
+  }
+}

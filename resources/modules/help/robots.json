@@ -1,0 +1,31 @@
+{
+  "module": "robots",
+  "version": "1.0",
+  "help": {
+    "title": "راهنمای مدیریت Robots.txt",
+    "sections": [
+      {
+        "heading": "معرفی",
+        "type": "text",
+        "content": "فایل robots.txt برای کنترل دسترسی موتورهای جستجو و بات‌ها به صفحات سایت استفاده می‌شود."
+      },
+      {
+        "heading": "قواعد رایج",
+        "type": "table",
+        "data": {
+          "headers": ["قانون", "توضیح"],
+          "rows": [
+            ["Allow", "اجازه بروز به گوگل و موتورهای دیگر"],
+            ["Disallow", "ممنوعیت بروز"],
+            ["Sitemap", "مسیر sitemap.xml"]
+          ]
+        }
+      },
+      {
+        "heading": "نکات مهم",
+        "type": "tip",
+        "content": "صفحات خصوصی (پنل مدیریت، صفحات توضیحی) را با Disallow از بات‌ها محافظت کنید."
+      }
+    ]
+  }
+}

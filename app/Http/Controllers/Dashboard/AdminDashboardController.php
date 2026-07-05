@@ -9,6 +9,8 @@ use App\Models\Admin;
 use App\Models\AffiliateDailyStat;
 use App\Models\AffiliateLink;
 use App\Models\AiUsageLog;
+use App\Models\AnalyticsEvent;
+use App\Models\AnalyticsLiveVisitor;
 use App\Models\ArtisanExecutionLog;
 use App\Models\Category;
 use App\Models\CategoryMapping;
@@ -182,9 +184,18 @@ class AdminDashboardController extends Controller
         return response()->json(['ok' => true, 'updated' => $results, 'count' => count($results)]);
     }
 
-    public function index()
+    public function index(SettingsRepository $settingsRepository)
     {
         Context::add('view', 'admin.dashboard');
+
+        $services = [
+            'queue' => $this->getQueueStatus($settingsRepository),
+            'cache' => $this->getCacheStatus($settingsRepository),
+            'geoip' => $this->getGeoIPStatus($settingsRepository),
+            'object_cache' => $this->getObjectCacheStatus(),
+            'analytics' => $this->getAnalyticsStatus(),
+            'sitemap' => $this->getSitemapStatus(),
+        ];
 
         return view('dash.admin.index', [
             'stats' => [
@@ -193,7 +204,107 @@ class AdminDashboardController extends Controller
                 'pending_comments' => Comment::query()->where('status', Comment::STATUS_PENDING)->count(),
                 'open_tickets' => Ticket::query()->where('status', 'open')->count(),
             ],
+            'services' => $services,
         ]);
+    }
+
+    private function getQueueStatus(SettingsRepository $settingsRepository): array
+    {
+        $settings = $settingsRepository->get('queue.settings', []);
+        $mode = $settings['mode'] ?? Config::get('queue.default', 'sync');
+        $lastLog = QueueExecutionLog::latest()->first();
+
+        return [
+            'name' => 'Queue',
+            'icon' => 'queue',
+            'status' => 'ok',
+            'metric' => $mode,
+            'metricLabel' => 'Mode',
+            'details' => $lastLog ? 'Last: ' . $lastLog->created_at->diffForHumans() : 'No logs',
+        ];
+    }
+
+    private function getCacheStatus(SettingsRepository $settingsRepository): array
+    {
+        $driver = Config::get('cache.default', 'array');
+        $settings = $settingsRepository->get('cache.management', []);
+        $lastClear = $settings['last_cleared_at'] ?? null;
+
+        return [
+            'name' => 'Cache',
+            'icon' => 'storage',
+            'status' => 'ok',
+            'metric' => ucfirst($driver),
+            'metricLabel' => 'Driver',
+            'details' => $lastClear ? 'Cleared: ' . \Carbon\Carbon::parse($lastClear)->diffForHumans() : 'Never cleared',
+        ];
+    }
+
+    private function getGeoIPStatus(SettingsRepository $settingsRepository): array
+    {
+        $settings = $settingsRepository->get('geoip', []);
+        $version = $settings['db_version'] ?? 'Unknown';
+        $lastUpdate = $settings['last_updated_at'] ?? null;
+
+        return [
+            'name' => 'GeoIP',
+            'icon' => 'language',
+            'status' => 'ok',
+            'metric' => $version,
+            'metricLabel' => 'Version',
+            'details' => $lastUpdate ? 'Updated: ' . \Carbon\Carbon::parse($lastUpdate)->diffForHumans() : 'Never updated',
+        ];
+    }
+
+    private function getObjectCacheStatus(): array
+    {
+        try {
+            $store = Cache::store(Config::get('cache.default', 'array'))->getStore();
+            $driver = class_basename($store);
+            $connected = true;
+        } catch (\Exception $e) {
+            $driver = 'Unknown';
+            $connected = false;
+        }
+
+        return [
+            'name' => 'Object Cache',
+            'icon' => 'memory',
+            'status' => $connected ? 'ok' : 'error',
+            'metric' => $driver,
+            'metricLabel' => 'Driver',
+            'details' => $connected ? '✓ Connected' : '✗ Disconnected',
+        ];
+    }
+
+    private function getAnalyticsStatus(): array
+    {
+        $lastEvent = \App\Models\AnalyticsEvent::latest()->first();
+        $todayCount = \App\Models\AnalyticsEvent::whereDate('created_at', today())->count();
+        $liveCount = \App\Models\AnalyticsLiveVisitor::count();
+
+        return [
+            'name' => 'Analytics',
+            'icon' => 'analytics',
+            'status' => 'ok',
+            'metric' => (string) $liveCount,
+            'metricLabel' => 'Live Visitors',
+            'details' => "Today: $todayCount events | " . ($lastEvent ? 'Last: ' . $lastEvent->created_at->diffForHumans() : 'No data'),
+        ];
+    }
+
+    private function getSitemapStatus(): array
+    {
+        $lastRun = SitemapRunLog::latest()->first();
+
+        return [
+            'name' => 'Sitemap',
+            'icon' => 'map',
+            'status' => 'ok',
+            'metric' => $lastRun?->urls_count ?? 0,
+            'metricLabel' => 'URLs',
+            'details' => $lastRun ? 'Generated: ' . $lastRun->created_at->diffForHumans() : 'Never generated',
+        ];
     }
 
     public function users(Request $request)
@@ -685,192 +796,8 @@ class AdminDashboardController extends Controller
 
     public function modules(Request $request, SettingsRepository $settingsRepository, SliderStorage $sliderStorage, HomeCategoryBannerStorage $homeCategoryBannerStorage)
     {
-        $modules = [
-            [
-                'key' => 'communication_hub',
-                'label' => 'ماژول جامع ارتباطی',
-                'description' => 'مدیریت یکپارچه ایمیل (عمومی/تراکنشی) و پیامک (SMS)',
-                'icon' => 'hub',
-                'permission' => 'communication.view',
-                'category' => 'communication',
-            ],
-            [
-                'key' => 'contact',
-                'label' => 'ماژول تماس با ما',
-                'description' => 'مدیریت پیام‌های دریافتی و تنظیمات اطلاعات تماس',
-                'icon' => 'contact_support',
-                'permission' => 'contact.view',
-                'category' => 'communication',
-            ],
-            [
-                'key' => 'affiliate',
-                'label' => 'سیستم افیلیت',
-                'description' => 'تنظیمات لینک‌سازی و رهگیری افیلیت',
-                'icon' => 'link',
-                'permission' => 'affiliate.view',
-                'category' => 'communication',
-            ],
-            [
-                'key' => 'file_manager',
-                'label' => 'مدیریت فایل‌ها',
-                'description' => 'مدیریت فایل‌ها در صفحه اختصاصی فایل منیجر',
-                'icon' => 'folder',
-                'permission' => 'file_manager.view',
-                'category' => 'data',
-            ],
-            [
-                'key' => 'home_items_management',
-                'label' => 'مدیریت آیتم‌های صفحه اصلی',
-                'description' => 'مدیریت یکپارچه اسلایدرها، بنرها و دسته‌بندی‌های صفحه اصلی',
-                'icon' => 'home_repair_service',
-                'permission' => 'home_items.view',
-                'category' => 'content',
-            ],
-            [
-                'key' => 'email_templates',
-                'label' => 'تمپلیت ایمیل‌ها',
-                'description' => 'مدیریت تمپلیت، هدر/فوتر، پیش‌نمایش و متغیرها',
-                'icon' => 'drafts',
-                'permission' => 'email_templates.view',
-                'category' => 'communication',
-            ],
-            [
-                'key' => 'queues',
-                'label' => 'مدیریت صف‌ها',
-                'description' => 'حالت پردازش، توکن Cron و گزارش اجراها',
-                'icon' => 'queue',
-                'permission' => 'queues.view',
-                'category' => 'technical',
-            ],
-            [
-                'key' => 'comments',
-                'label' => 'ماژول نظرات',
-                'description' => 'مدیریت نظرات، گزارش‌گیری و تنظیمات ارسال نظر',
-                'icon' => 'forum',
-                'permission' => 'comments.view',
-                'category' => 'content',
-            ],
-            [
-                'key' => 'tickets',
-                'label' => 'ماژول تیکت',
-                'description' => 'مدیریت تیکت‌ها، دسته‌بندی‌ها و تنظیمات ارسال تیکت',
-                'icon' => 'confirmation_number',
-                'permission' => 'tickets.view',
-                'category' => 'content',
-            ],
-            [
-                'key' => 'faq',
-                'label' => 'ماژول سوالات متداول',
-                'description' => 'مدیریت سوالات متداول سایت و نمایش در صفحه FAQ',
-                'icon' => 'quiz',
-                'permission' => 'faq.view',
-                'category' => 'content',
-            ],
-            [
-                'key' => 'analytics',
-                'label' => 'آنالیزور',
-                'description' => 'آمار بازدید، کاربران زنده، اهداف، محتوا و محصولات پربازدید',
-                'icon' => 'analytics',
-                'permission' => 'analytics.view',
-                'category' => 'analytics',
-            ],
-            [
-                'key' => 'geoip',
-                'label' => 'بروزرسانی GeoIP',
-                'description' => 'مدیریت دیتابیس‌های مکان‌دهی IP و گزارش بروزرسانی‌ها',
-                'icon' => 'language',
-                'permission' => 'geoip.view',
-                'category' => 'technical',
-            ],
-            [
-                'key' => 'robots',
-                'label' => 'فایل Robots.txt',
-                'description' => 'ویرایش و تست فایل robots.txt برای مدیریت دسترسی ربات‌ها',
-                'icon' => 'settings_suggest',
-                'permission' => 'robots.view',
-                'category' => 'technical',
-            ],
-            [
-                'key' => 'search',
-                'label' => 'جستجوی هوشمند',
-                'description' => 'تنظیمات جستجوی سریع در کل سیستم (ماژول‌ها، کاربران، محصولات)',
-                'icon' => 'search',
-                'permission' => 'search.view',
-                'category' => 'technical',
-            ],
-            [
-                'key' => 'megamenu',
-                'label' => 'مدیریت مگا منو',
-                'description' => 'مدیریت ویژوال آیتم‌های مگا منو با قابلیت درگ اند دراپ',
-                'icon' => 'menu',
-                'permission' => 'megamenu.view',
-                'category' => 'content',
-            ],
-            [
-                'key' => 'error_pages',
-                'label' => 'مدیریت صفحات خطا',
-                'description' => 'مدیریت لینک‌های کمکی و آیکون‌های نمایش داده شده در صفحات خطا',
-                'icon' => 'report_problem',
-                'permission' => 'error_pages.view',
-                'category' => 'content',
-            ],
-            [
-                'key' => 'cache_management',
-                'label' => 'مدیریت کش',
-                'description' => 'تنظیمات هدرهای کش وب‌سرویس‌ها و بهینه‌سازی وب‌سرور',
-                'icon' => 'bolt',
-                'permission' => 'cache_management.view',
-                'category' => 'technical',
-            ],
-            [
-                'key' => 'object_cache',
-                'label' => 'مدیریت Object Cache',
-                'description' => 'تنظیمات درایور، پیشوند، تست اتصال، پاکسازی و مرور آیتم‌های کش لاراول',
-                'icon' => 'memory',
-                'permission' => 'object_cache.view',
-                'category' => 'technical',
-            ],
-            [
-                'key' => 'visitor_intelligence',
-                'label' => 'هوشمندی بازدیدکنندگان',
-                'description' => 'مدیریت الگوهای تشخیص ربات، خزنده‌ها و ASNهای معتبر',
-                'icon' => 'psychology',
-                'permission' => 'geoip.full',
-                'category' => 'technical',
-            ],
-            [
-                'key' => 'artisan_commands',
-                'label' => 'دستورات Artisan',
-                'description' => 'اجرای دستورات کاربردی Artisan مانند پاکسازی کش، اجرای migration و ...',
-                'icon' => 'terminal',
-                'permission' => 'dashboard.view',
-                'category' => 'technical',
-            ],
-            [
-                'key' => 'categories',
-                'label' => 'مدیریت دسته‌بندی‌ها',
-                'description' => 'مدیریت درخت دسته‌بندی محصولات و نگاشت هوشمند بین فروشگاه‌ها',
-                'icon' => 'category',
-                'permission' => 'dashboard.view',
-                'category' => 'data',
-            ],
-            [
-                'key' => 'sitemap',
-                'label' => 'مدیریت سایت مپ',
-                'description' => 'تولید خودکار sitemap.xml با پشتیبانی از ایندکس چندبخشی، فشرده‌سازی gzip و پردازش افزایشی',
-                'icon' => 'map',
-                'permission' => 'sitemap.view',
-                'category' => 'technical',
-            ],
-            [
-                'key' => 'indexnow',
-                'label' => 'ایندکس‌سازی (IndexNow)',
-                'description' => 'ارسال خودکار محصولات به بینگ و یاندکس با برنامه‌ریزی ساعتی و کنترل نرخ',
-                'icon' => 'publish',
-                'permission' => 'indexnow.view',
-                'category' => 'technical',
-            ],
-        ];
+        $moduleRegistry = app(\App\Services\ModuleRegistry::class);
+        $modules = collect($moduleRegistry->all())->values()->toArray();
 
         $settings = [
             'communication_hub' => [
@@ -905,20 +832,8 @@ class AdminDashboardController extends Controller
             return auth('admin')->user()->hasPermission($m['permission']);
         })->values()->toArray();
 
-        $groupLabels = [
-            'communication' => 'ارتباطات',
-            'content' => 'مدیریت محتوا',
-            'data' => 'داده‌ها و فایل‌ها',
-            'technical' => 'فنی و بهینه‌سازی',
-            'analytics' => 'تحلیل و آمار',
-        ];
-        $groupIcons = [
-            'communication' => 'hub',
-            'content' => 'article',
-            'data' => 'folder_open',
-            'technical' => 'settings',
-            'analytics' => 'analytics',
-        ];
+        $groupLabels = $moduleRegistry->categoryLabels();
+        $groupIcons = $moduleRegistry->categoryIcons();
         $grouped = collect($modules)->groupBy('category');
 
         return view('dash.admin.modules', compact('modules', 'settings', 'fileExplorer', 'groupLabels', 'groupIcons', 'grouped'));
@@ -926,36 +841,13 @@ class AdminDashboardController extends Controller
 
     public function moduleSettings(string $authkey, string $moduleKey, Request $request, SettingsRepository $settingsRepository, EmailTemplateService $emailTemplateService, SliderStorage $sliderStorage, HomeCategoryBannerStorage $homeCategoryBannerStorage)
     {
-        $modules = [
-            'communication_hub' => ['label' => 'ماژول جامع ارتباطی', 'description' => 'تنظیمات یکپارچه ارسال ایمیل و پیامک', 'icon' => 'hub', 'permission' => 'communication.view'],
-            'contact' => ['label' => 'ماژول تماس با ما', 'description' => 'مدیریت پیام‌های دریافتی و تنظیمات اطلاعات تماس', 'icon' => 'contact_support', 'permission' => 'contact.view'],
-            'affiliate' => ['label' => 'سیستم افیلیت', 'description' => 'تنظیمات لینک‌سازی و رهگیری افیلیت', 'icon' => 'link', 'permission' => 'affiliate.view'],
-            'file_manager' => ['label' => 'مدیریت فایل‌ها', 'description' => 'مدیریت فایل‌ها در صفحه اختصاصی فایل منیجر', 'icon' => 'folder', 'permission' => 'file_manager.view'],
-            'home_items_management' => ['label' => 'مدیریت آیتم‌های صفحه اصلی', 'description' => 'مدیریت یکپارچه اسلایدرها، بنرها و دسته‌بندی‌های صفحه اصلی', 'icon' => 'home_repair_service', 'permission' => 'home_items.view'],
-            'email_templates' => ['label' => 'تمپلیت ایمیل‌ها', 'description' => 'مدیریت تمپلیت، هدر/فوتر، پیش‌نمایش و متغیرها', 'icon' => 'drafts', 'permission' => 'email_templates.view'],
-            'queues' => ['label' => 'مدیریت صف‌ها', 'description' => 'حالت پردازش، توکن Cron و گزارش اجراها', 'icon' => 'queue', 'permission' => 'queues.view'],
-            'comments' => ['label' => 'ماژول نظرات', 'description' => 'مدیریت نظرات، گزارش‌گیری و تنظیمات ارسال نظر', 'icon' => 'forum', 'permission' => 'comments.view'],
-            'tickets' => ['label' => 'ماژول تیکت', 'description' => 'مدیریت تیکت‌ها، دسته‌بندی‌ها و تنظیمات ارسال تیکت', 'icon' => 'confirmation_number', 'permission' => 'tickets.view'],
-            'faq' => ['label' => 'ماژول سوالات متداول', 'description' => 'مدیریت سوالات متداول سایت و نمایش در صفحه FAQ', 'icon' => 'quiz', 'permission' => 'faq.view'],
-            'analytics' => ['label' => 'آنالیزور', 'description' => 'آمار بازدید، کاربران زنده، اهداف، محتوا و محصولات پربازدید', 'icon' => 'analytics', 'permission' => 'analytics.view'],
-            'geoip' => ['label' => 'بروزرسانی GeoIP', 'description' => 'مدیریت دیتابیس‌های مکان‌دهی IP و گزارش بروزرسانی‌ها', 'icon' => 'language', 'permission' => 'geoip.view'],
-            'robots' => ['label' => 'فایل Robots.txt', 'description' => 'ویرایش و تست فایل robots.txt برای مدیریت دسترسی ربات‌ها', 'icon' => 'settings_suggest', 'permission' => 'robots.view'],
-            'search' => ['label' => 'جستجوی هوشمند', 'description' => 'تنظیمات جستجوی سریع در کل سیستم (ماژول‌ها، کاربران، محصولات)', 'icon' => 'search', 'permission' => 'search.view'],
-            'megamenu' => ['label' => 'مدیریت مگا منو', 'description' => 'مدیریت ویژوال آیتم‌های مگا منو با قابلیت درگ اند دراپ', 'icon' => 'menu', 'permission' => 'megamenu.view'],
-            'error_pages' => ['label' => 'مدیریت صفحات خطا', 'description' => 'مدیریت لینک‌های کمکی و آیکون‌های نمایش داده شده در صفحات خطا', 'icon' => 'report_problem', 'permission' => 'error_pages.view'],
-            'cache_management' => ['label' => 'مدیریت کش', 'description' => 'تنظیمات هدرهای کش وب‌سرویس‌ها و بهینه‌سازی وب‌سرور', 'icon' => 'bolt', 'permission' => 'cache_management.view'],
-            'object_cache' => ['label' => 'مدیریت Object Cache', 'description' => 'تنظیمات درایور، پیشوند، تست اتصال، پاکسازی و مرور آیتم‌های کش لاراول', 'icon' => 'memory', 'permission' => 'object_cache.view'],
-            'visitor_intelligence' => ['label' => 'هوشمندی بازدیدکنندگان', 'description' => 'مدیریت الگوهای تشخیص ربات، خزنده‌ها و ASNهای معتبر', 'icon' => 'psychology', 'permission' => 'geoip.full'],
-            'artisan_commands' => ['label' => 'دستورات Artisan', 'description' => 'اجرای دستورات کاربردی Artisan مانند پاکسازی کش، اجرای migration و ...', 'icon' => 'terminal', 'permission' => 'dashboard.view'],
-            'categories' => ['label' => 'مدیریت دسته‌بندی‌ها', 'description' => 'مدیریت درخت دسته‌بندی محصولات و نگاشت هوشمند', 'icon' => 'category', 'permission' => 'dashboard.view'],
-            'sitemap' => ['label' => 'مدیریت سایت مپ', 'description' => 'تولید خودکار sitemap.xml با پشتیبانی از ایندکس چندبخشی، فشرده‌سازی gzip و پردازش افزایشی', 'icon' => 'map', 'permission' => 'sitemap.view'],
-            'indexnow' => ['label' => 'ایندکس‌سازی (IndexNow)', 'description' => 'ارسال خودکار محصولات به بینگ و یاندکس با برنامه‌ریزی ساعتی و کنترل نرخ', 'icon' => 'publish', 'permission' => 'indexnow.view'],
-        ];
+        $moduleRegistry = app(\App\Services\ModuleRegistry::class);
+        $module = $moduleRegistry->get($moduleKey);
 
-        abort_unless(isset($modules[$moduleKey]), 404);
+        abort_unless($module !== null, 404);
 
-        if (isset($modules[$moduleKey]['permission'])) {
-            if (! auth('admin')->user()->hasPermission($modules[$moduleKey]['permission'])) {
+        if (isset($module['permission'])) {
+            if (! auth('admin')->user()->hasPermission($module['permission'])) {
                 abort(403, 'شما دسترسی لازم برای مشاهده این ماژول را ندارید.');
             }
         }
@@ -1094,7 +986,7 @@ class AdminDashboardController extends Controller
 
         return view('dash.admin.module-settings', [
             'moduleKey' => $moduleKey,
-            'module' => $modules[$moduleKey],
+            'module' => $module,
             'settings' => $settings,
             'fileExplorer' => $fileExplorer,
         ]);

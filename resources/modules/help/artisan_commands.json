@@ -1,0 +1,32 @@
+{
+  "module": "artisan_commands",
+  "version": "1.0",
+  "help": {
+    "title": "راهنمای دستورات Artisan",
+    "sections": [
+      {
+        "heading": "معرفی",
+        "type": "text",
+        "content": "دستورات Artisan برای اجرای کارهای مختلف سرویس از پنل مدیریت استفاده می‌شوند. شما می‌توانید کش را پاکسازی، Migration اجرا کنید و غیره."
+      },
+      {
+        "heading": "دستورات رایج",
+        "type": "table",
+        "data": {
+          "headers": ["دستور", "توضیح"],
+          "rows": [
+            ["migrate", "اجرای Migration‌های جدید"],
+            ["cache:clear", "پاکسازی کش کل سیستم"],
+            ["config:clear", "پاکسازی کش پیکربندی"],
+            ["storage:link", "ایجاد لینک برای Storage"]
+          ]
+        }
+      },
+      {
+        "heading": "هشدار اهمیت",
+        "type": "warning",
+        "content": "برخی دستورات خطرناک هستند (مثل migrate:reset). فقط دستوراتی را اجرا کنید که مطمئن باشید."
+      }
+    ]
+  }
+}
