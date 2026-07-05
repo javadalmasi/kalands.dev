@@ -5,6 +5,7 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
+                'resources/css/help-offcanvas.css',
                 'resources/js/app.js',
                 'resources/js/admin-app.js',
                 'resources/js/product-page.js',
