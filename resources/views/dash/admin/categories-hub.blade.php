@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="مدیریت دسته‌بندی‌ها">
+<x-layouts.admin-dashboard title="مدیریت دسته‌بندی‌ها" :helpModuleKey="'categories'">
     @push('head')
         <meta name="authkey" content="{{ $authkey }}">
         <style>

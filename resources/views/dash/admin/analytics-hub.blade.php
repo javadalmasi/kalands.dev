@@ -1,10 +1,7 @@
-<x-layouts.admin-dashboard title="آنالیزور">
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <div>
-            <h1 class="admin-page-title !mb-1">آنالیزور</h1>
-            <p class="text-sm text-slate/60">گزارش حرفه‌ای بازدیدها، اهداف، دستگاه‌ها، کشورها و رفتار کاربران</p>
-        </div>
-        <x-admin.help-offcanvas moduleKey="analytics" />
+<x-layouts.admin-dashboard title="آنالیزور" :helpModuleKey="'analytics'">
+    <div>
+        <h1 class="admin-page-title !mb-1">آنالیزور</h1>
+        <p class="text-sm text-slate/60">گزارش حرفه‌ای بازدیدها، اهداف، دستگاه‌ها، کشورها و رفتار کاربران</p>
     </div>
 
     <div class="admin-card mb-6 !p-0 overflow-hidden">

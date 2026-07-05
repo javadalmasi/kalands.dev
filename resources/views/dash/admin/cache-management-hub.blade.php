@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="مدیریت کش">
+<x-layouts.admin-dashboard title="مدیریت کش" :helpModuleKey="'cache_management'">
     @php($authkey = request()->route('authkey'))
 
     <div class="flex items-center justify-between gap-4 mb-6">

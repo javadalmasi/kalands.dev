@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="مدیریت سایت مپ">
+<x-layouts.admin-dashboard title="مدیریت سایت مپ" :helpModuleKey="'sitemap'">
     @php
         $authkey = request()->route('authkey');
     @endphp

@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="ماژول سوالات متداول">
+<x-layouts.admin-dashboard title="ماژول سوالات متداول" :helpModuleKey="'faq'">
     @php($authkey = request()->route('authkey'))
     @vite('resources/js/admin-faq-hub.js')
 

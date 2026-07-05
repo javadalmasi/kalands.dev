@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="مدیریت Object Cache">
+<x-layouts.admin-dashboard title="مدیریت Object Cache" :helpModuleKey="'object_cache'">
     @php($authkey = request()->route('authkey'))
 
     <div class="flex items-center justify-between gap-4 mb-6">

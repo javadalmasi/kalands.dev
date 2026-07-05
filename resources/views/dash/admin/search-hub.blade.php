@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="تنظیمات جستجو">
+<x-layouts.admin-dashboard title="تنظیمات جستجو" :helpModuleKey="'search'">
     @php($authkey = request()->route('authkey'))
 
     <div class="flex items-center justify-between gap-4 mb-6">

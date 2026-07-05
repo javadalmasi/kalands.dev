@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="مدیریت فایل‌ها">
+<x-layouts.admin-dashboard title="مدیریت فایل‌ها" :helpModuleKey="'file_manager'">
     @php($authkey = request()->route('authkey'))
 
     <div class="flex items-center justify-between gap-4 mb-6">

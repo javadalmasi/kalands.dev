@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="هوشمندی بازدیدکنندگان">
+<x-layouts.admin-dashboard title="هوشمندی بازدیدکنندگان" :helpModuleKey="'visitor_intelligence'">
     @php($authkey = request()->route('authkey'))
 
     <div class="flex items-center justify-between gap-4 mb-6">

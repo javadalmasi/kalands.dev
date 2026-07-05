@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="مدیریت IndexNow">
+<x-layouts.admin-dashboard title="مدیریت IndexNow" :helpModuleKey="'indexnow'">
     <?php $authkey = request()->route('authkey'); ?>
     <?php $engines = ['bing', 'yandex']; ?>
 

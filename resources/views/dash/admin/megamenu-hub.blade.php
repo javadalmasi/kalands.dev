@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="مدیریت مگا منو">
+<x-layouts.admin-dashboard title="مدیریت مگا منو" :helpModuleKey="'megamenu'">
     @push('head')
         <meta name="authkey" content="{{ request()->route('authkey') }}">
     @endpush

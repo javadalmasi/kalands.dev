@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="ماژول تماس با ما">
+<x-layouts.admin-dashboard title="ماژول تماس با ما" :helpModuleKey="'contact'">
     @php($authkey = request()->route('authkey'))
 
     <div class="flex items-center justify-between gap-4 mb-6">

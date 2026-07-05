@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="دستورات Artisan">
+<x-layouts.admin-dashboard title="دستورات Artisan" :helpModuleKey="'artisan_commands'">
     @php($authkey = request()->route('authkey'))
 
     <div class="flex items-center justify-between gap-4 mb-6">

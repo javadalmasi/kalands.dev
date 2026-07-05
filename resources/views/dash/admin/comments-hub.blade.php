@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="ماژول نظرات">
+<x-layouts.admin-dashboard title="ماژول نظرات" :helpModuleKey="'comments'">
     @php($authkey = request()->route('authkey'))
 
     <div class="flex items-center justify-between gap-4 mb-6">

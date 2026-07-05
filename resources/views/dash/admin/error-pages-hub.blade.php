@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="مدیریت صفحات خطا">
+<x-layouts.admin-dashboard title="مدیریت صفحات خطا" :helpModuleKey="'error_pages'">
     <div class="flex items-center justify-between gap-4 mb-6">
         <div>
             <h1 class="admin-page-title !mb-0">مدیریت صفحات خطا</h1>

@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="فایل Robots.txt">
+<x-layouts.admin-dashboard title="فایل Robots.txt" :helpModuleKey="'robots'">
     @php($authkey = request()->route('authkey'))
 
     <div class="flex items-center justify-between gap-4 mb-6">

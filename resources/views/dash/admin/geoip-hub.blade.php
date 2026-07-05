@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="بروزرسانی GeoIP">
+<x-layouts.admin-dashboard title="بروزرسانی GeoIP" :helpModuleKey="'geoip'">
     @php($authkey = request()->route('authkey'))
 
     <div class="flex items-center justify-between gap-4 mb-6">

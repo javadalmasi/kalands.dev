@@ -1,4 +1,4 @@
-@props(['title' => 'Admin Dashboard'])
+@props(['title' => 'Admin Dashboard', 'helpModuleKey' => null])
 
 @php
     $authkey = request()->route('authkey') ?? auth('admin')->user()->dashboard_authkey;
@@ -113,34 +113,41 @@
         </aside>
 
         <div class="admin-main min-w-0">
-            <header class="admin-topbar sticky top-0 z-30 flex items-center justify-between gap-4 px-4 py-3 lg:px-6">
+            <header class="admin-topbar sticky top-0 z-30 flex items-center justify-between gap-4 px-4 py-3 lg:px-6 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
                 <div class="flex items-center gap-3 min-w-0">
-                    <button type="button" id="admin-sidebar-toggle" class="admin-toggle inline-flex lg:hidden" aria-label="mobile menu">
-                        <span class="material-icons">menu</span>
+                    <button type="button" id="admin-sidebar-toggle" class="admin-toggle inline-flex lg:hidden hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="mobile menu">
+                        <span class="material-icons text-slate dark:text-slate-300">menu</span>
                     </button>
-                    <button type="button" id="admin-theme-toggle" class="admin-toggle inline-flex" aria-label="toggle theme" title="لایت/دارک">
-                        <span class="material-icons">brightness_7</span>
+                    <button type="button" id="admin-theme-toggle" class="admin-toggle inline-flex hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="toggle theme" title="لایت/دارک">
+                        <span class="material-icons text-slate dark:text-slate-300">brightness_7</span>
                     </button>
 
-                    <div class="hidden lg:block">
-                        <h1 class="text-base font-semibold text-slate lg:text-lg">{{ $title }}</h1>
-                        <p class="text-xs text-slate">مسیر: <span class="admin-breadcrumb">{{ request()->path() }}</span></p>
+                    <div class="hidden lg:block border-l border-slate-200 dark:border-slate-700 pl-4">
+                        <h1 class="text-base font-bold text-slate dark:text-slate-100 lg:text-lg">{{ $title }}</h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">مسیر: <span class="admin-breadcrumb font-mono text-[11px]">{{ request()->path() }}</span></p>
                     </div>
                 </div>
 
                 <div class="hidden sm:flex flex-1 justify-center px-2 lg:px-4">
                     <div class="relative w-full max-w-[520px]">
-                        <div id="admin-header-search-trigger" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-primary/50 transition-colors">
-                            <span class="material-icons text-slate-400 !text-lg">search</span>
-                            <span class="text-xs text-slate-500 dark:text-slate-300 flex-1">جستجو در سیستم...</span>
-                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400">Ctrl + K</span>
+                        <div id="admin-header-search-trigger" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-primary/50 dark:hover:border-primary/30 transition-colors">
+                            <span class="material-icons text-slate-400 dark:text-slate-500 !text-lg">search</span>
+                            <span class="text-xs text-slate-600 dark:text-slate-400 flex-1">جستجو در سیستم...</span>
+                            <span class="text-[10px] px-2 py-1 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-mono">Ctrl K</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-4 shrink-0">
-                    <button type="button" id="admin-notifications-toggle" class="admin-toggle inline-flex relative" title="اعلان‌ها">
-                        <span class="material-icons text-slate">notifications</span>
+                <div class="flex items-center gap-2 shrink-0">
+                    <!-- Help Button (filled by modules) -->
+                    @isset($helpModuleKey)
+                        <x-admin.help-offcanvas :moduleKey="$helpModuleKey" />
+                    @endisset
+
+                    <div class="hidden sm:block border-l border-slate-200 dark:border-slate-700 pl-2"></div>
+
+                    <button type="button" id="admin-notifications-toggle" class="admin-toggle inline-flex relative hover:bg-slate-100 dark:hover:bg-slate-800" title="اعلان‌ها">
+                        <span class="material-icons text-slate dark:text-slate-300">notifications</span>
                         @if(($adminNotificationCount ?? 0) > 0)
                             <span class="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white outline outline-2 outline-white dark:outline-slate-900">
                                 {{ $adminNotificationCount > 99 ? '99+' : $adminNotificationCount }}
