@@ -32,16 +32,15 @@ class ModuleRegistry
         return $grouped;
     }
 
-    public function helpManifest(string $moduleKey): ?array
+    public function helpManifest(string $moduleKey): ?string
     {
-        $helpPath = resource_path("modules/help/{$moduleKey}.json");
+        $helpPath = resource_path("modules/help/{$moduleKey}.md");
 
         if (!File::exists($helpPath)) {
             return null;
         }
 
-        $json = File::get($helpPath);
-        return json_decode($json, true);
+        return File::get($helpPath);
     }
 
     public function categoryLabels(): array

@@ -1,8 +1,24 @@
 @props(['moduleKey'])
 
 @php
-    $manifest = app(\App\Services\ModuleRegistry::class)->helpManifest($moduleKey);
+    $markdownContent = app(\App\Services\ModuleRegistry::class)->helpManifest($moduleKey);
     $randomId = 'help-' . $moduleKey . '-' . \Illuminate\Support\Str::random(8);
+
+    // Convert markdown to HTML
+    $html = '';
+    if ($markdownContent) {
+        $converter = new \League\CommonMark\CommonMarkConverter([
+            'allow_unsafe_links' => false,
+            'html_input' => 'strip',
+        ]);
+        $html = $converter->convert($markdownContent)->getContent();
+    }
+
+    // Extract title from markdown (first h1)
+    $title = 'راهنمای ماژول';
+    if (preg_match('/^#\s+(.+)$/m', $markdownContent, $matches)) {
+        $title = $matches[1];
+    }
 @endphp
 
 <!-- Help Button -->
@@ -22,7 +38,7 @@
     <div class="sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-6 py-4 flex items-center justify-between">
         <h5 class="font-bold text-lg flex items-center gap-3 text-slate dark:text-slate-100">
             <span class="material-icons text-primary">help_outline</span>
-            <span>{{ $manifest['help']['title'] ?? 'راهنمای ماژول' }}</span>
+            <span>{{ $title }}</span>
         </h5>
         <button type="button"
             class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition text-slate dark:text-slate-300"
@@ -32,68 +48,9 @@
     </div>
 
     <!-- Content -->
-    <div class="px-5 py-4 space-y-4 text-sm">
-        @if ($manifest && isset($manifest['help']['sections']))
-            @foreach ($manifest['help']['sections'] as $index => $section)
-                <div>
-                    @if (isset($section['heading']))
-                        <h3 class="font-bold text-sm text-slate dark:text-slate-100 mb-2 pb-1.5 border-b-2 border-primary/30">
-                            {{ $section['heading'] }}
-                        </h3>
-                    @endif
-
-                    @if ($section['type'] === 'text')
-                        <div class="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap text-xs space-y-1">
-                            {{ $section['content'] }}
-                        </div>
-
-                    @elseif ($section['type'] === 'code')
-                        <pre class="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 p-3 rounded-lg overflow-x-auto text-xs border border-slate-200 dark:border-slate-700 font-mono"><code>{{ $section['content'] }}</code></pre>
-
-                    @elseif ($section['type'] === 'tip')
-                        <div class="bg-success/10 dark:bg-success/20 border border-success/30 dark:border-success/50 rounded-lg p-3 text-success dark:text-success/90">
-                            <div class="flex gap-2">
-                                <span class="material-icons text-base shrink-0 mt-0">lightbulb</span>
-                                <div class="text-xs leading-relaxed">{{ $section['content'] }}</div>
-                            </div>
-                        </div>
-
-                    @elseif ($section['type'] === 'warning')
-                        <div class="bg-warning/10 dark:bg-warning/20 border border-warning/30 dark:border-warning/50 rounded-lg p-3 text-warning dark:text-warning/90">
-                            <div class="flex gap-2">
-                                <span class="material-icons text-base shrink-0 mt-0">warning</span>
-                                <div class="text-xs leading-relaxed">{{ $section['content'] }}</div>
-                            </div>
-                        </div>
-
-                    @elseif ($section['type'] === 'table' && isset($section['data']))
-                        <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-                            <table class="w-full text-xs border-collapse">
-                                <thead>
-                                    <tr class="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-                                        @foreach ($section['data']['headers'] as $header)
-                                            <th class="px-3 py-2 text-left font-bold text-slate-900 dark:text-slate-100">{{ $header }}</th>
-                                        @endforeach
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($section['data']['rows'] as $row)
-                                        <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                                            @foreach ($row as $cell)
-                                                <td class="px-3 py-2 text-slate-700 dark:text-slate-300">{{ $cell }}</td>
-                                            @endforeach
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @endif
-                </div>
-
-                @if ($index < count($manifest['help']['sections']) - 1)
-                    <hr class="border-slate-200 dark:border-slate-700 my-1.5">
-                @endif
-            @endforeach
+    <div class="px-5 py-4 text-sm markdown-content">
+        @if ($html)
+            {!! $html !!}
         @else
             <div class="text-center text-slate-400 dark:text-slate-500 py-8">
                 <span class="material-icons block text-3xl mb-2">info</span>
@@ -131,7 +88,119 @@
         background: rgba(100, 116, 139, 0.8);
     }
 
-    /* Dark mode scrollbar */
+    /* Markdown Styling */
+    .markdown-content {
+        color: rgb(71, 85, 105);
+    }
+
+    .markdown-content h2 {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: rgb(15, 23, 42);
+        margin-top: 0.75rem;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.375rem;
+        border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .markdown-content h3 {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: rgb(30, 41, 59);
+        margin-top: 0.5rem;
+        margin-bottom: 0.375rem;
+    }
+
+    .markdown-content p {
+        font-size: 0.75rem;
+        line-height: 1.4;
+        margin-bottom: 0.5rem;
+    }
+
+    .markdown-content ul,
+    .markdown-content ol {
+        margin-left: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .markdown-content li {
+        font-size: 0.75rem;
+        line-height: 1.4;
+        margin-bottom: 0.25rem;
+    }
+
+    .markdown-content code {
+        background-color: rgb(241, 245, 249);
+        color: rgb(30, 41, 59);
+        padding: 0.125rem 0.375rem;
+        border-radius: 0.25rem;
+        font-size: 0.7rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .markdown-content pre {
+        background-color: rgb(241, 245, 249);
+        color: rgb(15, 23, 42);
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        overflow-x: auto;
+        margin-bottom: 0.5rem;
+        border: 1px solid rgb(226, 232, 240);
+        font-size: 0.7rem;
+        line-height: 1.3;
+    }
+
+    .markdown-content pre code {
+        background: none;
+        color: inherit;
+        padding: 0;
+        border-radius: 0;
+    }
+
+    .markdown-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .markdown-content table th {
+        background-color: rgb(241, 245, 249);
+        color: rgb(15, 23, 42);
+        font-weight: 600;
+        padding: 0.5rem;
+        text-align: right;
+        border: 1px solid rgb(226, 232, 240);
+    }
+
+    .markdown-content table td {
+        padding: 0.5rem;
+        border: 1px solid rgb(226, 232, 240);
+        color: rgb(71, 85, 105);
+    }
+
+    .markdown-content table tr:hover {
+        background-color: rgba(241, 245, 249, 0.5);
+    }
+
+    .markdown-content blockquote {
+        border-right: 3px solid rgb(59, 130, 246);
+        padding-right: 0.75rem;
+        margin: 0.5rem 0;
+        color: rgb(100, 116, 139);
+        font-size: 0.75rem;
+        font-style: italic;
+    }
+
+    .markdown-content em {
+        font-style: italic;
+    }
+
+    .markdown-content strong {
+        font-weight: 600;
+    }
+
+    /* Dark mode */
     @media (prefers-color-scheme: dark) {
         #{{ $randomId }} {
             scrollbar-color: rgba(71, 85, 105, 0.6) transparent;
@@ -143,6 +212,45 @@
 
         #{{ $randomId }}::-webkit-scrollbar-thumb:hover {
             background: rgba(71, 85, 105, 0.9);
+        }
+
+        .markdown-content {
+            color: rgb(203, 213, 225);
+        }
+
+        .markdown-content h2,
+        .markdown-content h3 {
+            color: rgb(226, 232, 240);
+        }
+
+        .markdown-content code {
+            background-color: rgb(30, 41, 59);
+            color: rgb(226, 232, 240);
+        }
+
+        .markdown-content pre {
+            background-color: rgb(15, 23, 42);
+            color: rgb(203, 213, 225);
+            border-color: rgb(51, 65, 85);
+        }
+
+        .markdown-content table th {
+            background-color: rgb(30, 41, 59);
+            color: rgb(226, 232, 240);
+            border-color: rgb(51, 65, 85);
+        }
+
+        .markdown-content table td {
+            border-color: rgb(51, 65, 85);
+            color: rgb(203, 213, 225);
+        }
+
+        .markdown-content table tr:hover {
+            background-color: rgba(30, 41, 59, 0.5);
+        }
+
+        .markdown-content blockquote {
+            color: rgb(148, 163, 184);
         }
     }
 </style>

@@ -19,7 +19,7 @@ export function initAllHelpOffcanvas() {
             backdrop.classList.add('hidden');
             // Show admin sidebar again
             if (adminSidebar) {
-                adminSidebar.classList.add('pointer-events-auto');
+                adminSidebar.classList.remove('pointer-events-none');
                 adminSidebar.style.opacity = '1';
             }
         };
@@ -47,7 +47,7 @@ export function initAllHelpOffcanvas() {
             if (helpOffcanvas.classList.contains('hidden')) {
                 backdrop.classList.add('hidden');
                 if (adminSidebar) {
-                    adminSidebar.classList.add('pointer-events-auto');
+                    adminSidebar.classList.remove('pointer-events-none');
                     adminSidebar.style.opacity = '1';
                 }
             } else {
