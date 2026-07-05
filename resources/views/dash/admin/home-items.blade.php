@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="مدیریت آیتم‌های صفحه اصلی">
+<x-layouts.admin-dashboard title="مدیریت آیتم‌های صفحه اصلی" :helpModuleKey="'home_items_management'">
     @php($authkey = request()->route('authkey'))
     @php($slider = $settings['slider'] ?? [])
     @php($banners_categories = $settings['banners_categories'] ?? [])
@@ -34,10 +34,6 @@
             <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-categories">
                 <span class="material-icons text-base">grid_view</span>
                 <span>آیکون‌های دسته‌بندی</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
             </button>
         </div>
     </div>
@@ -447,101 +443,6 @@
         </div>
     </div>
 
-    <div id="tab-help" class="tab-content hidden">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای کامل ماژول مدیریت آیتم‌های صفحه اصلی</h2>
-                    </div>
-
-                    <div class="space-y-8 text-sm text-slate leading-7">
-                        <section id="doc-slider">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">desktop_windows</span>
-                                اسلایدر دسکتاپ و موبایل
-                            </h3>
-                            <p>در این بخش می‌توانید اسلایدهای تصویری صفحه اصلی را برای دسکتاپ و موبایل مدیریت کنید. هر اسلاید شامل تصویر، عنوان، توضیح کوتاه، لینک مقصد و تنظیمات نمایش است.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">نکات مهم</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li>اسلایدهای دسکتاپ و موبایل به صورت جداگانه مدیریت می‌شوند</li>
-                                    <li>حداقل عرض توصیه شده برای تصاویر دسکتاپ: 1200px</li>
-                                    <li>حداقل عرض توصیه شده برای تصاویر موبایل: 350px</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-banners">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">campaign</span>
-                                بنرهای تبلیغاتی
-                            </h3>
-                            <p>در این بخش دو بنر اصلی صفحه را می‌توانید مدیریت کنید. برای بهترین نمایش توصیه می‌شود از تصاویر با عرض یکسان استفاده کنید.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">تنظیمات قابل ویرایش</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li>تصویر بنر (آدرس کامل یا مسیر)</li>
-                                    <li>لینک مقصد (آدرس URL کامل)</li>
-                                    <li>متن جایگزین (Alt) برای سئو</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-categories">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">grid_view</span>
-                                آیکون‌های دسته‌بندی
-                            </h3>
-                            <p>آیکون‌های دسته‌بندی در دو بخش (قبل و بعد از بنرها) نمایش داده می‌شوند. می‌توانید تعداد ستون و ردیف را تنظیم کنید.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">حالت‌های نمایش</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li><b>شبکه‌ای (Grid):</b> نمایش به صورت محصولات در یک جدول</li>
-                                    <li><b>اسلایدر (Slider):</b> نمایش به صورت اسلایدشو برای فضای محدود</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-preview">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">visibility</span>
-                                پیش‌نمایش زنده
-                            </h3>
-                            <p>در سمت راست صفحه، پیش‌نمایش زنده از اسلایدر دسکتاپ و موبایل قابل مشاهده است. تغییرات شما به صورت real-time در پیش‌نمایش اعمال می‌شود.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">ویژگی‌های پیش‌نمایش</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li>پیش‌نمایش دسکتاپ: عرض کامل با نسبت تصویر واقعی</li>
-                                    <li>پیش‌نمایش موبایل: عرض 320px شبیه مرورگر موبایل</li>
-                                    <li>تغییرات پس از ذخیره نهایی در سایت اعمال می‌شود</li>
-                                </ul>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </div>
-
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-slider" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">اسلایدر دسکتاپ و موبایل</a>
-                        <a href="#doc-banners" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">بنرهای تبلیغاتی</a>
-                        <a href="#doc-categories" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">آیکون‌های دسته‌بندی</a>
-                        <a href="#doc-preview" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">پیش‌نمایش زنده</a>
-                    </nav>
-                </div>
-            </aside>
-        </div>
-    </div>
     </form>
 
 

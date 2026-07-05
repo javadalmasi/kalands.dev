@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="مدیریت صف‌ها">
+<x-layouts.admin-dashboard title="مدیریت صف‌ها" :helpModuleKey="'queues'">
     @php($authkey = request()->route('authkey'))
     <div class="flex items-center justify-between gap-4 mb-6">
         <h1 class="admin-page-title !mb-0">مدیریت صف‌ها</h1>
@@ -27,10 +27,6 @@
             <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-maintenance">
                 <span class="material-icons text-base">cleaning_services</span>
                 <span>پاکسازی خودکار</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
             </button>
         </div>
     </div>
@@ -268,81 +264,6 @@
 
     <form id="regenerate-token-form" action="{{ route('dash.admin.queues.token.regenerate', ['authkey' => $authkey]) }}" method="POST" class="hidden">@csrf</form>
 
-    <div id="tab-help" class="tab-content hidden">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای کامل مدیریت صف‌ها</h2>
-                    </div>
-
-                    <div class="space-y-8 text-sm text-slate leading-7">
-                        <section id="doc-intro">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">info</span>
-                                معرفی ماژول
-                            </h3>
-                            <p>ماژول مدیریت صف، سامانه پردازش کارهای توالی در پس‌زمینه است. این سامانه برای قطعه کردن کارهای سنگین (مانند ایمپورت داده، بروزرسانی GeoIP) و بهبود سرعت وب‌سایت استفاده می‌شود.</p>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-modes">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">settings</span>
-                                حالت‌های پردازش
-                            </h3>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li><b>Cron Job:</b> برای هاست‌های اشتراکی (Shared Hosting) مناسب است. با فراخوانی دوره‌ای URL صف پردازش می‌شود.</li>
-                                <li><b>Artisan Worker:</b> برای سرورهای اختصاصی (Dedicated/VPS) مناسب است. پردازش توسط پروسه <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">queue:work</code> انجام می‌شود.</li>
-                            </ul>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-drivers">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">storage</span>
-                                درایورهای صف
-                            </h3>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li><b>sync:</b> پردازش فوری (بدون صف‌زدن) - برای تست مناسب است</li>
-                                <li><b>database:</b> ذخیره در دیتابیس - ساده و قابل اعتماد</li>
-                                <li><b>redis:</b> ذخیره در Redis - سریع و برای سرورهای تولید</li>
-                            </ul>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-security">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">security</span>
-                                نکات امنیتی
-                            </h3>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li>توکن Cron باید محرمانه بماند و در دسترس عمومی نباشد</li>
-                                <li>تمامی endpointهای صف نیاز به توکن برای دسترسی دارند</li>
-                                <li>در صورت تغییر توکن، دستور Cron را نیز به‌روز کنید</li>
-                            </ul>
-                        </section>
-                    </div>
-                </div>
-            </div>
-
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
-                        <a href="#doc-modes" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">حالت‌های پردازش</a>
-                        <a href="#doc-drivers" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">درایورهای صف</a>
-                        <a href="#doc-security" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">نکات امنیتی</a>
-                    </nav>
-                </div>
-            </aside>
-        </div>
-    </div>
 
 <dialog id="regenerate-token-modal" class="admin-dialog w-[min(100vw-32px,450px)]">
     <div class="admin-dialog-body">

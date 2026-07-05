@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="تمپلیت ایمیل‌ها">
+<x-layouts.admin-dashboard title="تمپلیت ایمیل‌ها" :helpModuleKey="'email_templates'">
     @php($authkey = request()->route('authkey'))
     @php($currentKey = isset($templateCatalog[$activeKey ?? '']) ? ($activeKey ?? '') : array_key_first($templateCatalog))
 
@@ -17,10 +17,6 @@
             <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="module-settings-tab">
                 <span class="material-icons text-base">settings_applications</span>
                 <span>تنظیمات ماژول</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
             </button>
         </div>
     </div>
@@ -117,80 +113,6 @@
 </div>
     </form>
 
-    <div id="tab-help" class="tab-content hidden">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای کامل تمپلیت ایمیل‌ها</h2>
-                    </div>
-
-                    <div class="space-y-8 text-sm text-slate leading-7">
-                        <section id="doc-intro">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">info</span>
-                                معرفی ماژول
-                            </h3>
-                            <p>ماژول تمپلیت ایمیل، سامانه مدیریت قالب‌های ایمیل در پلتفرم kalands.ir است. این ماژول امکان شخصی‌سازی کامل محتوا، هدر/فوتر مشترک و متغیرهای دینامیک را فراهم می‌کند.</p>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-templates">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">library_books</span>
-                                مدیریت تمپلیت‌ها
-                            </h3>
-                            <p>در تب مدیریت تمپلیت‌ها می‌توانید:</p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li>تمامی تمپلیت‌های سیستم را مشاهده و ویرایش کنید</li>
-                                <li>متغیرهای دینامیک را در متن ایمیل استفاده کنید</li>
-                                <li>پیش‌نمایش سرور را برای تست کد HTML ببینید</li>
-                            </ul>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-common">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">dashboard_customize</span>
-                                ویژگی‌های مشترک
-                            </h3>
-                            <p>هدر و فوتر مشترک در تمامی ایمیل‌ها استفاده می‌شود. می‌توانید:</p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li>لوگوی سایت را تنظیم کنید</li>
-                                <li>کدهای HTML سر و صفحه را شخصی‌سازی کنید</li>
-                                <li>لینک‌های کاربردی را در فوتر اضافه کنید (حداکثر ۵ مورد)</li>
-                            </ul>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-preview">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">visibility</span>
-                                پیش‌نمایش زنده
-                            </h3>
-                            <p>در انتهای صفحه، پیش‌نمایش زنده ایمیل را مشاهده کنید. تغییرات در فرم به صورت خودکار در iframe اعمال می‌شود.</p>
-                        </section>
-                    </div>
-                </div>
-            </div>
-
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
-                        <a href="#doc-templates" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">مدیریت تمپلیت‌ها</a>
-                        <a href="#doc-common" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">ویژگی‌های مشترک</a>
-                        <a href="#doc-preview" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">پیش‌نمایش زنده</a>
-                    </nav>
-                </div>
-            </aside>
-        </div>
-    </div>
 
     <div class="admin-card mt-6 space-y-3" id="live-preview-card">
         <div class="flex items-center justify-between border-b pb-2 dark:border-white/10">

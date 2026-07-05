@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="ماژول جامع ارتباطی">
+<x-layouts.admin-dashboard title="ماژول جامع ارتباطی" :helpModuleKey="'communication_hub'">
     @php($authkey = request()->route('authkey'))
     <h1 class="admin-page-title">ماژول جامع ارتباطی</h1>
 
@@ -19,10 +19,6 @@
             <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="test-hub">
                 <span class="material-icons text-base">science</span>
                 <span>تست و عیب‌یابی</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
             </button>
         </div>
     </div>
@@ -260,83 +256,6 @@
                 <p class="text-[10px] text-slate-500 mb-2 font-mono uppercase tracking-widest">Server Response & Logs:</p>
                 <pre id="test-full-log" class="admin-ltr text-green-400 overflow-x-auto text-[11px] max-h-[400px] whitespace-pre-wrap font-mono custom-scrollbar"></pre>
             </div>
-        </div>
-    </div>
-
-    <div id="tab-help" class="tab-content hidden">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای کامل ماژول جامع ارتباطی</h2>
-                    </div>
-
-                    <div class="space-y-8 text-sm text-slate leading-7">
-                        <section id="doc-intro">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">info</span>
-                                معرفی ماژول
-                            </h3>
-                            <p>ماژول جامع ارتباطی، سامانه یکپارچه ارسال ایمیل و پیامک در پلتفرم kalands.ir است. این ماژول شامل تنظیمات SMTP دو سطحی (عمومی و تراکنشی)، پنل پیامک ملی‌پیامک و قابلیت تست مستقیم کانکشن‌ها می‌باشد.</p>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-smtp">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">mail</span>
-                                سیستم SMTP
-                            </h3>
-                            <p>این سامانه دو بخش SMTP عمومی و SMTP تراکنشی دارد:</p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li><b>SMTP عمومی:</b> برای ایمیل‌های عمومی مانند خبرنامه، اطلاعیه‌ها و پیامک‌های تایید حساب استفاده می‌شود.</li>
-                                <li><b>SMTP تراکنشی:</b> برای ایمیل‌های حساس مانند بازیابی رمز عبور، فعال‌سازی حساب و ایمیل‌های احراز هویت استفاده می‌شود. در صورت خالی بودن، به SMTP عمومی رجوع می‌شود.</li>
-                            </ul>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-sms">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">sms</span>
-                                سیستم پیامک
-                            </h3>
-                            <p>سیستم پیامک با پنل ملی‌پیامک ادغام شده است. برای استفاده از این سرویس، نیاز به توکن API و شماره اختصاصی دارید.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">ویژگی‌های کلیدی</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li>ارسال کد تایید برای ثبت‌نام و بازیابی رمز عبور</li>
-                                    <li>قابلیت تنظیم Endpoint دلخواه برای سایر پنل‌ها</li>
-                                    <li>تست مستقیم از پنل برای اطمینان از دریافت پیامک</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-testing">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">science</span>
-                                تست و عیب‌یابی
-                            </h3>
-                            <p>در تب تست و عیب‌یابی، می‌توانید مقادیر پیش‌فرض را ذخیره کنید تا در تست‌های دیگر سیستم استفاده شوند. همچنین می‌توانید ایمیل یا پیامک تستی بفرستید تا کانکشن را بررسی کنید.</p>
-                        </section>
-                    </div>
-                </div>
-            </div>
-
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
-                        <a href="#doc-smtp" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">سیستم SMTP</a>
-                        <a href="#doc-sms" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">سامانه پیامک</a>
-                        <a href="#doc-testing" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">تست و عیب‌یابی</a>
-                    </nav>
-                </div>
-            </aside>
         </div>
     </div>
 

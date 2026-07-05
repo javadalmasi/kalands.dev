@@ -1,4 +1,4 @@
-<x-layouts.admin-dashboard title="مدیریت افیلیت">
+<x-layouts.admin-dashboard title="مدیریت افیلیت" :helpModuleKey="'affiliate'">
     @php($authkey = request()->route('authkey'))
 
     <style>
@@ -41,10 +41,6 @@
             <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-settings">
                 <span class="material-icons text-base">settings</span>
                 <span>تنظیمات</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
             </button>
         </div>
     </div>
@@ -351,117 +347,6 @@
         </div>
     </div>
 
-    <div id="tab-help" class="tab-content hidden">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای کامل ماژول مدیریت سیستم افیلیت</h2>
-                    </div>
-
-                    <div class="space-y-8 text-sm text-slate leading-7">
-                        <section id="doc-intro">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">info</span>
-                                معرفی ماژول
-                            </h3>
-                            <p>ماژول سیستم افیلیت، پلتفرم مدیریت لینک‌های بازاریابی affiliatemarketing سایت kalands.ir است. این ماژول به شما امکان می‌دهد لینک‌های ویژه دیجی‌کالا و باسلام را مدیریت کنید، آمار کلیک‌ها را پیگیری کنید و تنظیمات ارتباط با APIهای فروشگاه‌ها را به صورت متمرکز کنترل نمایید.</p>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-link-structure">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">link</span>
-                                ساختار لینک‌های افیلیت
-                            </h3>
-                            <p>تمام لینک‌های affiliatemarketing تولید شده در این ماژول، از فرمت استاندارد <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">/go/{slug}</code> استفاده می‌کنند:</p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li><b>دیجی‌کالا:</b> <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">/go/d{id}</code> — شناسه واقعی محصول دیجی‌کالا</li>
-                                <li><b>باسلام:</b> <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">/go/b{id}</code> — شناسه واقعی محصول باسلام</li>
-                                <li><b>دیجی‌کالا (جستجو):</b> <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">/go/ds_{query}</code> — کدگذاری base64 عبارت جستجو</li>
-                            </ul>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-digikala">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">shopping_bag</span>
-                                سیستم افیلیت دیجی‌کالا
-                            </h3>
-                            <p>سیستم افیلیت دیجی‌کالا بدون نیاز به ذخیره‌سازی در دیتابیس محلی کار می‌کند. هر درخواست به لینک <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">/go/d{id}</code>، مستقیماً از سرویس <b>dgkl.io</b> استفاده می‌کند.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">ویژگی‌های کلیدی</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li>عدم نیاز به تنظیم API Key یا توکن</li>
-                                    <li>عدم استفاده از دیتابیس محلی</li>
-                                    <li>سرعت بالا در هدایت کاربر</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-basalam">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">shopping_cart</span>
-                                سیستم افیلیت باسلام
-                            </h3>
-                            <p>سیستم افیلیت باسلام برای کار کردن به اتصال با API باسلام نیاز دارد. درخواست اول به لینک <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">/go/b{id}</code>، لینک affiliatemarketing را از API دریافت و در دیتابیس ذخیره می‌کند.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">ویژگی‌های کلیدی</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li>نیاز به <b>Merchant ID</b> و <b>Access Token</b></li>
-                                    <li>ذخیره خودکار در جدول <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">affiliate_links</code></li>
-                                    <li>در صورت خطای API، درخواست بعدی دوباره تلاش می‌کند</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-backup">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">backup</span>
-                                پشتیبان‌گیری و بازیابی
-                            </h3>
-                            <p>در این بخش می‌توانید تنظیمات اتصال باسلام و تمام لینک‌ها و آمار را به صورت JSON پشتیبان‌گیری و بازیابی کنید.</p>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-security">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">security</span>
-                                نکات امنیتی
-                            </h3>
-                            <ul class="list-disc list-inside space-y-1 mr-4">
-                                <li>توکن‌های API به صورت محرمانه در تنظیمات ذخیره می‌شوند.</li>
-                                <li>تمام لینک‌های affiliates با هدر <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">X-Robots-Tag: noindex</code> ارائه می‌شوند.</li>
-                                <li>رفرینگ (Referrer) برای لینک‌های affiliates غیرفعال است.</li>
-                            </ul>
-                        </section>
-                    </div>
-                </div>
-            </div>
-
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
-                        <a href="#doc-link-structure" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">ساختار لینک‌ها</a>
-                        <a href="#doc-digikala" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">افیلیت دیجی‌کالا</a>
-                        <a href="#doc-basalam" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">افیلیت باسلام</a>
-                        <a href="#doc-backup" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">پشتیبان‌گیری</a>
-                        <a href="#doc-security" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">نکات امنیتی</a>
-                    </nav>
-                </div>
-            </aside>
-        </div>
-    </div>
 
 </x-layouts.admin-dashboard>
     @vite(['resources/js/admin-affiliate-settings.js'])
