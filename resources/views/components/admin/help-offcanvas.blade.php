@@ -5,6 +5,15 @@
     $randomId = 'help-' . $moduleKey . '-' . \Illuminate\Support\Str::random(8);
 @endphp
 
+<!-- Help Button -->
+<button type="button"
+    class="p-2 inline-flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate dark:text-slate-300"
+    onclick="document.getElementById('{{ $randomId }}').classList.remove('hidden'); document.getElementById('{{ $randomId }}-backdrop').classList.remove('hidden');"
+    title="راهنمای ماژول"
+    aria-label="راهنمای ماژول">
+    <span class="material-icons">help_outline</span>
+</button>
+
 <!-- Help Offcanvas (Sidebar) -->
 <div id="{{ $randomId }}"
     class="hidden fixed inset-y-0 left-0 z-50 w-[450px] max-w-[90vw] bg-white dark:bg-slate-900 shadow-2xl transition-all duration-300 overflow-y-auto"
@@ -17,7 +26,7 @@
         </h5>
         <button type="button"
             class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition text-slate dark:text-slate-300"
-            onclick="document.getElementById('{{ $randomId }}').classList.toggle('hidden'); document.getElementById('{{ $randomId }}-backdrop').classList.toggle('hidden')">
+            onclick="document.getElementById('{{ $randomId }}').classList.add('hidden'); document.getElementById('{{ $randomId }}-backdrop').classList.add('hidden')">
             <span class="material-icons">close</span>
         </button>
     </div>
@@ -96,30 +105,33 @@
 
 <!-- Backdrop (overlay) -->
 <div id="{{ $randomId }}-backdrop"
-    class="hidden fixed inset-0 z-40 bg-black/50 transition-opacity duration-300"
-    onclick="document.getElementById('{{ $randomId }}').classList.toggle('hidden'); document.getElementById('{{ $randomId }}-backdrop').classList.toggle('hidden');">
+    class="hidden fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 cursor-pointer"
+    onclick="document.getElementById('{{ $randomId }}').classList.add('hidden'); document.getElementById('{{ $randomId }}-backdrop').classList.add('hidden');">
 </div>
 
 <script>
-    // Toggle backdrop when sidebar opens/closes
+    // Keep sidebar and backdrop in sync
     const sidebar = document.getElementById('{{ $randomId }}');
     const backdrop = document.getElementById('{{ $randomId }}-backdrop');
-    const observer = new MutationObserver(() => {
-        if (sidebar.classList.contains('hidden')) {
-            backdrop.classList.add('hidden');
-        } else {
-            backdrop.classList.remove('hidden');
-        }
-    });
-    observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+    if (sidebar && backdrop) {
+        const observer = new MutationObserver(() => {
+            if (sidebar.classList.contains('hidden')) {
+                backdrop.classList.add('hidden');
+            } else {
+                backdrop.classList.remove('hidden');
+            }
+        });
+        observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+    }
 
     // Close on ESC key
-    document.addEventListener('keydown', (e) => {
+    const closeOnEsc = (e) => {
         if (e.key === 'Escape' && !sidebar.classList.contains('hidden')) {
             sidebar.classList.add('hidden');
             backdrop.classList.add('hidden');
         }
-    });
+    };
+    document.addEventListener('keydown', closeOnEsc);
 </script>
 
 <style>
