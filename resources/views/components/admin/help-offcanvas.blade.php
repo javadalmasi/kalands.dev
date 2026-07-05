@@ -32,37 +32,37 @@
     </div>
 
     <!-- Content -->
-    <div class="px-6 py-6 space-y-6 text-sm">
+    <div class="px-5 py-4 space-y-4 text-sm">
         @if ($manifest && isset($manifest['help']['sections']))
             @foreach ($manifest['help']['sections'] as $index => $section)
                 <div>
                     @if (isset($section['heading']))
-                        <h3 class="font-bold text-base text-slate dark:text-slate-100 mb-3 pb-2 border-b-2 border-primary/30">
+                        <h3 class="font-bold text-sm text-slate dark:text-slate-100 mb-2 pb-1.5 border-b-2 border-primary/30">
                             {{ $section['heading'] }}
                         </h3>
                     @endif
 
                     @if ($section['type'] === 'text')
-                        <div class="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap text-sm space-y-2">
+                        <div class="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap text-xs space-y-1">
                             {{ $section['content'] }}
                         </div>
 
                     @elseif ($section['type'] === 'code')
-                        <pre class="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 p-4 rounded-lg overflow-x-auto text-xs border border-slate-200 dark:border-slate-700 font-mono"><code>{{ $section['content'] }}</code></pre>
+                        <pre class="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 p-3 rounded-lg overflow-x-auto text-xs border border-slate-200 dark:border-slate-700 font-mono"><code>{{ $section['content'] }}</code></pre>
 
                     @elseif ($section['type'] === 'tip')
-                        <div class="bg-success/10 dark:bg-success/20 border border-success/30 dark:border-success/50 rounded-lg p-4 text-success dark:text-success/90">
-                            <div class="flex gap-3">
-                                <span class="material-icons text-lg shrink-0 mt-0.5">lightbulb</span>
-                                <div class="text-sm leading-relaxed">{{ $section['content'] }}</div>
+                        <div class="bg-success/10 dark:bg-success/20 border border-success/30 dark:border-success/50 rounded-lg p-3 text-success dark:text-success/90">
+                            <div class="flex gap-2">
+                                <span class="material-icons text-base shrink-0 mt-0">lightbulb</span>
+                                <div class="text-xs leading-relaxed">{{ $section['content'] }}</div>
                             </div>
                         </div>
 
                     @elseif ($section['type'] === 'warning')
-                        <div class="bg-warning/10 dark:bg-warning/20 border border-warning/30 dark:border-warning/50 rounded-lg p-4 text-warning dark:text-warning/90">
-                            <div class="flex gap-3">
-                                <span class="material-icons text-lg shrink-0 mt-0.5">warning</span>
-                                <div class="text-sm leading-relaxed">{{ $section['content'] }}</div>
+                        <div class="bg-warning/10 dark:bg-warning/20 border border-warning/30 dark:border-warning/50 rounded-lg p-3 text-warning dark:text-warning/90">
+                            <div class="flex gap-2">
+                                <span class="material-icons text-base shrink-0 mt-0">warning</span>
+                                <div class="text-xs leading-relaxed">{{ $section['content'] }}</div>
                             </div>
                         </div>
 
@@ -72,7 +72,7 @@
                                 <thead>
                                     <tr class="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                                         @foreach ($section['data']['headers'] as $header)
-                                            <th class="px-4 py-3 text-left font-bold text-slate-900 dark:text-slate-100">{{ $header }}</th>
+                                            <th class="px-3 py-2 text-left font-bold text-slate-900 dark:text-slate-100">{{ $header }}</th>
                                         @endforeach
                                     </tr>
                                 </thead>
@@ -80,7 +80,7 @@
                                     @foreach ($section['data']['rows'] as $row)
                                         <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
                                             @foreach ($row as $cell)
-                                                <td class="px-4 py-3 text-slate-700 dark:text-slate-300">{{ $cell }}</td>
+                                                <td class="px-3 py-2 text-slate-700 dark:text-slate-300">{{ $cell }}</td>
                                             @endforeach
                                         </tr>
                                     @endforeach
@@ -91,7 +91,7 @@
                 </div>
 
                 @if ($index < count($manifest['help']['sections']) - 1)
-                    <hr class="border-slate-200 dark:border-slate-700 my-2">
+                    <hr class="border-slate-200 dark:border-slate-700 my-1.5">
                 @endif
             @endforeach
         @else

@@ -4,24 +4,36 @@
  */
 
 export function initAllHelpOffcanvas() {
+    const adminSidebar = document.getElementById('admin-sidebar');
+
     document.querySelectorAll('[id$="-backdrop"]').forEach((backdrop) => {
         const randomId = backdrop.id.replace('-backdrop', '');
-        const sidebar = document.getElementById(randomId);
+        const helpOffcanvas = document.getElementById(randomId);
         const helpBtn = document.getElementById(`help-btn-${randomId}`);
-        const closeBtn = sidebar?.querySelector('[data-close-offcanvas]');
+        const closeBtn = helpOffcanvas?.querySelector('[data-close-offcanvas]');
 
-        if (!sidebar) return;
+        if (!helpOffcanvas) return;
 
         const closeOffcanvas = () => {
-            sidebar.classList.add('hidden');
+            helpOffcanvas.classList.add('hidden');
             backdrop.classList.add('hidden');
+            // Show admin sidebar again
+            if (adminSidebar) {
+                adminSidebar.classList.add('pointer-events-auto');
+                adminSidebar.style.opacity = '1';
+            }
         };
 
         // Open on button click
         if (helpBtn) {
             helpBtn.addEventListener('click', () => {
-                sidebar.classList.remove('hidden');
+                helpOffcanvas.classList.remove('hidden');
                 backdrop.classList.remove('hidden');
+                // Hide admin sidebar
+                if (adminSidebar) {
+                    adminSidebar.classList.add('pointer-events-none');
+                    adminSidebar.style.opacity = '0.5';
+                }
             });
         }
 
@@ -30,20 +42,28 @@ export function initAllHelpOffcanvas() {
             closeBtn.addEventListener('click', closeOffcanvas);
         }
 
-        // Keep sidebar and backdrop in sync
+        // Keep offcanvas and backdrop in sync
         const observer = new MutationObserver(() => {
-            if (sidebar.classList.contains('hidden')) {
+            if (helpOffcanvas.classList.contains('hidden')) {
                 backdrop.classList.add('hidden');
+                if (adminSidebar) {
+                    adminSidebar.classList.add('pointer-events-auto');
+                    adminSidebar.style.opacity = '1';
+                }
             } else {
                 backdrop.classList.remove('hidden');
+                if (adminSidebar) {
+                    adminSidebar.classList.add('pointer-events-none');
+                    adminSidebar.style.opacity = '0.5';
+                }
             }
         });
 
-        observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+        observer.observe(helpOffcanvas, { attributes: true, attributeFilter: ['class'] });
 
         // Close on ESC key
         const escHandler = (e) => {
-            if (e.key === 'Escape' && !sidebar.classList.contains('hidden')) {
+            if (e.key === 'Escape' && !helpOffcanvas.classList.contains('hidden')) {
                 closeOffcanvas();
             }
         };
