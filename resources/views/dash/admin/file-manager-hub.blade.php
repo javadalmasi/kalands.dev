@@ -21,11 +21,7 @@
                 <span class="material-icons text-base">settings</span>
                 <span>تنظیمات</span>
             </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
-            </button>
-        </div>
+</div>
     </div>
 
     <div id="tab-files" class="tab-content space-y-4">
@@ -94,69 +90,6 @@
                 </div>
             </div>
         </form>
-    </div>
-
-    <div id="tab-help" class="tab-content hidden">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای کامل مدیریت فایل‌ها</h2>
-                    </div>
-
-                    <div class="space-y-8 text-sm text-slate leading-7">
-                        <section id="doc-intro">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">info</span>
-                                معرفی ماژول
-                            </h3>
-                            <p>ماژول مدیریت فایل در پلتفرم kalands.ir، سامانه بارگذاری، مرور و مدیریت فایل‌ها در مسیرهای تعریف شده است. این سامانه با استفاده از API‌های Ajax عملکرد می‌کند و برای سایر ماژول‌ها (مانند اسلایدر و بنر) قابل استفاده است.</p>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-browser">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">folder_open</span>
-                                مرور فایل‌ها
-                            </h3>
-                            <p>در تب فایل‌ها می‌توانید عملیات زیر را انجام دهید:</p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li>مشاهده فایل‌ها و پوشه‌ها به صورت درختی</li>
-                                <li>ایجاد پوشه جدید از طریق دکمه‌ی «ایجاد پوشه»</li>
-                                <li>دانلود و حذف فایل‌ها</li>
-                                <li>کپی مسیر فایل برای استفاده در سایر بخش‌ها</li>
-                            </ul>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-settings">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">settings</span>
-                                تنظیمات فایل منیجر
-                            </h3>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li><b>مسیر ریشه (Root Path):</b> پوشه‌ای در دایرکتوری <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">public</code> که فایل‌ها در آن ذخیره می‌شوند (مثلاً: <code class="bg-slate/10 px-1.5 py-0.5 rounded text-xs font-mono">uploads</code>)</li>
-                                <li><b>آدرس پایه CDN:</b> در صورت استفاده از شبکه توزیع محتوا، آدرس CDN را وارد کنید تا فایل‌ها از طریق CDN بارگذاری شوند</li>
-                            </ul>
-                        </section>
-                    </div>
-                </div>
-            </div>
-
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
-                        <a href="#doc-browser" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">مرور فایل‌ها</a>
-                        <a href="#doc-settings" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">تنظیمات فایل منیجر</a>
-                    </nav>
-                </div>
-            </aside>
-        </div>
     </div>
 
 </x-layouts.admin-dashboard>

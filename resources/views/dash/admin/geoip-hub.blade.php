@@ -35,11 +35,7 @@
                 <span class="material-icons text-base">settings</span>
                 <span>تنظیمات</span>
             </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
-            </button>
-        </div>
+</div>
     </div>
 
     <div id="tab-overview" class="tab-content space-y-6">
@@ -142,90 +138,6 @@
         <div class="admin-card">
             <h3 class="font-bold text-slate mb-4">تنظیمات GeoIP</h3>
             <p class="text-sm text-slate/60">تنظیمات این ماژول در حال حاضر فقط برای نمایش وضعیت فایل‌ها است.</p>
-        </div>
-    </div>
-
-    <div id="tab-help" class="tab-content hidden space-y-6">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای کامل ماژول بروزرسانی GeoIP</h2>
-                    </div>
-
-                    <div class="space-y-8 text-sm text-slate leading-7">
-                        <section id="doc-intro">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">info</span>
-                                معرفی ماژول
-                            </h3>
-                            <p>دیتابیس‌های GeoIP برای شناسایی موقعیت مکانی کاربران بر اساس آدرس IP آن‌ها استفاده می‌شوند. این سیستم به خصوص در ماژول‌های زیر نقش حیاتی دارد:</p>
-                            <ul class="list-disc list-inside space-y-2 mt-2 mr-4">
-                                <li>شناسایی و تفکیک ربات‌ها و خزنده‌های جستجوگر (در ماژول هوشمندی بازدیدکنندگان)</li>
-                                <li>اعمال محدودیت‌های جغرافیایی برای دسترسی به بخش‌های خاص سایت</li>
-                                <li>نمایش دکمه‌های افیلیت (مانند دیجی‌کالا و باسلام) صرفاً برای کاربران داخل ایران</li>
-                            </ul>
-                            <p class="mt-3">در صورتی که بروزرسانی خودکار با شکست مواجه شود، سیستم به طور هوشمند از آخرین نسخه معتبر موجود استفاده خواهد کرد تا اختلالی در تجربه کاربری ایجاد نشود.</p>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-services">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">cloud</span>
-                                سرویس‌های منابع
-                            </h3>
-                            <p>ماژول GeoIP از دو سرویس معتبر برای به‌روزرسانی دیتابیس‌ها استفاده می‌کند:</p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li><b>MaxMind:</b> ارائه‌دهنده اصلی و دقیق‌ترین دیتابیس GeoIP2</li>
-                                <li><b>IPinfo:</b> سرویس تکمیلی با پوشش بالاتر و جزئیات بیشتر</li>
-                            </ul>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-schedule">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">schedule</span>
-                                زمان‌بندی بروزرسانی
-                            </h3>
-                            <p>بروزرسانی‌ها به صورت خودکار هر ۵ ساعت از طریق سیستم صف‌ها (Queues) انجام می‌شود. در صورت نیاز به بروزرسانی فوری، می‌توانید از دکمه «بروزرسانی دستی» در بالای صفحه استفاده کنید.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">وضعیت فایل‌ها</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li>نمایش وضعیت وجود، حجم و آخرین زمان بروزرسانی هر دیتابیس</li>
-                                    <li>لاگ‌های کامل اجراهای قبلی برای عیب‌یابی</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-important">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">warning_amber</span>
-                                نکات بسیار مهم
-                            </h3>
-                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-900 text-sm">
-                                <p>بروزرسانی دیتابیس‌ها مستلزم دانلود فایل‌های حجیم (حدود ۵۰ تا ۱۰۰ مگابایت) از سرورهای MaxMind است. این فرآیند ممکن است بسته به سرعت سرور و کیفیت ارتباط بین‌المللی بین <b>۳۰ تا ۱۲۰ ثانیه</b> زمان ببرد. لطفاً در هنگام بروزرسانی دستی، تا پایان عملیات مرورگر خود را نبندید.</p>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </div>
-
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
-                        <a href="#doc-services" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">سرویس‌های منابع</a>
-                        <a href="#doc-schedule" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">زمان‌بندی بروزرسانی</a>
-                        <a href="#doc-important" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">نکات مهم</a>
-                    </nav>
-                </div>
-            </aside>
         </div>
     </div>
 

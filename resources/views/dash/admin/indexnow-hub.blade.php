@@ -34,11 +34,7 @@
                 <span class="material-icons text-base">history</span>
                 <span>گزارش اجراها</span>
             </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
-            </button>
-        </div>
+</div>
     </div>
 
     <form action="{{ route('dash.admin.indexnow.settings.save', ['authkey' => $authkey]) }}" method="POST" id="indexnow-settings-form">
@@ -325,106 +321,6 @@
                     </div>
                 @endforelse
             </div>
-        </div>
-    </div>
-
-    <div id="tab-help" class="tab-content hidden">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای ماژول IndexNow</h2>
-                    </div>
-
-                    <section id="doc-intro">
-                        <h3 class="text-base font-bold mb-3 flex items-center gap-2">
-                            <span class="material-icons text-primary text-lg">info</span>
-                            IndexNow چیست؟
-                        </h3>
-                        <p class="text-sm text-slate leading-7">پروتکل IndexNow یک استاندارد ساده است که به موتورهای جستجو اجازه می‌دهد از طریق API از تغییرات محتوای وب‌سایت شما مطلع شوند. با استفاده از IndexNow، بلافاصله پس از تغییر محصولات، آدرس آن‌ها را به بینگ و یاندکس اطلاع می‌دهید تا سریع‌تر ایندکس شوند.</p>
-                    </section>
-
-                    <hr class="border-slate/10">
-
-                    <section id="doc-verify">
-                        <h3 class="text-base font-bold mb-3 flex items-center gap-2">
-                            <span class="material-icons text-primary text-lg">verified</span>
-                            وریفای مشترک بینگ و یاندکس
-                        </h3>
-                        <p class="text-sm text-slate leading-7">ماژول IndexNow از یک کلید وریفای مشترک برای هر دو موتور بینگ و یاندکس استفاده می‌کند. مالکیت سایت فقط یک‌بار تأیید می‌شود و فایل <code class="bg-slate/10 px-1.5 py-0.5 rounded">{key}.txt</code> باید در ریشه سایت قابل دسترس باشد.</p>
-                        <ol class="list-decimal list-inside mt-3 space-y-2 mr-4 text-sm text-slate leading-7">
-                            <li>یک کلید ۳۲ کاراکتری (ترجیحاً تصادفی) تولید یا وارد کنید.</li>
-                            <li>فایل <code class="bg-slate/10 px-1.5 py-0.5 rounded">{key}.txt</code> در ریشه سایت قرار دهید.</li>
-                            <li>هنگام ارسال درخواست، کلید و محل فایل به هر دو موتور ارسال می‌شود.</li>
-                            <li>هر دو موتور یک فایل مشترک را بررسی می‌کنند.</li>
-                        </ol>
-                        <p class="text-[11px] text-warning mt-3 flex items-center gap-1">
-                            <span class="material-icons text-xs">warning</span>
-                            در صورت تغییر کلید، فایل قبلی حذف و فایل جدید تولید می‌شود.
-                        </p>
-                    </section>
-
-                    <hr class="border-slate/10">
-
-                    <section id="doc-disable">
-                        <h3 class="text-base font-bold mb-3 flex items-center gap-2">
-                            <span class="material-icons text-primary text-lg">toggle_on</span>
-                            فعال و غیرفعال کردن موتورها
-                        </h3>
-                        <p class="text-sm text-slate leading-7">هر موتور (بینگ و یاندکس) را می‌توانید به صورت مستقل فعال یا غیرفعال کنید. اگر موتری غیرفعال باشد، ارسال به آن موتور متوقف می‌شود.</p>
-                    </section>
-
-                    <hr class="border-slate/10">
-
-                    <section id="doc-weights">
-                        <h3 class="text-base font-bold mb-3 flex items-center gap-2">
-                            <span class="material-icons text-primary text-lg">bar_chart</span>
-                            نرخ ارسال ساعتی
-                        </h3>
-                        <p class="text-sm text-slate leading-7">با استفاده از نمودار ستونی می‌توانید برای هر ساعت از شبانه‌روز وزن ارسال مشخصی تعیین کنید. وزن بیشتر به معنای ارسال محصولات بیشتر در آن ساعت است. این قابلیت برای توزیع بار ارسال در ساعات خلوت (مثلاً نیمه‌شب) بسیار مفید است.</p>
-                    </section>
-
-                    <hr class="border-slate/10">
-
-                    <section id="doc-limits">
-                        <h3 class="text-base font-bold mb-3 flex items-center gap-2">
-                            <span class="material-icons text-primary text-lg">speed</span>
-                            محدودیت‌ها
-                        </h3>
-                        <ul class="list-disc list-inside mt-3 space-y-2 mr-4 text-sm text-slate leading-7">
-                            <li>حداکثر ۱۰٬۰۰۰ URL در هر درخواست</li>
-                            <li>حداکثر ۱٬۰۰۰٬۰۰۰ URL در روز (توصیه شده)</li>
-                            <li>فقط محصولات فعال (is_active = true) ارسال می‌شوند</li>
-                            <li>محصولاتی که قبلاً ارسال شده و بروزرسانی نشده‌اند، دوباره ارسال نمی‌شوند</li>
-                        </ul>
-                    </section>
-
-                    <hr class="border-slate/10">
-
-                    <section id="doc-schedule">
-                        <h3 class="text-base font-bold mb-3 flex items-center gap-2">
-                            <span class="material-icons text-primary text-lg">schedule</span>
-                            زمان‌بندی
-                        </h3>
-                        <p class="text-sm text-slate leading-7">ماژول IndexNow به صورت خودکار داخل چرخه مدیریت صف اجرا می‌شود و نیاز به اجرای دستور مجزا ندارد. کافی است پردازشگر صف (Queue) طبق تنظیمات ماژول صف فعال باشد.</p>
-                    </section>
-                </div>
-            </div>
-
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">IndexNow چیست؟</a>
-                        <a href="#doc-verify" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">وریفای مشترک</a>
-                        <a href="#doc-disable" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">فعال/غیرفعال موتورها</a>
-                        <a href="#doc-weights" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">نرخ ارسال ساعتی</a>
-                        <a href="#doc-limits" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">محدودیت‌ها</a>
-                        <a href="#doc-schedule" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">زمان‌بندی</a>
-                    </nav>
-                </div>
-            </aside>
         </div>
     </div>
 

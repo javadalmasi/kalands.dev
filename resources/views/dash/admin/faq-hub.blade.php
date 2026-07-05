@@ -16,10 +16,6 @@
                 <span class="material-icons text-base">view_list</span>
                 <span>مدیریت آیتم‌ها</span>
             </button>
-            <button type="button" class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="faq-tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
-            </button>
         </div>
     </div>
 
@@ -136,70 +132,5 @@
         </div>
     </div>
 
-    <div id="faq-tab-help" class="tab-content hidden">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای کامل ماژول سوالات متداول</h2>
-                    </div>
-
-                    <div class="space-y-8 text-sm text-slate leading-7">
-                        <section id="doc-intro">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">info</span>
-                                معرفی ماژول
-                            </h3>
-                            <p>ماژول سوالات متداول، سامانه مدیریت سوال و جواب‌های پرتکرار در صفحه FAQ سایت است. این سامانه قابلیت افزودن، ویرایش، حذف و مرتب‌سازی با درگ اند دراپ را فراهم می‌کند.</p>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-create">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">add_circle_outline</span>
-                                افزودن سوال
-                            </h3>
-                            <p>برای افزودن سوال جدید، در تب افزودن آیتم موارد زیر را تکمیل کنید:</p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li><b>عنوان سوال:</b> سؤال کوتاه و واضح</li>
-                                <li><b>توضیحات:</b> پاسخ دقیق و کامل به سؤال</li>
-                                <li><b>ترتیب نمایش:</b> عددی برای مرتب‌سازی در صفحه</li>
-                                <li><b>وضعیت فعال:</b> در صورت فعال بودن در سایت نمایش داده می‌شود</li>
-                            </ul>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-manage">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">view_list</span>
-                                مدیریت آیتم‌ها
-                            </h3>
-                            <p>در تب مدیریت آیتم‌ها می‌توانید:</p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li>سوالات را به صورت جستجوی سریع پیدا کنید</li>
-                                <li>آیتم‌ها را با کشیدن و رها کردن مرتب کنید</li>
-                                <li>عملیات دسته‌جمعی انجام دهید (فعال‌سازی، غیرفعال‌سازی، حذف)</li>
-                                <li>هر آیتم را ویرایش یا حذف کنید</li>
-                            </ul>
-                        </section>
-                    </div>
-                </div>
-            </div>
-
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
-                        <a href="#doc-create" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">افزودن سوال</a>
-                        <a href="#doc-manage" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">مدیریت آیتم‌ها</a>
-                    </nav>
-                </div>
-            </aside>
-        </div>
-    </div>
 
 </x-layouts.admin-dashboard>

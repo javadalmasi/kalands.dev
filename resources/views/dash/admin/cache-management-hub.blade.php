@@ -21,11 +21,7 @@
                 <span class="material-icons text-base">settings_suggest</span>
                 <span>بهینه‌سازی وب‌سرور</span>
             </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
-            </button>
-        </div>
+</div>
     </div>
 
     <div id="tab-webservices" class="tab-content space-y-6">
@@ -642,95 +638,6 @@
         </form>
     </div>
 
-    <div id="tab-help" class="tab-content hidden">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای کامل ماژول مدیریت کش</h2>
-                    </div>
-
-                    <div class="space-y-8 text-sm text-slate leading-7">
-                        <section id="doc-webservices">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">bolt</span>
-                                تنظیمات وب‌سرویس‌ها
-                            </h3>
-                            <p>در این بخش می‌توانید تنظیمات کش برای وب‌سرویس‌های Autocomplete و Visitor Info را مدیریت کنید.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">وب‌سرویس‌های قابل تنظیم</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li><b>Autocomplete:</b> وب‌سرویس جستجوی هوشمند سایت</li>
-                                    <li><b>Affiliate:</b> وب‌سرویس ریدایرکت لینک‌های وابسته (/go/*)</li>
-                                    <li><b>Product Page:</b> صفحات محصول (/product/*)</li>
-                                    <li><b>Visitor Info:</b> وب‌سرویس مشخصات بازدیدکننده (IP، موقعیت، مرورگر)</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-ttl">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">schedule</span>
-                                تنظیمات TTL و Cache-Control
-                            </h3>
-                            <p>TTL (Time To Live) زمان نگهداری داده‌ها در کش را مشخص می‌کند. مقدار پیش‌فرض برای Autocomplete و Affiliate ۳۱۵۳۶۰۰۰ ثانیه (یک سال) و برای Product Page ۸۶۴۰۰ ثانیه (۲۴ ساعت) است.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">انواع کش</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li><b>Public:</b> قابل ذخیره در کش عمومی (CDN، پراکسی)</li>
-                                    <li><b>Private:</b> فقط برای مرورگر کاربر قابل ذخیره است</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-optimization">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">settings_suggest</span>
-                                بهینه‌سازی وب‌سرور LiteSpeed
-                            </h3>
-                            <p>این بخش تنظیمات مربوط به بهینه‌سازی سرور LiteSpeed را در فایل .htaccess مدیریت می‌کند.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">تنظیمات قابل تغییر</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li>Cache Lookup و وابستگی‌ها (ESI، Crawler)</li>
-                                    <li>QUIC Enable برای سرعت بالاتر ارتباطات UDP</li>
-                                    <li>SpdyEnabled برای فعال‌سازی HTTP/2 و HTTP/3</li>
-                                    <li>LSPHP Workers و Process Group برای بهینه‌سازی PHP</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-custom-headers">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">tune</span>
-                                پیشرفته
-                            </h3>
-                            <p>با فعال‌سازی حالت پیشرفته، می‌توانید به صورت جداگانه برای هر هدر (Cache-Control، X-LiteSpeed-Cache، CDN-Cache-Control و Cloudflare-CDN-Cache) مقدار TTL و نوع کش را تعیین کنید.</p>
-                        </section>
-                    </div>
-                </div>
-            </div>
-
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-webservices" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">وب‌سرویس‌ها</a>
-                        <a href="#doc-ttl" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">TTL و Cache-Control</a>
-                        <a href="#doc-optimization" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">بهینه‌سازی LiteSpeed</a>
-                        <a href="#doc-custom-headers" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">پیشرفته</a>
-                    </nav>
-                </div>
-            </aside>
-        </div>
-    </div>
 
     @vite(['resources/js/admin-cache-hub.js'])
 </x-layouts.admin-dashboard>

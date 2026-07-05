@@ -41,11 +41,7 @@
                 <span class="material-icons text-base">settings</span>
                 <span>تنظیمات و کنترل</span>
             </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
-            </button>
-        </div>
+</div>
     </div>
 
     <div id="tab-overview" class="tab-content space-y-6">
@@ -839,73 +835,6 @@
                     </div>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <div id="tab-help" class="tab-content space-y-6 hidden">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای ماژول سایت مپ</h2>
-                    </div>
-                    <section id="doc-howto">
-                        <h3 class="text-base font-bold mb-3 flex items-center gap-2">
-                            <span class="material-icons text-primary text-lg">info</span>
-                            نحوه عملکرد
-                        </h3>
-                        <p class="text-sm text-slate leading-7">این ماژول به صورت افزایشی و گروه‌بندی‌شده کار می‌کند. در اجرای افزایشی، فقط محصولاتی پردازش می‌شوند که:</p>
-                        <ul class="list-disc list-inside space-y-1 mt-2 text-xs text-slate">
-                            <li>جدید اضافه شده‌اند (sitemapped_at null)</li>
-                            <li>برای تکمیل گروه ۵۰٬۰۰۰تایی بعدی به حد نصاب رسیده‌اند</li>
-                        </ul>
-                        <p class="mt-2 text-sm text-slate leading-7">گروه ناقص در draft نگه‌داری می‌شود و تا زمانی که به ۵۰٬۰۰۰ URL نرسد داخل sitemap.xml قرار نمی‌گیرد. به‌روزرسانی کامل URLهای قبلی با بازسازی دوره‌ای انجام می‌شود.</p>
-                    </section>
-                    <hr class="border-slate/10">
-                    <section id="doc-schedule">
-                        <h3 class="text-base font-bold mb-3 flex items-center gap-2">
-                            <span class="material-icons text-primary text-lg">schedule</span>
-                            زمان‌بندی
-                        </h3>
-                        <p class="text-sm text-slate leading-7">فرآیند تولید سایت مپ توسط ماژول مدیریت صف‌ها شروع می‌شود. در صورت نبود اجرای فعال، وجود محصول آماده پردازش و مثبت بودن نرخ ساعت فعلی، اجرای جدید در صف قرار می‌گیرد.</p>
-                        <p class="mt-2 text-sm text-slate leading-7">این ماژول بازه مجاز/غیرمجاز ندارد؛ نرخ هر ساعت از ۰ تا ۱۰ تعیین می‌کند batchهای ۱۰۰۰تایی با چه فاصله‌ای اجرا شوند.</p>
-                    </section>
-                    <hr class="border-slate/10">
-                    <section id="doc-rebuild">
-                        <h3 class="text-base font-bold mb-3 flex items-center gap-2">
-                            <span class="material-icons text-primary text-lg">restart_alt</span>
-                            بازسازی دوره‌ای
-                        </h3>
-                        <p class="text-sm text-slate leading-7">در بازسازی کامل، نسخه جدید پشت صحنه ساخته می‌شود. نسخه قبلی و sitemap.xml فعلی تا پایان ساخت حفظ می‌شوند و بعد از کامل شدن نسخه جدید، فایل‌های نسخه قبلی حذف و sitemap.xml با آدرس فایل‌های جدید جایگزین می‌شود.</p>
-                    </section>
-                    <hr class="border-slate/10">
-                    <section id="doc-files">
-                        <h3 class="text-base font-bold mb-3 flex items-center gap-2">
-                            <span class="material-icons text-primary text-lg">description</span>
-                            ساختار فایل‌ها
-                        </h3>
-                        <ul class="list-disc list-inside space-y-1 mt-2 text-xs text-slate">
-                            <li><span class="admin-ltr font-mono">/sitemap.xml</span> — ایندکس اصلی سایت مپ</li>
-                            <li><span class="admin-ltr font-mono">/sitemaps/sitemap-{run}-g{group}.xml.gz</span> — فایل‌های سایت مپ فشرده شده</li>
-                            <li>هر فایل حداکثر ۵۰٬۰۰۰ URL دارد (۵۰ batch هزار تایی)</li>
-                            <li>تعداد کل فایل‌ها بستگی به تعداد محصولات فعال دارد</li>
-                            <li>فقط محصولات فعال (is_active = true) ایندکس می‌شوند</li>
-                        </ul>
-                    </section>
-                </div>
-            </div>
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-howto" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">نحوه عملکرد</a>
-                        <a href="#doc-schedule" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">زمان‌بندی</a>
-                        <a href="#doc-rebuild" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">بازسازی دوره‌ای</a>
-                        <a href="#doc-files" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">ساختار فایل‌ها</a>
-                    </nav>
-                </div>
-            </aside>
         </div>
     </div>
 

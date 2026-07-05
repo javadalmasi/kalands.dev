@@ -45,10 +45,6 @@
                 <span class="material-icons text-base">psychology</span>
                 <span>تنظیمات هوش مصنوعی</span>
             </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
-            </button>
         </div>
     </div>
 
@@ -221,91 +217,6 @@
         </div>
     </div>
 
-    <div id="tab-help" class="tab-content hidden">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای کامل مدیریت دسته‌بندی‌ها</h2>
-                    </div>
-
-                    <div class="space-y-8 text-sm text-slate leading-7">
-                        <section id="doc-intro">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">info</span>
-                                معرفی ماژول
-                            </h3>
-                            <p>ماژول مدیریت دسته‌بندی، سامانه یکپارچه مدیریت درخت دسته‌بندی محصولات و نگاشت هوشمند بین فروشگاه‌های دیجی‌کالا، باسلام و اسنپ‌شاپ در پلتفرم kalands.ir است.</p>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-stores">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">storefront</span>
-                                فروشگاه‌ها
-                            </h3>
-                            <p>سه فروشگاه اصلی در این ماژول مدیریت می‌شوند:</p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li><b>دیجی‌کالا:</b> دسته‌بندی مرجع که دیگر فروشگاه‌ها به آن نگاشت می‌شوند</li>
-                                <li><b>باسلام:</b> دسته‌بندی باسلام که می‌تواند به دیجی‌کالا متصل شود</li>
-                                <li><b>اسنپ‌شاپ:</b> دسته‌بندی اسنپ‌شاپ که می‌تواند به دیجی‌کالا متصل شود</li>
-                            </ul>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-mapping">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">link</span>
-                                نگاشت هوشمند
-                            </h3>
-                            <p>نگاشت هوشمند بین دسته‌بندی‌ها با استفاده از بردارهای بیانیه (Vector Embeddings) انجام می‌شود. در تنظیمات می‌توانید موتور وکتور را انتخاب کنید:</p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li><b>موتور داخلی (N-gram):</b> بدون نیاز به سرویس خارجی، سرعت بالا</li>
-                                <li><b>موتور خارجی (LLM API):</b> دقت بالاتر با هزینه وابسته به API</li>
-                            </ul>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-operations">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">settings_suggest</span>
-                                عملیات و ایمپورت
-                            </h3>
-                            <p>برای ایمپورت دسته‌بندی اسنپ‌شاپ، خروجی JSON وب‌سرویس را در فرم ایمپورت قرار دهید. سیستم به صورت خودکار ساختار درختی را استخراج و وکتورایز می‌کند.</p>
-                            <p class="mt-3">همچنین می‌توانید نگاشت هوشمند سراسری را اجرا کنید تا تمام دسته‌بندی‌های باسلام و اسنپ‌شاپ با دیجی‌کالا مقایسه شوند.</p>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-linked">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">link</span>
-                                موارد لینک شده
-                            </h3>
-                            <p>در این بخش می‌توانید تمامی نگاشت‌های ایجاد شده را مشاهده کنید. نمایش درصد شباهت و وضعیت دستی/خودکار نگاشت‌ها امکان‌پذیر است.</p>
-                        </section>
-                    </div>
-                </div>
-            </div>
-
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
-                        <a href="#doc-stores" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">فروشگاه‌ها</a>
-                        <a href="#doc-mapping" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">نگاشت هوشمند</a>
-                        <a href="#doc-operations" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">عملیات و ایمپورت</a>
-                        <a href="#doc-linked" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">موارد لینک شده</a>
-                    </nav>
-                </div>
-            </aside>
-        </div>
-    </div>
 
     @push('scripts')
         @vite('resources/js/admin-visitor-intelligence.js')

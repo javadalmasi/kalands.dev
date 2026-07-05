@@ -31,11 +31,7 @@
                 <span class="material-icons text-base">settings</span>
                 <span>تنظیمات عمومی</span>
             </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
-            </button>
-            <div class="flex-grow"></div>
+<div class="flex-grow"></div>
             <button onclick="window.addGroup()" class="px-6 py-4 text-sm font-bold text-emerald-600 hover:bg-emerald-50 transition-colors flex items-center gap-2 border-r border-slate/10">
                 <span class="material-icons text-base">add_circle</span>
                 <span>افزودن گروه اصلی</span>
@@ -184,84 +180,6 @@
         </div>
     </div>
 
-    <div id="tab-help" class="tab-content hidden">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای کامل ماژول مگا منو</h2>
-                    </div>
-
-                    <div class="space-y-8 text-sm text-slate leading-7">
-                        <section id="doc-editor">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">edit_note</span>
-                                ویرایشگر منو
-                            </h3>
-                            <p>ویرایشگر بصری مگا منو به شما امکان می‌دهد ساختار کامل منوی سایت را از طریق یک رابط کاربری کشیدن و رها کردن مدیریت کنید.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">نکات کلیدی</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li>گروه‌های اصلی (تب‌ها) در هدر سایت ظاهر می‌شوند</li>
-                                    <li>زیرمنوها تا سه سطح تو در تو پشورش دارند</li>
-                                    <li>استفاده از جستجوی سراسری برای یافتن سریع آیتم‌ها</li>
-                                    <li>فیلترهای وضعیت برای نمایش فقط موارد غیرفعال</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-broken-links">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">link_off</span>
-                                تست لینک‌های شکسته
-                            </h3>
-                            <p>این بخش به‌صورت خودکار لینک‌های منو را بررسی می‌کند و گزارش می‌دهد کدام لینک‌ها دچار خطا یا حذف شده‌اند.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">عملیات‌های دسته‌جمعی</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li>غیرفعال‌سازی انتخابی: لینک‌های انتخابی را غیرفعال می‌کند</li>
-                                    <li>حذف انتخابی: لینک‌های انتخابی را از ساختار منو حذف می‌کند</li>
-                                    <li>غیرفعال‌سازی همه شکسته: تمام لینک‌های خطا را غیرفعال می‌کند</li>
-                                </ul>
-                            </div>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-settings">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">settings</span>
-                                تنظیمات عمومی
-                            </h3>
-                            <p>در این بخش می‌توانید ساختار JSON منو را مستقیماً مشاهده و ویرایش کنید.</p>
-                            <div class="mt-4 bg-primary/5 border border-primary/20 rounded-xl p-4">
-                                <h4 class="font-bold text-slate mb-2">ویرایش مستقیم JSON</h4>
-                                <ul class="list-disc list-inside space-y-1 mr-4">
-                                    <li>تغییرات در اینجا بلافاصله در ویرایشگر اعمال می‌شود</li>
-                                    <li>دانلود خروجی JSON برای پشتیبان‌گیری</li>
-                                    <li>وارد کردن JSON برای بازیابی تنظیمات قبلی</li>
-                                </ul>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </div>
-
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-editor" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">ویرایشگر منو</a>
-                        <a href="#doc-broken-links" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">تست لینک‌های شکسته</a>
-                        <a href="#doc-settings" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">تنظیمات عمومی</a>
-                    </nav>
-                </div>
-            </aside>
-        </div>
-    </div>
 
     {{-- Dialog Modals --}}
     <dialog id="group-form-modal" class="admin-dialog w-[min(100vw-32px,500px)]">

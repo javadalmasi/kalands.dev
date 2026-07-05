@@ -19,11 +19,7 @@
                 <span class="material-icons text-base">settings</span>
                 <span>تنظیمات</span>
             </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-help">
-                <span class="material-icons text-base">help_outline</span>
-                <span>راهنما</span>
-            </button>
-        </div>
+</div>
     </div>
 
     <div id="tab-moderation" class="tab-content space-y-4">
@@ -199,84 +195,6 @@
                 </div>
             </div>
         </form>
-    </div>
-
-    <div id="tab-help" class="tab-content hidden">
-        <div class="flex gap-6 items-start">
-            <div class="flex-1 min-w-0">
-                <div class="admin-card space-y-6">
-                    <div class="flex items-center gap-3 border-b border-slate/10 pb-4">
-                        <span class="material-icons text-2xl text-primary">help_outline</span>
-                        <h2 class="font-bold text-slate text-lg">راهنمای کامل ماژول نظرات</h2>
-                    </div>
-
-                    <div class="space-y-8 text-sm text-slate leading-7">
-                        <section id="doc-intro">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">info</span>
-                                معرفی ماژول
-                            </h3>
-                            <p>ماژول نظرات، سامانه مدیریت نظرات کاربران در پلتفرم kalands.ir است. این ماژول امکان تایید، رد، اسپم‌سازی و گزارش‌گیری از نظرات ارسال شده کاربران را فراهم می‌کند.</p>
-                            <p class="mt-3">نظرات کاربران بر اساس IP، محصول و زمان ثبت پیگیری می‌شوند و امکانات مدیریت گروهی برای افزایش بهره‌وری پشتیبانان در نظر گرفته شده است.</p>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-moderation">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">fact_check</span>
-                                تایید نظرات
-                            </h3>
-                            <p>در این بخش نظرات ارسال شده را بررسی و وضعیت آن‌ها را تغییر دهید:</p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li><b>تایید:</b> نظر در صفحه محصول نمایش داده می‌شود</li>
-                                <li><b>رد:</b> نظر تایید نمی‌شود</li>
-                                <li><b>اسپم:</b> نظر به عنوان اسپم علامت‌گذاری می‌شود</li>
-                                <li><b>حذف دائمی:</b> نظر از دیتابیس حذف می‌شود</li>
-                            </ul>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-reports">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">assessment</span>
-                                گزارش نظرات
-                            </h3>
-                            <p>گزارش نظرات بر اساس محصول و فروشگاه مرتب‌سازی می‌شود. برای هر محصول تعداد نظرات تایید شده و getsign فروشگاه (دیجی‌کالا یا باسلام) نمایش داده می‌شود.</p>
-                            <p class="mt-3">امکان مشاهده سریع محصول از طریق لینک «مشاهده محصول» وجود دارد.</p>
-                        </section>
-
-                        <hr class="border-slate/10">
-
-                        <section id="doc-settings">
-                            <h3 class="text-base font-bold text-slate mb-3 flex items-center gap-2">
-                                <span class="material-icons text-primary text-lg">settings</span>
-                                تنظیمات
-                            </h3>
-                            <p>در بخش تنظیمات می‌توانید:</p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 mr-4">
-                                <li>امکان ارسال نظر را به صورت سراسری فعال/غیرفعال کنید</li>
-                                <li>پیام هشدار برای زمان غیرفعال بودن فرم نظردهی تنظیم کنید</li>
-                            </ul>
-                            <p class="mt-3">با غیرفعال کردن ارسال نظر، فرم نظردهی در تمامی محصولات مسدود و پیام تعیین شده به کاربران نمایش داده می‌شود.</p>
-                        </section>
-                    </div>
-                </div>
-            </div>
-
-            <aside class="hidden lg:block w-64 shrink-0">
-                <div class="admin-card !p-4 sticky top-4">
-                    <h4 class="text-xs font-bold text-slate uppercase tracking-wider mb-3 px-2">فهرست مطالب</h4>
-                    <nav class="space-y-1">
-                        <a href="#doc-intro" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">معرفی ماژول</a>
-                        <a href="#doc-moderation" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">تایید نظرات</a>
-                        <a href="#doc-reports" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">گزارش نظرات</a>
-                        <a href="#doc-settings" class="doc-nav-link block px-3 py-2 rounded-lg text-xs font-medium text-slate hover:bg-primary/5 hover:text-primary transition-colors">تنظیمات</a>
-                    </nav>
-                </div>
-            </aside>
-        </div>
     </div>
 
     @push('scripts')
