@@ -3,10 +3,12 @@ import '../css/admin-app.css';
 import 'material-icons/iconfont/material-icons.css';
 import 'material-symbols/outlined.css';
 import { initFlowbite } from 'flowbite';
+import { initAllHelpOffcanvas } from './admin/help-offcanvas';
 
 document.addEventListener('DOMContentLoaded', () => {
     window.initFlowbite = initFlowbite;
     initFlowbite();
+    initAllHelpOffcanvas();
 
     const getByIdInScope = (scope, id) => {
         if (!id) return null;

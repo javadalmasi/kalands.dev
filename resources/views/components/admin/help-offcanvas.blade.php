@@ -7,11 +7,11 @@
 
 <!-- Help Button -->
 <button type="button"
-    class="p-2 inline-flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate dark:text-slate-300"
-    onclick="document.getElementById('{{ $randomId }}').classList.remove('hidden'); document.getElementById('{{ $randomId }}-backdrop').classList.remove('hidden');"
+    id="help-btn-{{ $randomId }}"
+    class="admin-toggle inline-flex relative cursor-pointer"
     title="راهنمای ماژول"
     aria-label="راهنمای ماژول">
-    <span class="material-icons">help_outline</span>
+    <span class="material-icons text-slate dark:text-slate-300">help_outline</span>
 </button>
 
 <!-- Help Offcanvas (Sidebar) -->
@@ -26,7 +26,7 @@
         </h5>
         <button type="button"
             class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition text-slate dark:text-slate-300"
-            onclick="document.getElementById('{{ $randomId }}').classList.add('hidden'); document.getElementById('{{ $randomId }}-backdrop').classList.add('hidden')">
+            data-close-offcanvas>
             <span class="material-icons">close</span>
         </button>
     </div>
@@ -105,34 +105,8 @@
 
 <!-- Backdrop (overlay) -->
 <div id="{{ $randomId }}-backdrop"
-    class="hidden fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 cursor-pointer"
-    onclick="document.getElementById('{{ $randomId }}').classList.add('hidden'); document.getElementById('{{ $randomId }}-backdrop').classList.add('hidden');">
+    class="hidden fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 cursor-pointer">
 </div>
-
-<script>
-    // Keep sidebar and backdrop in sync
-    const sidebar = document.getElementById('{{ $randomId }}');
-    const backdrop = document.getElementById('{{ $randomId }}-backdrop');
-    if (sidebar && backdrop) {
-        const observer = new MutationObserver(() => {
-            if (sidebar.classList.contains('hidden')) {
-                backdrop.classList.add('hidden');
-            } else {
-                backdrop.classList.remove('hidden');
-            }
-        });
-        observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
-    }
-
-    // Close on ESC key
-    const closeOnEsc = (e) => {
-        if (e.key === 'Escape' && !sidebar.classList.contains('hidden')) {
-            sidebar.classList.add('hidden');
-            backdrop.classList.add('hidden');
-        }
-    };
-    document.addEventListener('keydown', closeOnEsc);
-</script>
 
 <style>
     #{{ $randomId }} {
