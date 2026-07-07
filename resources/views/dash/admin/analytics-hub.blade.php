@@ -5,7 +5,7 @@
     </div>
 
     <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-b border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="analytics-tabs">
+        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="analytics-tabs">
             <button class="px-5 py-3.5 text-sm font-bold transition-colors border-b-2 border-success text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-overview">
                 <span class="material-icons text-lg">dashboard</span>
                 <span class="hidden sm:inline">نمای کلی</span>

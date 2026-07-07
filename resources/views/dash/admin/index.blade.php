@@ -45,33 +45,4 @@
             </div>
         </div>
     </div>
-
-    <div>
-        <h2 class="text-sm font-bold text-slate/50 uppercase tracking-wider mb-4">وضعیت سرویس‌ها</h2>
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            @foreach ($services as $service)
-                <div class="admin-card">
-                    <div class="flex items-start justify-between mb-3">
-                        <div>
-                            <p class="text-xs text-slate/60 mb-1">{{ $service['name'] }}</p>
-                            <div class="flex items-center gap-2">
-                                <span class="inline-block h-2.5 w-2.5 rounded-full {{ $service['status'] === 'ok' ? 'bg-success' : ($service['status'] === 'warning' ? 'bg-warning' : 'bg-error') }}"></span>
-                                <span class="text-xs font-medium text-slate/50">
-                                    {{ $service['status'] === 'ok' ? 'فعال' : ($service['status'] === 'warning' ? 'هشدار' : 'خرابی') }}
-                                </span>
-                            </div>
-                        </div>
-                        <span class="material-icons text-lg text-slate/30">{{ $service['icon'] }}</span>
-                    </div>
-
-                    <div class="bg-slate/5 rounded-lg p-3 mb-3">
-                        <p class="text-xs text-slate/50">{{ $service['metricLabel'] }}</p>
-                        <p class="text-lg font-bold text-slate truncate">{{ $service['metric'] }}</p>
-                    </div>
-
-                    <p class="text-xs text-slate/50 leading-relaxed">{{ $service['details'] }}</p>
-                </div>
-            @endforeach
-        </div>
-    </div>
 </x-layouts.admin-dashboard>

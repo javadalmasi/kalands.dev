@@ -12,7 +12,7 @@
     </div>
 
     <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-b border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="artisan-tabs">
+        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="artisan-tabs">
             <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-commands">
                 <span class="material-icons text-base">terminal</span>
                 <span>دستورات</span>
