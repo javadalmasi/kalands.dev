@@ -34,7 +34,7 @@
                                 <h2 class="font-semibold text-slate">{{ $meta['label'] }}</h2>
                                 <p class="text-sm text-slate">{{ $meta['description'] }}</p>
                             </div>
-                            <button id="preview-toggle-btn" class="text-slate hover:text-primary transition-colors p-2 hover:bg-slate/10 rounded" title="نمایش پیش‌نمایش">
+                            <button class="preview-toggle-btn text-slate hover:text-primary transition-colors p-2 hover:bg-slate/10 rounded" title="نمایش پیش‌نمایش">
                                 <span class="material-icons text-base">preview</span>
                             </button>
                         </div>
@@ -51,22 +51,22 @@
                     </div>
                 @endforeach
             </section>
-        </div>
 
-        <aside class="admin-card space-y-2 h-fit sticky top-4 hidden" id="live-preview-card">
-            <div class="flex items-center justify-between border-b pb-2 dark:border-white/10">
-                <h4 class="font-semibold text-slate text-sm flex items-center gap-2">
-                    <span class="material-icons text-base">preview</span>
-                    پیش‌نمایش
-                </h4>
-                <button id="preview-close-btn" class="text-slate hover:text-primary transition-colors p-1 hover:bg-slate/10 rounded" title="بسته کردن">
-                    <span class="material-icons text-base">close</span>
-                </button>
-            </div>
-            <div class="overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800" id="preview-container">
-                <iframe id="email-live-preview" class="w-full border-none bg-white" style="min-height: 600px"></iframe>
-            </div>
-        </aside>
+            <aside class="admin-card space-y-2 h-fit sticky top-4 hidden" id="live-preview-card">
+                <div class="flex items-center justify-between border-b pb-2 dark:border-white/10">
+                    <h4 class="font-semibold text-slate text-sm flex items-center gap-2">
+                        <span class="material-icons text-base">preview</span>
+                        پیش‌نمایش
+                    </h4>
+                    <button id="preview-close-btn" class="text-slate hover:text-primary transition-colors p-1 hover:bg-slate/10 rounded" title="بسته کردن">
+                        <span class="material-icons text-base">close</span>
+                    </button>
+                </div>
+                <div class="overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800" id="preview-container">
+                    <iframe id="email-live-preview" class="w-full border-none bg-white" style="min-height: 600px"></iframe>
+                </div>
+            </aside>
+        </div>
     </div>
 
     <div id="common-features-tab" class="tab-content hidden">

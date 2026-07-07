@@ -256,28 +256,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Preview toggle functionality
     const previewCard = document.getElementById('live-preview-card');
     const previewContainer = document.getElementById('preview-container');
-    const previewToggleBtn = document.getElementById('preview-toggle-btn');
-    const previewCloseBtn = document.getElementById('preview-close-btn');
     const templatesGrid = document.getElementById('templates-grid');
-    const editorSection = document.getElementById('editor-section');
 
-    if (previewToggleBtn && previewCloseBtn && previewCard) {
-        previewToggleBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            // Show preview card
-            previewCard.classList.remove('hidden');
-            // Change grid to show editor and preview side by side
-            templatesGrid.classList.remove('lg:grid-cols-[280px_1fr]');
-            templatesGrid.classList.add('lg:grid-cols-[280px_1fr_400px]');
-            // Move preview inside the grid
-            const tempDiv = document.createElement('div');
-            tempDiv.appendChild(previewCard);
-            templatesGrid.appendChild(previewCard);
-            previewCard.classList.remove('fixed', 'bottom-6', 'right-6', 'w-96');
-            previewCard.classList.add('h-fit', 'sticky', 'top-4');
+    if (previewCard && templatesGrid) {
+        // Listen for all toggle buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.preview-toggle-btn')) {
+                e.preventDefault();
+                // Show preview card
+                previewCard.classList.remove('hidden');
+                // Change grid to show editor and preview side by side
+                templatesGrid.classList.remove('lg:grid-cols-[280px_1fr]');
+                templatesGrid.classList.add('lg:grid-cols-[280px_1fr_400px]');
+            }
         });
 
-        previewCloseBtn.addEventListener('click', (e) => {
+        // Listen for close button
+        document.getElementById('preview-close-btn').addEventListener('click', (e) => {
             e.preventDefault();
             // Hide preview card
             previewCard.classList.add('hidden');
