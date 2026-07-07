@@ -118,13 +118,9 @@
                     <button type="button" id="admin-sidebar-toggle" class="admin-toggle inline-flex lg:hidden hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="mobile menu">
                         <span class="material-icons text-slate dark:text-slate-300">menu</span>
                     </button>
-                    <button type="button" id="admin-theme-toggle" class="admin-toggle inline-flex hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="toggle theme" title="لایت/دارک">
-                        <span class="material-icons text-slate dark:text-slate-300">brightness_7</span>
-                    </button>
 
-                    <div class="hidden lg:block border-l border-slate-200 dark:border-slate-700 pl-4">
+                    <div class="hidden lg:block dark:border-slate-700 pl-4">
                         <h1 class="text-base font-bold text-slate dark:text-slate-100 lg:text-lg">{{ $title }}</h1>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">مسیر: <span class="admin-breadcrumb font-mono text-[11px]">{{ request()->path() }}</span></p>
                     </div>
                 </div>
 
@@ -139,13 +135,6 @@
                 </div>
 
                 <div class="flex items-center gap-2 shrink-0">
-                    <!-- Help Button (filled by modules) -->
-                    @isset($helpModuleKey)
-                        <x-admin.help-offcanvas :moduleKey="$helpModuleKey" />
-                    @endisset
-
-                    <div class="hidden sm:block border-l border-slate-200 dark:border-slate-700 pl-2"></div>
-
                     <button type="button" id="admin-notifications-toggle" class="admin-toggle inline-flex relative hover:bg-slate-100 dark:hover:bg-slate-800" title="اعلان‌ها">
                         <span class="material-icons text-slate dark:text-slate-300">notifications</span>
                         @if(($adminNotificationCount ?? 0) > 0)
@@ -155,8 +144,19 @@
                         @endif
                     </button>
 
+                    <button type="button" id="admin-theme-toggle" class="admin-toggle inline-flex hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="toggle theme" title="لایت/دارک">
+                        <span class="material-icons text-slate dark:text-slate-300">brightness_7</span>
+                    </button>
+
+                    <!-- Help Button (filled by modules) -->
+                    @isset($helpModuleKey)
+                        <x-admin.help-offcanvas :moduleKey="$helpModuleKey" />
+                    @endisset
+
+                    <div class="hidden sm:block border-l border-slate-200 dark:border-slate-700 pl-2"></div>
+
                     <div class="relative group">
-                        <button type="button" class="flex items-center gap-3 border-l border-slate/20 pl-4 hover:opacity-80 transition-opacity">
+                        <button type="button" class="flex items-center gap-3 pl-4 hover:opacity-80 transition-opacity">
                             <div class="text-right">
                                 <p class="text-sm font-bold text-slate">{{ $admin?->full_name ?? $admin?->username ?? 'Admin' }}</p>
                                 <p class="admin-user-meta text-[10px] text-slate/60">{{ $admin?->roles->pluck('label')->implode('، ') }}</p>
