@@ -18,19 +18,26 @@
     </div>
 
     <div id="templates-tab" class="tab-content">
-        <div class="grid gap-4 lg:grid-cols-[280px_1fr_400px]">
+        <div class="grid gap-4 lg:grid-cols-[280px_1fr]" id="templates-grid">
             <aside class="admin-card space-y-2 h-fit">
                 @foreach($templateCatalog as $key => $meta)
                     <a href="#tpl-{{ $key }}" class="admin-nav-link {{ $key === $currentKey ? 'active' : '' }}" data-template-tab="{{ $key }}">{{ $meta['label'] }}</a>
                 @endforeach
             </aside>
 
-            <section class="space-y-4">
+            <section class="space-y-4" id="editor-section">
                 @foreach($templateCatalog as $key => $meta)
                     @php($current = $templates[$key] ?? [])
                     <div id="tpl-{{ $key }}" class="admin-card space-y-3 {{ $key === $currentKey ? '' : 'hidden' }}" data-template-panel="{{ $key }}">
-                        <h2 class="font-semibold text-slate">{{ $meta['label'] }}</h2>
-                        <p class="text-sm text-slate">{{ $meta['description'] }}</p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="font-semibold text-slate">{{ $meta['label'] }}</h2>
+                                <p class="text-sm text-slate">{{ $meta['description'] }}</p>
+                            </div>
+                            <button id="preview-toggle-btn" class="text-slate hover:text-primary transition-colors p-2 hover:bg-slate/10 rounded" title="نمایش پیش‌نمایش">
+                                <span class="material-icons text-base">preview</span>
+                            </button>
+                        </div>
                         <form action="{{ route('dash.admin.email.templates.save', ['authkey' => $authkey, 'key' => $key]) }}" method="POST" class="space-y-3 template-form" data-template-form="{{ $key }}">
                             @csrf
                             <input name="subject" value="{{ old('subject', $current['subject'] ?? $meta['default_subject']) }}" placeholder="Subject" class="rounded border border-slate bg-slate p-2 w-full dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
@@ -44,27 +51,22 @@
                     </div>
                 @endforeach
             </section>
-
-            <aside class="admin-card space-y-2 h-fit sticky top-4" id="live-preview-card">
-                <div class="flex items-center justify-between border-b pb-2 dark:border-white/10">
-                    <h4 class="font-semibold text-slate text-sm flex items-center gap-2">
-                        <span class="material-icons text-base">preview</span>
-                        پیش‌نمایش
-                    </h4>
-                    <div class="flex gap-1">
-                        <button id="preview-expand-btn" class="text-slate hover:text-primary transition-colors p-1 hover:bg-slate/10 rounded" title="بزرگ کردن">
-                            <span class="material-icons text-base">open_in_full</span>
-                        </button>
-                        <button id="preview-minimize-btn" class="text-slate hover:text-primary transition-colors p-1 hover:bg-slate/10 rounded hidden" title="کوچک کردن">
-                            <span class="material-icons text-base">close_fullscreen</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800" id="preview-container">
-                    <iframe id="email-live-preview" class="w-full border-none bg-white" style="min-height: 600px"></iframe>
-                </div>
-            </aside>
         </div>
+
+        <aside class="admin-card space-y-2 h-fit sticky top-4 hidden" id="live-preview-card">
+            <div class="flex items-center justify-between border-b pb-2 dark:border-white/10">
+                <h4 class="font-semibold text-slate text-sm flex items-center gap-2">
+                    <span class="material-icons text-base">preview</span>
+                    پیش‌نمایش
+                </h4>
+                <button id="preview-close-btn" class="text-slate hover:text-primary transition-colors p-1 hover:bg-slate/10 rounded" title="بسته کردن">
+                    <span class="material-icons text-base">close</span>
+                </button>
+            </div>
+            <div class="overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800" id="preview-container">
+                <iframe id="email-live-preview" class="w-full border-none bg-white" style="min-height: 600px"></iframe>
+            </div>
+        </aside>
     </div>
 
     <div id="common-features-tab" class="tab-content hidden">

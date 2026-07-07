@@ -253,41 +253,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateAddButtonState();
 
-    // Preview expand/minimize functionality
+    // Preview toggle functionality
     const previewCard = document.getElementById('live-preview-card');
     const previewContainer = document.getElementById('preview-container');
-    const previewExpandBtn = document.getElementById('preview-expand-btn');
-    const previewMinimizeBtn = document.getElementById('preview-minimize-btn');
+    const previewToggleBtn = document.getElementById('preview-toggle-btn');
+    const previewCloseBtn = document.getElementById('preview-close-btn');
+    const templatesGrid = document.getElementById('templates-grid');
+    const editorSection = document.getElementById('editor-section');
 
-    if (previewExpandBtn && previewMinimizeBtn && previewCard) {
-        let isExpanded = false;
-
-        previewExpandBtn.addEventListener('click', (e) => {
+    if (previewToggleBtn && previewCloseBtn && previewCard) {
+        previewToggleBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            isExpanded = true;
-            previewCard.classList.add('fixed', 'inset-0', 'z-50');
-            previewCard.classList.remove('h-fit', 'sticky', 'top-4', 'w-96');
-            previewCard.style.height = '100vh';
-            previewCard.style.width = '100vw';
-            previewCard.style.maxWidth = 'none';
-            previewContainer.style.height = 'calc(100vh - 100px)';
-            previewContainer.style.minHeight = 'unset';
-            previewExpandBtn.classList.add('hidden');
-            previewMinimizeBtn.classList.remove('hidden');
+            // Show preview card
+            previewCard.classList.remove('hidden');
+            // Change grid to show editor and preview side by side
+            templatesGrid.classList.remove('lg:grid-cols-[280px_1fr]');
+            templatesGrid.classList.add('lg:grid-cols-[280px_1fr_400px]');
+            // Move preview inside the grid
+            const tempDiv = document.createElement('div');
+            tempDiv.appendChild(previewCard);
+            templatesGrid.appendChild(previewCard);
+            previewCard.classList.remove('fixed', 'bottom-6', 'right-6', 'w-96');
+            previewCard.classList.add('h-fit', 'sticky', 'top-4');
         });
 
-        previewMinimizeBtn.addEventListener('click', (e) => {
+        previewCloseBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            isExpanded = false;
-            previewCard.classList.remove('fixed', 'inset-0', 'z-50');
-            previewCard.classList.add('h-fit', 'sticky', 'top-4', 'w-96');
-            previewCard.style.height = '';
-            previewCard.style.width = '';
-            previewCard.style.maxWidth = '';
-            previewContainer.style.height = '';
-            previewContainer.style.minHeight = '';
-            previewMinimizeBtn.classList.add('hidden');
-            previewExpandBtn.classList.remove('hidden');
+            // Hide preview card
+            previewCard.classList.add('hidden');
+            // Change grid back to normal
+            templatesGrid.classList.add('lg:grid-cols-[280px_1fr]');
+            templatesGrid.classList.remove('lg:grid-cols-[280px_1fr_400px]');
         });
     }
 
