@@ -18,7 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.toggle('hidden', content.id !== targetId);
+            if (content.id === targetId) {
+                content.classList.remove('hidden');
+            } else {
+                content.classList.add('hidden');
+            }
         });
     };
 
@@ -50,12 +54,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Update active state in sidebar
             templateLinks.forEach(l => {
-                l.classList.toggle('active', l === link);
+                if (l === link) {
+                    l.classList.add('active');
+                } else {
+                    l.classList.remove('active');
+                }
             });
 
             // Show selected template panel and hide others
             document.querySelectorAll('[data-template-panel]').forEach(panel => {
-                panel.classList.toggle('hidden', panel.getAttribute('data-template-panel') !== templateKey);
+                if (panel.getAttribute('data-template-panel') === templateKey) {
+                    panel.classList.remove('hidden');
+                } else {
+                    panel.classList.add('hidden');
+                }
             });
         });
     });
@@ -207,7 +219,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateAddButtonState = () => {
         const rows = document.querySelectorAll('.useful-link-row');
         addLinkBtn.disabled = rows.length >= MAX_LINKS;
-        addLinkBtn.classList.toggle('opacity-50 cursor-not-allowed', rows.length >= MAX_LINKS);
+        if (rows.length >= MAX_LINKS) {
+            addLinkBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            addLinkBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
     };
 
     if (addLinkBtn && linksContainer) {
