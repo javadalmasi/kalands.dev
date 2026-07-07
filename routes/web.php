@@ -181,13 +181,12 @@ Route::prefix('dash/admin/{authkey}')
         Route::post('/queues', [AdminDashboardController::class, 'saveQueueSettings'])->name('queues.save')->middleware('permission:queues.full');
         Route::post('/queues/regenerate-token', [AdminDashboardController::class, 'regenerateQueueToken'])->name('queues.token.regenerate')->middleware('permission:queues.full');
 
+        // ── Communication Hub ──────────────────────────────────────────────────────
+        Route::post('/mail-config',       [AdminDashboardController::class, 'saveMailConfig'])->name('mail.config.save')->middleware('permission:communication.edit');
+        Route::post('/mail-config/test',  [AdminDashboardController::class, 'sendMailTest'])->name('mail.config.test')->middleware('permission:communication.full');
+        Route::post('/sms-config',        [AdminDashboardController::class, 'saveSmsConfig'])->name('sms.config.save')->middleware('permission:communication.edit');
+        Route::post('/sms-config/test',   [AdminDashboardController::class, 'sendSmsTest'])->name('sms.config.test')->middleware('permission:communication.full');
         Route::post('/communication/defaults', [AdminDashboardController::class, 'saveCommunicationDefaults'])->name('communication.defaults.save')->middleware('permission:communication.edit');
-        Route::post('/smtp-general/test', [AdminDashboardController::class, 'sendSmtpGeneralTest'])->name('smtp.general.test')->middleware('permission:communication.full');
-        Route::post('/smtp-transactional/test', [AdminDashboardController::class, 'sendSmtpTransactionalTest'])->name('smtp.transactional.test')->middleware('permission:communication.full');
-        Route::post('/sms-config/test', [AdminDashboardController::class, 'sendSmsTest'])->name('sms.config.test')->middleware('permission:communication.full');
-        Route::post('/smtp-general', [AdminDashboardController::class, 'saveSmtpGeneral'])->name('smtp.general.save')->middleware('permission:communication.edit');
-        Route::post('/smtp-transactional', [AdminDashboardController::class, 'saveSmtpTransactional'])->name('smtp.transactional.save')->middleware('permission:communication.edit');
-        Route::post('/sms-config', [AdminDashboardController::class, 'saveSmsConfig'])->name('sms.config.save')->middleware('permission:communication.edit');
         Route::get('/email-templates', [AdminDashboardController::class, 'emailTemplates'])->name('email.templates')->middleware('permission:email_templates.view');
         Route::post('/email-templates/layout', [AdminDashboardController::class, 'saveEmailTemplateLayout'])->name('email.templates.layout.save')->middleware('permission:email_templates.edit');
         Route::post('/email-templates/{key}', [AdminDashboardController::class, 'saveEmailTemplate'])->name('email.templates.save')->middleware('permission:email_templates.edit');

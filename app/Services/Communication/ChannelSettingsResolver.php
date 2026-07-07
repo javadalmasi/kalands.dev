@@ -4,108 +4,112 @@ namespace App\Services\Communication;
 
 use App\Repositories\SettingsRepository;
 
+/**
+ * Applies mail / SMS configuration to Laravel's runtime config.
+ *
+ * Data is stored in SettingsRepository under the key "mail.config".
+ * For backward-compat the old "smtp.general" key is used as a fallback.
+ *
+ * Supported drivers: smtp | mailgun | sendmail | log
+ */
 class ChannelSettingsResolver
 {
-    public function __construct(private readonly SettingsRepository $settingsRepository)
+    public function __construct(private readonly SettingsRepository $settingsRepository) {}
+
+    // ─────────────────────────────────────────────────────────────
+    // Public API
+    // ─────────────────────────────────────────────────────────────
+
+    /** Primary entry-point — applies the unified mail.config to Laravel. */
+    public function applyMailConfig(): void
     {
-    }
+        $raw = $this->settingsRepository->get('mail.config');
 
-    public function applyTransactionalSmtp(): void
-    {
-        $transactional = $this->normalizeSmtpConfig($this->settingsRepository->get('smtp.transactional'));
-        $general = $this->normalizeSmtpConfig($this->settingsRepository->get('smtp.general'));
-
-        $this->applySmtp([
-            'mailer' => $transactional['mailer'] ?: $general['mailer'] ?: 'smtp',
-            'host' => $transactional['host'] ?: $general['host'] ?: config('mail.mailers.smtp.host'),
-            'port' => $transactional['port'] ?: $general['port'] ?: config('mail.mailers.smtp.port'),
-            'username' => $transactional['username'] ?: $general['username'] ?: config('mail.mailers.smtp.username'),
-            'password' => $transactional['password'] ?: $general['password'] ?: config('mail.mailers.smtp.password'),
-            'encryption' => $transactional['encryption'] ?: $general['encryption'] ?: config('mail.mailers.smtp.encryption'),
-            'sender_email' => $transactional['sender_email'] ?: $general['sender_email'] ?: config('mail.from.address'),
-            'sender_name' => $transactional['sender_name'] ?: $general['sender_name'] ?: config('mail.from.name'),
-        ]);
-    }
-
-    public function applyGeneralSmtp(): void
-    {
-        $general = $this->normalizeSmtpConfig($this->settingsRepository->get('smtp.general'));
-
-        $this->applySmtp([
-            'mailer' => $general['mailer'] ?: 'smtp',
-            'host' => $general['host'] ?: config('mail.mailers.smtp.host'),
-            'port' => $general['port'] ?: config('mail.mailers.smtp.port'),
-            'username' => $general['username'] ?: config('mail.mailers.smtp.username'),
-            'password' => $general['password'] ?: config('mail.mailers.smtp.password'),
-            'encryption' => $general['encryption'] ?: config('mail.mailers.smtp.encryption'),
-            'sender_email' => $general['sender_email'] ?: config('mail.from.address'),
-            'sender_name' => $general['sender_name'] ?: config('mail.from.name'),
-        ]);
-    }
-
-    private function applySmtp(array $config): void
-    {
-        $mailer = $config['mailer'] ?? 'smtp';
-
-        config(['mail.default' => $mailer]);
-
-        if ($mailer === 'sendmail') {
-            config([
-                'mail.mailers.sendmail.transport' => 'sendmail',
-                'mail.mailers.sendmail.path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
-                'mail.from.address' => $config['sender_email'],
-                'mail.from.name' => $config['sender_name'],
-            ]);
-            return;
+        // Backward-compat: fall back to the old smtp.general key.
+        if (empty($raw) || empty($raw['mailer'])) {
+            $raw = $this->settingsRepository->get('smtp.general', []);
         }
 
-        config([
-            'mail.mailers.smtp.transport' => 'smtp',
-            'mail.mailers.smtp.host' => $config['host'],
-            'mail.mailers.smtp.port' => (int) $config['port'],
-            'mail.mailers.smtp.username' => $config['username'],
-            'mail.mailers.smtp.password' => $config['password'],
-            'mail.mailers.smtp.encryption' => $config['encryption'],
-            'mail.from.address' => $config['sender_email'],
-            'mail.from.name' => $config['sender_name'],
-        ]);
+        $this->applyDriver($this->normalize($raw));
     }
 
+    /**
+     * Backward-compat aliases — both now delegate to applyMailConfig().
+     * Kept so that existing Jobs (e.g. SendPasswordResetCodeJob) still compile.
+     */
+    public function applyTransactionalSmtp(): void { $this->applyMailConfig(); }
+    public function applyGeneralSmtp(): void       { $this->applyMailConfig(); }
+
+    /** Returns SMS config, falling back to env/services config. */
     public function resolveSms(): array
     {
-        $config = $this->settingsRepository->get('sms.melipayamak', []);
+        $cfg = $this->settingsRepository->get('sms.melipayamak', []);
 
         return [
-            'endpoint' => $config['endpoint'] ?? 'https://console.melipayamak.com/api/send/otp',
-            'api_token' => $config['api_token'] ?? config('services.melipayamak.key'),
-            'sender_number' => $config['sender_number'] ?? null,
+            'endpoint'      => $cfg['endpoint']      ?? 'https://console.melipayamak.com/api/send/otp',
+            'api_token'     => $cfg['api_token']      ?? config('services.melipayamak.key'),
+            'sender_number' => $cfg['sender_number']  ?? null,
         ];
     }
 
-    private function normalizeSmtpConfig(mixed $config): array
+    // ─────────────────────────────────────────────────────────────
+    // Private helpers
+    // ─────────────────────────────────────────────────────────────
+
+    private function applyDriver(array $cfg): void
     {
-        if (!is_array($config)) {
-            return [
-                'mailer' => null,
-                'host' => null,
-                'port' => null,
-                'username' => null,
-                'password' => null,
-                'encryption' => null,
-                'sender_email' => null,
-                'sender_name' => null,
-            ];
+        // Always set the global From address & name.
+        config([
+            'mail.from.address' => $cfg['sender_email'] ?: config('mail.from.address'),
+            'mail.from.name'    => $cfg['sender_name']  ?: config('mail.from.name'),
+        ]);
+
+        match ($cfg['mailer']) {
+            'sendmail' => config([
+                'mail.default'                    => 'sendmail',
+                'mail.mailers.sendmail.transport' => 'sendmail',
+                'mail.mailers.sendmail.path'      => $cfg['sendmail_path']
+                    ?: env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
+            ]),
+
+            'log' => config([
+                'mail.default' => 'log',
+            ]),
+
+            default => config([   // smtp
+                'mail.default'                   => 'smtp',
+                'mail.mailers.smtp.transport'    => 'smtp',
+                'mail.mailers.smtp.host'         => $cfg['host'],
+                'mail.mailers.smtp.port'         => (int) ($cfg['port'] ?? 587),
+                'mail.mailers.smtp.username'     => $cfg['username'],
+                'mail.mailers.smtp.password'     => $cfg['password'],
+                'mail.mailers.smtp.encryption'   => $cfg['encryption'] ?: null,
+                'mail.mailers.smtp.verify_peer'  => (bool) ($cfg['verify_peer'] ?? true),
+                'mail.mailers.smtp.timeout'      => 30,
+            ]),
+        };
+    }
+
+    private function normalize(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            $raw = [];
         }
 
         return [
-            'mailer' => $config['mailer'] ?? null,
-            'host' => $config['host'] ?? null,
-            'port' => $config['port'] ?? null,
-            'username' => $config['username'] ?? null,
-            'password' => $config['password'] ?? null,
-            'encryption' => $config['encryption'] ?? null,
-            'sender_email' => $config['sender_email'] ?? null,
-            'sender_name' => $config['sender_name'] ?? null,
+            'mailer'        => in_array($raw['mailer'] ?? '', ['smtp', 'sendmail', 'log']) ? $raw['mailer'] : 'smtp',
+            // SMTP
+            'host'          => $raw['host']          ?? null,
+            'port'          => $raw['port']          ?? 587,
+            'username'      => $raw['username']      ?? null,
+            'password'      => $raw['password']      ?? null,
+            'encryption'    => $raw['encryption']    ?? null,
+            'verify_peer'   => $raw['verify_peer']   ?? true,
+            // Sendmail
+            'sendmail_path' => $raw['sendmail_path'] ?? null,
+            // Shared
+            'sender_email'  => $raw['sender_email']  ?? null,
+            'sender_name'   => $raw['sender_name']   ?? null,
         ];
     }
 }

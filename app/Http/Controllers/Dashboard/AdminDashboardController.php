@@ -805,6 +805,7 @@ class AdminDashboardController extends Controller
                 'smtp_transactional' => $settingsRepository->get('smtp.transactional', []),
                 'sms' => $settingsRepository->get('sms.melipayamak', []),
                 'test_defaults' => $settingsRepository->get('communication.test_defaults', ['email' => '', 'phone' => '']),
+                'split_email' => (bool) ($settingsRepository->get('communication.settings', [])['split_email'] ?? false),
             ],
             'contact' => $settingsRepository->get('contact.page_info', []),
             'affiliate' => $settingsRepository->get('affiliate.basalam', []),
@@ -858,6 +859,7 @@ class AdminDashboardController extends Controller
                 'smtp_transactional' => $settingsRepository->get('smtp.transactional', []),
                 'sms' => $settingsRepository->get('sms.melipayamak', []),
                 'test_defaults' => $settingsRepository->get('communication.test_defaults', ['email' => '', 'phone' => '']),
+                'split_email' => (bool) ($settingsRepository->get('communication.settings', [])['split_email'] ?? false),
             ],
             'contact' => $settingsRepository->get('contact.page_info', []),
             'affiliate' => $settingsRepository->get('affiliate.basalam', []),
@@ -890,8 +892,18 @@ class AdminDashboardController extends Controller
         }
 
         if ($moduleKey === 'communication_hub') {
+            // Prefer new unified key; fall back to old smtp.general for existing installs.
+            $mailCfg = $settingsRepository->get('mail.config');
+            if (empty($mailCfg) || empty($mailCfg['mailer'])) {
+                $mailCfg = $settingsRepository->get('smtp.general', []);
+            }
+
             return view('dash.admin.communication', [
-                'settings' => $settings['communication_hub'],
+                'settings' => [
+                    'mail_config'   => $mailCfg,
+                    'sms'           => $settingsRepository->get('sms.melipayamak', []),
+                    'test_defaults' => $settingsRepository->get('communication.test_defaults', ['email' => '', 'phone' => '']),
+                ],
                 'authkey' => $authkey,
             ]);
         }
@@ -1270,37 +1282,104 @@ class AdminDashboardController extends Controller
         return back()->with('message', 'مقادیر پیش‌فرض تست ذخیره شد.');
     }
 
-    public function sendSmtpGeneralTest(Request $request, ChannelSettingsResolver $channelSettingsResolver): JsonResponse
+    public function saveMailConfig(Request $request, SettingsRepository $settingsRepository, ActivityLogger $activityLogger): RedirectResponse
     {
-        $data = $request->validate(['to' => ['required', 'email']]);
-        try {
-            $channelSettingsResolver->applyGeneralSmtp();
-            $mailable = new GenericTemplateMail('تست SMTP عمومی', '<p>ارسال آزمایشی SMTP عمومی موفق بود.</p>');
-            $mailable->shouldQueue = false;
-            Mail::to($data['to'])->send($mailable);
+        $mailer = $request->input('mailer', 'smtp');
 
-            return response()->json(['ok' => true, 'message' => 'ایمیل تست عمومی ارسال شد.']);
-        } catch (\Throwable $e) {
-            Log::error('Mail General Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+        $rules = [
+            'mailer'       => ['required', 'in:smtp,sendmail,log'],
+            'sender_email' => ['required', 'email', 'max:255'],
+            'sender_name'  => ['required', 'string', 'max:100'],
+        ];
 
-            return response()->json(['ok' => false, 'error' => 'ارسال ایمیل تست با خطا مواجه شد.'], 500);
+        if ($mailer === 'smtp') {
+            $rules += [
+                'host'        => ['required', 'string', 'max:255'],
+                'port'        => ['required', 'integer', 'between:1,65535'],
+                'encryption'  => ['nullable', 'in:tls,ssl'],
+                'username'    => ['nullable', 'string'],
+                'password'    => ['nullable', 'string'],
+                'verify_peer' => ['nullable', 'boolean'],
+            ];
+        } elseif ($mailer === 'sendmail') {
+            $rules += [
+                'sendmail_path' => ['nullable', 'string', 'max:500'],
+            ];
         }
+
+        $data = $request->validate($rules);
+        $settingsRepository->set('mail.config', $data);
+
+        // Keep smtp.general in sync for any existing code that reads from it.
+        if ($mailer === 'smtp') {
+            $settingsRepository->set('smtp.general', $data);
+        }
+
+        $activityLogger->log('settings.mail.update', auth('admin')->user(), 'بروزرسانی تنظیمات ایمیل — درایور: ' . $mailer);
+
+        return back()->with('message', 'تنظیمات ایمیل با موفقیت ذخیره شد.');
     }
 
-    public function sendSmtpTransactionalTest(Request $request, ChannelSettingsResolver $channelSettingsResolver): JsonResponse
+    public function sendMailTest(Request $request, ChannelSettingsResolver $channelSettingsResolver, SettingsRepository $settingsRepository): JsonResponse
     {
         $data = $request->validate(['to' => ['required', 'email']]);
+        $startTime = microtime(true);
+
         try {
-            $channelSettingsResolver->applyTransactionalSmtp();
-            $mailable = new GenericTemplateMail('تست SMTP تراکنشی', '<p>ارسال آزمایشی SMTP تراکنشی موفق بود.</p>');
+            $channelSettingsResolver->applyMailConfig();
+
+            // Force a fresh transport so config changes take effect immediately.
+            foreach (['smtp', 'sendmail', 'mailgun', 'log'] as $m) {
+                try { app('mail.manager')->purge($m); } catch (\Throwable) {}
+            }
+
+            $driver   = config('mail.default', 'smtp');
+            $mailable = new GenericTemplateMail(
+                'تست ایمیل — ' . config('app.name'),
+                '<p>ارسال آزمایشی ایمیل با موفقیت انجام شد.</p><p>زمان ارسال: ' . now()->format('Y-m-d H:i:s') . '</p>'
+            );
             $mailable->shouldQueue = false;
-            Mail::to($data['to'])->send($mailable);
+            Mail::mailer($driver)->to($data['to'])->send($mailable);
 
-            return response()->json(['ok' => true, 'message' => 'ایمیل تست تراکنشی ارسال شد.']);
+            $elapsed = round((microtime(true) - $startTime) * 1000);
+            $cfg     = $settingsRepository->get('mail.config') ?: $settingsRepository->get('smtp.general', []);
+
+            $log  = "[OK] ارسال موفق\n";
+            $log .= "To       : {$data['to']}\n";
+            $log .= "Elapsed  : {$elapsed}ms\n";
+            $log .= "Driver   : {$driver}\n";
+
+            if ($driver === 'smtp') {
+                $log .= "Host     : " . ($cfg['host'] ?? config('mail.mailers.smtp.host', '-')) . "\n";
+                $log .= "Port     : " . ($cfg['port'] ?? config('mail.mailers.smtp.port', '-')) . "\n";
+                $log .= "Encrypt  : " . strtoupper((string) ($cfg['encryption'] ?? 'none')) . "\n";
+                $log .= "TLSVerify: " . ((bool)($cfg['verify_peer'] ?? true) ? 'yes' : 'no') . "\n";
+            } elseif ($driver === 'mailgun') {
+                $log .= "Domain   : " . ($cfg['mailgun_domain'] ?? '-') . "\n";
+                $log .= "Endpoint : " . ($cfg['mailgun_endpoint'] ?? 'api.mailgun.net') . "\n";
+            } elseif ($driver === 'sendmail') {
+                $log .= "Path     : " . ($cfg['sendmail_path'] ?? '/usr/sbin/sendmail -bs -i') . "\n";
+            }
+
+            $log .= "From     : " . ($cfg['sender_email'] ?? config('mail.from.address', '-')) . "\n";
+            $log .= "PHP      : " . PHP_VERSION . "\n";
+            $log .= "Laravel  : " . app()->version() . "\n";
+
+            return response()->json(['ok' => true, 'message' => $log]);
         } catch (\Throwable $e) {
-            Log::error('Mail Transactional Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            $elapsed = round((microtime(true) - $startTime) * 1000);
+            Log::error('Mail Test Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
-            return response()->json(['ok' => false, 'error' => 'ارسال ایمیل تست با خطا مواجه شد.'], 500);
+            $log  = "[FAIL] ارسال ناموفق\n";
+            $log .= "To       : {$data['to']}\n";
+            $log .= "Elapsed  : {$elapsed}ms\n";
+            $log .= "Driver   : " . config('mail.default', 'smtp') . "\n\n";
+            $log .= "--- Exception ---\n";
+            $log .= get_class($e) . ": " . $e->getMessage() . "\n\n";
+            $log .= "--- Stack Trace ---\n";
+            $log .= $e->getTraceAsString();
+
+            return response()->json(['ok' => false, 'error' => $e->getMessage(), 'trace' => $log]);
         }
     }
 
@@ -1310,6 +1389,8 @@ class AdminDashboardController extends Controller
             'to' => ['required', 'regex:/^09[0-9]{9}$/'],
             'message' => ['nullable', 'max:200'],
         ]);
+        $startTime = microtime(true);
+
         try {
             $config = $channelSettingsResolver->resolveSms();
             $token = $config['api_token'] ?? null;
@@ -1319,19 +1400,40 @@ class AdminDashboardController extends Controller
             $endpoint = rtrim((string) ($config['endpoint'] ?? 'https://console.melipayamak.com/api/send/otp'), '/');
             $response = Http::timeout(10)->post("{$endpoint}/{$token}", [
                 'to' => $data['to'],
-                'code' => $data['message'] ?? 'SMS test from admin panel',
+                'code' => $data['message'] ?? 'Kalands SMS Test',
                 'from' => $config['sender_number'] ?? null,
             ]);
 
+            $elapsed = round((microtime(true) - $startTime) * 1000);
+            $httpStatus = $response->status();
+            $body = $response->body();
+
             if ($response->failed()) {
-                throw new \Exception('خطا در فراخوانی وب‌سرویس: '.$response->body());
+                throw new \Exception("HTTP {$httpStatus} از وب‌سرویس: {$body}");
             }
 
-            return response()->json(['ok' => true, 'message' => 'پیامک تست ارسال شد.']);
-        } catch (\Throwable $e) {
-            Log::error('SMS Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            $log = "[OK] پیامک ارسال شد\n";
+            $log .= "To       : {$data['to']}\n";
+            $log .= "Elapsed  : {$elapsed}ms\n";
+            $log .= "HTTP     : {$httpStatus}\n";
+            $log .= "Endpoint : {$endpoint}/***\n\n";
+            $log .= "--- Response Body ---\n";
+            $log .= $body;
 
-            return response()->json(['ok' => false, 'error' => 'ارسال پیامک تست با خطا مواجه شد.'], 500);
+            return response()->json(['ok' => true, 'message' => $log]);
+        } catch (\Throwable $e) {
+            $elapsed = round((microtime(true) - $startTime) * 1000);
+            Log::error('SMS Test Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
+            $log = "[FAIL] ارسال ناموفق\n";
+            $log .= "To       : {$data['to']}\n";
+            $log .= "Elapsed  : {$elapsed}ms\n\n";
+            $log .= "--- Exception ---\n";
+            $log .= $e->getMessage() . "\n\n";
+            $log .= "--- Stack Trace ---\n";
+            $log .= $e->getTraceAsString();
+
+            return response()->json(['ok' => false, 'error' => $e->getMessage(), 'trace' => $log]);
         }
     }
 
