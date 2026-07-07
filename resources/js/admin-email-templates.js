@@ -249,8 +249,11 @@ document.addEventListener('DOMContentLoaded', () => {
         previewExpandBtn.addEventListener('click', (e) => {
             e.preventDefault();
             isExpanded = true;
-            previewCard.classList.add('fixed', 'inset-0', 'z-50', '!h-screen', '!w-screen', '!max-w-none', '!sticky-none');
+            previewCard.classList.add('fixed', 'inset-0', 'z-50');
             previewCard.classList.remove('h-fit', 'sticky', 'top-4', 'w-96');
+            previewCard.style.height = '100vh';
+            previewCard.style.width = '100vw';
+            previewCard.style.maxWidth = 'none';
             previewContainer.style.height = 'calc(100vh - 100px)';
             previewContainer.style.minHeight = 'unset';
             previewExpandBtn.classList.add('hidden');
@@ -260,8 +263,11 @@ document.addEventListener('DOMContentLoaded', () => {
         previewMinimizeBtn.addEventListener('click', (e) => {
             e.preventDefault();
             isExpanded = false;
-            previewCard.classList.remove('fixed', 'inset-0', 'z-50', '!h-screen', '!w-screen', '!max-w-none');
+            previewCard.classList.remove('fixed', 'inset-0', 'z-50');
             previewCard.classList.add('h-fit', 'sticky', 'top-4', 'w-96');
+            previewCard.style.height = '';
+            previewCard.style.width = '';
+            previewCard.style.maxWidth = '';
             previewContainer.style.height = '';
             previewContainer.style.minHeight = '';
             previewMinimizeBtn.classList.add('hidden');
