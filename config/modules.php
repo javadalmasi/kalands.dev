@@ -185,4 +185,12 @@ return [
         'permission' => 'indexnow.view',
         'category' => 'technical',
     ],
+    'product_checker' => [
+        'key' => 'product_checker',
+        'label' => 'بررسی محصولات',
+        'description' => 'بررسی وضعیت وب‌سرویس محصولات دیجی‌کالا و به‌روز‌رسانی خودکار',
+        'icon' => 'check_circle',
+        'permission' => 'products.check',
+        'category' => 'technical',
+    ],
 ];
