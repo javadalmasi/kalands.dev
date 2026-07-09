@@ -19,12 +19,11 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
     let liveSummaryPrevious = null;
     let liveSummaryCountdownTimer = null;
     let liveSummaryCountdownStartedAt = 0;
-    let isFilterPanelOpen = false;
     let currentTab = 'tab-overview';
 
     const tabFilterConfig = {
         'tab-overview': {
-            title: 'فیلترهای نمای کلی',
+            title: 'فیلترهای داشبورد',
             description: 'فیلترهای بازه، رفتار و کیفیت ترافیک برای KPIها و نمودارهای خلاصه.',
             fields: ['from', 'to', 'period', 'search', 'country', 'device_type', 'activity', 'source', 'session_status'],
         },
@@ -33,55 +32,15 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             description: 'تمرکز روی کاربران فعال، منبع ورود، دستگاه، مرورگر و وضعیت جلسات زنده.',
             fields: ['country', 'device_type', 'source', 'browser', 'platform', 'session_status', 'search'],
         },
-        'tab-reports': {
-            title: 'فیلترهای گزارش‌ها',
-            description: 'تحلیل عمیق کشور، دستگاه، مرورگر، سیستم‌عامل، موتور جستجو و UTM.',
-            fields: ['from', 'to', 'period', 'country', 'device_type', 'activity', 'source', 'campaign', 'browser', 'platform', 'search'],
-        },
-        'tab-content': {
-            title: 'فیلترهای محتوا',
-            description: 'تمرکز روی مسیر، صفحه، محصول، دسته‌بندی، فروشنده و رفتار محتوایی.',
-            fields: ['from', 'to', 'period', 'path', 'country', 'device_type', 'source', 'search'],
+        'tab-analytics': {
+            title: 'فیلترهای آنالیز',
+            description: 'تحلیل کشور، دستگاه، مرورگر، سیستم‌عامل، موتور جستجو، UTM و محتوا.',
+            fields: ['from', 'to', 'period', 'path', 'country', 'device_type', 'activity', 'source', 'campaign', 'browser', 'platform', 'search'],
         },
         'tab-goals': {
             title: 'فیلترهای اهداف',
             description: 'تحلیل دقیق goalها بر اساس کلید هدف، منبع، کمپین و نوع کاربر.',
             fields: ['from', 'to', 'period', 'goal_key', 'source', 'campaign', 'country', 'device_type', 'session_status'],
-        },
-        'tab-funnels': {
-            title: 'فیلترهای قیف',
-            description: 'تمرکز روی بازه تحلیل و کیفیت ترافیک ورودی برای قیف‌های تبدیل.',
-            fields: ['from', 'to', 'source', 'campaign', 'country', 'device_type', 'session_status'],
-        },
-        'tab-sessions': {
-            title: 'فیلترهای جلسات',
-            description: 'فیلترهای نرخ پرش، بازگشتی بودن، دستگاه و کیفیت جلسه.',
-            fields: ['from', 'to', 'period', 'country', 'device_type', 'source', 'browser', 'platform', 'session_status'],
-        },
-        'tab-users': {
-            title: 'فیلترهای کاربران',
-            description: 'تمرکز روی کاربران لاگین‌شده، منبع، دستگاه، مرورگر و مسیرهای مهم.',
-            fields: ['from', 'to', 'country', 'device_type', 'source', 'browser', 'platform', 'path', 'search'],
-        },
-        'tab-errors': {
-            title: 'فیلترهای خطا',
-            description: 'تفکیک خطاها بر اساس مرورگر، سیستم‌عامل، مسیر، کشور و نوع ترافیک.',
-            fields: ['from', 'to', 'country', 'device_type', 'browser', 'platform', 'path', 'source', 'search'],
-        },
-        'tab-cohort': {
-            title: 'فیلترهای Cohort',
-            description: 'تمرکز روی بازه‌های زمانی و کیفیت ترافیک برای تحلیل بازگشت کاربران.',
-            fields: ['from', 'to', 'period', 'country', 'device_type', 'source', 'campaign'],
-        },
-        'tab-compare': {
-            title: 'فیلترهای مقایسه',
-            description: 'فیلترهای تحلیلی برای مقایسه بازه‌ها بر اساس رفتار و کیفیت ورودی.',
-            fields: ['from', 'to', 'period', 'country', 'device_type', 'activity', 'source', 'campaign', 'search'],
-        },
-        'tab-raw': {
-            title: 'فیلترهای رویداد خام',
-            description: 'فیلترهای ریز برای جستجوی رویدادها، مسیرها، مرورگرها و سشن‌ها.',
-            fields: ['from', 'to', 'activity', 'country', 'device_type', 'path', 'goal_key', 'source', 'browser', 'platform', 'search'],
         },
     };
 
@@ -207,13 +166,11 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
     const syncFilterVisibility = (tab) => {
         if (!filterForm) return;
         const filterCard = root.querySelector('#analytics-filter-card');
-        const panel = root.querySelector('#analytics-filter-panel');
         const title = root.querySelector('#analytics-filter-title');
         const description = root.querySelector('#analytics-filter-description');
-        const toggleIcon = root.querySelector('#analytics-filter-toggle-icon');
         const config = tabFilterConfig[tab];
 
-        if (!filterCard || !panel || !toggleIcon) return;
+        if (!filterCard) return;
 
         if (!config) {
             filterCard.classList.add('hidden');
@@ -231,9 +188,6 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                 input.disabled = !shouldShow;
             });
         });
-
-        panel.classList.toggle('hidden', !isFilterPanelOpen);
-        toggleIcon.textContent = isFilterPanelOpen ? 'expand_less' : 'expand_more';
     };
 
     const empty = '<p class="text-center py-10 opacity-50">داده‌ای یافت نشد.</p>';
@@ -1057,31 +1011,6 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
         });
     };
 
-    const loadUsers = () => {
-        fetchJson(sectionUrl('users')).then((data) => {
-            if (!data) return;
-            const container = root.querySelector('[data-list="users"]');
-            if (!container) return;
-            if (!data.users || !data.users.length) { container.innerHTML = empty; return; }
-
-            container.innerHTML = iconizeRows(data.users, 'users').map((row) => `
-                <div class="flex items-center justify-between text-[11px] border-b border-slate/5 pb-2 gap-4">
-                    <span class="truncate" title="${escapeHtml(row.label)}">${renderLabel(row)}</span>
-                    <div class="flex items-center gap-3 shrink-0">
-                        <span class="font-bold text-success">${number(row.count)} بازدید</span>
-                        <button type="button" data-user-id="${row.key}" data-user-name="${escapeHtml(row.label)}" class="admin-btn !h-7 !px-2 !bg-slate/10 hover:!bg-success/20 !text-slate hover:!text-success !text-[10px] !gap-1 !rounded-md">
-                            <span class="material-icons text-xs">visibility</span>
-                            بیشتر
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-
-            container.querySelectorAll('[data-user-id]').forEach(btn => {
-                btn.onclick = () => showUserActivity(btn.dataset.userId, btn.dataset.userName);
-            });
-        });
-    };
 
     const showUserActivity = (userId, userName) => {
         const dialog = document.getElementById('user-activity-modal');
@@ -1194,231 +1123,6 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
         });
     };
 
-    const loadFunnels = () => {
-        fetchJson(sectionUrl('funnels')).then((data) => {
-            const container = root.querySelector('[data-list="funnels"]');
-            if (!container) return;
-            if (!data.funnels || !data.funnels.length) {
-                container.innerHTML = '<p class="text-center py-10 opacity-50">قیفی تعریف نشده. یک قیف جدید بسازید.</p>';
-                return;
-            }
-            container.innerHTML = data.funnels.map((f, fi) => {
-                const report = data.report && data.report[fi];
-                const steps = report && report.steps ? report.steps : f.steps.map((s, si) => ({
-                    step: si + 1,
-                    name: s.name,
-                    entered: 0,
-                    dropoff: 0,
-                    dropoff_pct: 0,
-                    conversion_pct: 0
-                }));
-
-                return `
-                    <div class="rounded-xl border border-slate/10 bg-slate/5 p-4 space-y-3">
-                        <div class="flex items-center justify-between gap-4">
-                            <h4 class="font-bold text-slate">${escapeHtml(f.name)} <span class="text-[10px] text-slate/40 font-normal">(${escapeHtml(f.key)})</span></h4>
-                            <form action="${root.dataset.funnelDeleteUrl ? root.dataset.funnelDeleteUrl.replace(':key', f.key) : '#'}" method="POST" onsubmit="return confirm('حذف شود؟')">
-                                <input type="hidden" name="_token" value="${document.querySelector('meta[name=\'csrf-token\']')?.getAttribute('content') || ''}">
-                                <button class="text-danger/60 hover:text-danger text-xs">حذف</button>
-                            </form>
-                        </div>
-                        <div class="space-y-2">
-                            <div class="flex text-[10px] text-slate/50 font-bold px-1">
-                                <span class="w-8">#</span>
-                                <span class="flex-1">مرحله</span>
-                                <span class="w-20 text-center">ورود</span>
-                                <span class="w-20 text-center">ریزش</span>
-                                <span class="w-16 text-center">نرخ</span>
-                            </div>
-                            ${steps.map((s, si) => {
-                                const pct = s.conversion_pct || (si === 0 ? 100 : 0);
-                                const barColor = pct > 50 ? 'bg-success' : (pct > 20 ? 'bg-amber-500' : 'bg-danger');
-                                return `
-                                    <div class="flex items-center gap-2 text-xs">
-                                        <span class="w-8 text-slate/40 font-bold">${s.step || (si + 1)}</span>
-                                        <span class="flex-1 truncate">${escapeHtml(s.name)}</span>
-                                        <span class="w-20 text-center font-bold">${number(s.entered || 0)}</span>
-                                        <span class="w-20 text-center text-danger">${number(s.dropoff || 0)} (${s.dropoff_pct || 0}%)</span>
-                                        <span class="w-16 text-center font-bold ${pct > 50 ? 'text-success' : 'text-danger'}">${pct}%</span>
-                                        <div class="w-20 h-1.5 bg-slate/10 rounded-full overflow-hidden">
-                                            <div class="${barColor} h-full" style="width:${pct}%"></div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        });
-    };
-
-    const loadSessions = () => {
-        fetchJson(sectionUrl('sessions')).then((data) => {
-            if (!data) return;
-            const total = root.querySelector('[data-session-total]');
-            const bounce = root.querySelector('[data-session-bounce]');
-            const duration = root.querySelector('[data-session-duration]');
-            const ppv = root.querySelector('[data-session-ppv]');
-            const deviceList = root.querySelector('[data-list="sessions-by-device"]');
-
-            if (total) total.textContent = number(data.total);
-            if (bounce) bounce.textContent = (data.bounce_rate || 0) + '%';
-            if (duration) duration.textContent = data.avg_duration_formatted || '0:00';
-            if (ppv) ppv.textContent = data.avg_pageviews_per_session || '0';
-
-            if (deviceList && data.by_device && data.by_device.length) {
-                deviceList.innerHTML = data.by_device.map((d) => `
-                    <div class="flex items-center justify-between text-xs border-b border-slate/5 pb-2">
-                        <span class="font-bold">${escapeHtml(d.device_type || 'نامشخص')}</span>
-                        <span>${number(d.total)} جلسه | ${(Number(d.avg_dur) > 0 ? Math.round(Number(d.avg_dur) / 60) : 0)} دقیقه | ${d.bounces} پرش</span>
-                    </div>
-                `).join('');
-            } else if (deviceList) {
-                deviceList.innerHTML = empty;
-            }
-        });
-    };
-
-    const loadCohort = () => {
-        fetchJson(sectionUrl('cohorts')).then((data) => {
-            const container = root.querySelector('[data-cohort-table]');
-            if (!container) return;
-            const cohorts = data.cohorts || [];
-            if (!cohorts.length) {
-                container.innerHTML = '<p class="text-center py-10 opacity-50">داده کافی برای تحلیل هم‌گروه وجود ندارد. نیاز به بازدیدکنندگان بازگشتی است.</p>';
-                return;
-            }
-
-            const periods = cohorts[0].periods.map(p => p.period);
-            let html = '<table class="w-full text-xs text-center"><thead class="bg-slate/5"><tr><th class="p-2 font-bold">هم‌گروه</th><th class="p-2 font-bold">تعداد</th>';
-            periods.forEach(p => { html += `<th class="p-2 font-bold">${p.slice(5)}</th>`; });
-            html += '</tr></thead><tbody>';
-
-            cohorts.forEach(c => {
-                html += `<tr class="border-b border-slate/5 hover:bg-slate/5"><td class="p-2 font-bold">${c.cohort}</td><td class="p-2">${number(c.total)}</td>`;
-                c.periods.forEach(p => {
-                    const color = p.retention_pct > 50 ? 'text-success' : (p.retention_pct > 20 ? 'text-amber-500' : 'text-danger');
-                    html += `<td class="p-2 ${color} font-bold">${p.retention_pct}%</td>`;
-                });
-                html += '</tr>';
-            });
-
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        });
-    };
-
-    const loadCompare = () => {
-        fetchJson(sectionUrl('comparative')).then((data) => {
-            if (!data) return;
-            const currentPeriod = root.querySelector('[data-compare-current-period]');
-            const previousPeriod = root.querySelector('[data-compare-previous-period]');
-            const currentEl = root.querySelector('[data-compare-current]');
-            const previousEl = root.querySelector('[data-compare-previous]');
-            const changeEl = root.querySelector('[data-compare-change]');
-
-            if (currentPeriod) currentPeriod.textContent = `${data.current?.start || '...'} تا ${data.current?.end || '...'}`;
-            if (previousPeriod) previousPeriod.textContent = `${data.previous?.start || '...'} تا ${data.previous?.end || '...'}`;
-            if (currentEl) currentEl.textContent = number(data.current?.total || 0);
-            if (previousEl) previousEl.textContent = number(data.previous?.total || 0);
-            if (changeEl) {
-                const dir = data.change_direction === 'up' ? '▲' : '▼';
-                const cls = data.change >= 0 ? 'text-success' : 'text-danger';
-                changeEl.innerHTML = `<span class="${cls}">${dir} ${Math.abs(data.change)}%</span>`;
-            }
-
-            renderCompareChart(root.querySelector('[data-chart="compare"]'), data.series?.current, data.series?.previous);
-        });
-    };
-
-    const loadRawEvents = (page = 1) => {
-        const url = new URL(sectionUrl('raw'), window.location.origin);
-        url.searchParams.set('page', String(page));
-
-        const searchInput = root.querySelector('[data-raw-filter="search"]');
-        const typeInput = root.querySelector('[data-raw-filter="event_type"]');
-        const sessionInput = root.querySelector('[data-raw-filter="session_id"]');
-
-        if (searchInput?.value) url.searchParams.set('search', searchInput.value);
-        if (typeInput?.value) url.searchParams.set('event_type', typeInput.value);
-        if (sessionInput?.value) url.searchParams.set('session_id', sessionInput.value);
-
-        fetchJson(url.toString()).then((data) => {
-            const container = root.querySelector('[data-list="raw-events"]');
-            const pagination = root.querySelector('[data-raw-pagination]');
-            if (!container) return;
-
-            if (!data.data || !data.data.length) {
-                container.innerHTML = empty;
-                if (pagination) pagination.innerHTML = '';
-                return;
-            }
-
-            container.innerHTML = data.data.map(e => `
-                <div class="flex items-center justify-between text-[11px] border-b border-slate/5 py-2 gap-4 ${e.type === 'error' ? 'bg-danger/5' : ''}">
-                    <div class="flex items-center gap-2 min-w-0 flex-1">
-                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${e.type === 'goal' ? 'bg-success/10 text-success' : (e.type === 'error' ? 'bg-danger/10 text-danger' : 'bg-slate/10 text-slate/70')} shrink-0">
-                            ${e.type === 'goal' ? 'هدف' : (e.type === 'error' ? 'خطا' : 'بازدید')}
-                        </span>
-                        <span class="truncate" title="${displayPath(e.path)}">${displayPath(e.path || '-')}</span>
-                    </div>
-                    <div class="flex items-center gap-3 shrink-0 text-slate/50">
-                        <span>${escapeHtml(e.country || '-')}</span>
-                        <span>${escapeHtml(e.browser || '-')}</span>
-                        <span class="admin-ltr text-[10px]">${e.time ? e.time.slice(5, 16) : '-'}</span>
-                    </div>
-                </div>
-            `).join('');
-
-            if (pagination) {
-                const last = data.last_page || 1;
-                const cur = data.page || 1;
-                let phtml = '<div class="flex items-center gap-2">';
-                for (let i = 1; i <= last && i <= 10; i++) {
-                    phtml += `<button class="px-3 py-1 rounded text-xs font-bold ${i === cur ? 'bg-success text-white' : 'bg-slate/10 hover:bg-slate/20'}" data-raw-page="${i}">${i}</button>`;
-                }
-                phtml += '</div>';
-                pagination.innerHTML = phtml;
-                pagination.querySelectorAll('[data-raw-page]').forEach(btn => {
-                    btn.onclick = () => loadRawEvents(parseInt(btn.dataset.rawPage));
-                });
-            }
-        });
-    };
-
-    const loadErrors = () => {
-        fetchJson(sectionUrl('errors')).then((data) => {
-            if (!data) return;
-            const total = root.querySelector('[data-errors-total]');
-            const container = root.querySelector('[data-errors-list]');
-            if (total) total.textContent = `${number(data.total)} خطا در ۳۰ روز`;
-            if (!container) return;
-            if (!data.recent || !data.recent.length) { container.innerHTML = empty; return; }
-            container.innerHTML = data.recent.map((error) => `
-                <div class="rounded-lg border border-danger/20 bg-danger/10 p-3 text-xs space-y-2 shadow-sm shadow-danger/5">
-                    <div class="flex flex-wrap items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <p class="font-bold text-danger truncate flex items-center gap-2">
-                                <a href="${error.path}" target="_blank" class="material-icons text-sm opacity-40 hover:opacity-100 hover:text-danger">open_in_new</a>
-                                <span>${escapeHtml(error.message)}</span>
-                            </p>
-                            <p class="admin-ltr text-left text-slate/60 truncate mt-1">${displayPath(error.path || '-')}</p>
-                        </div>
-                        <div class="text-slate/70 flex flex-wrap gap-2">
-                            <span>${escapeHtml(error.user)}</span>
-                            <span>${escapeHtml(error.ip)}</span>
-                            <span>${escapeHtml(error.country)}</span>
-                            <span>${escapeHtml(error.device)}</span>
-                            <span>${escapeHtml(error.time)}</span>
-                        </div>
-                    </div>
-                    <p class="admin-ltr text-left text-[10px] text-slate/50 truncate">${escapeHtml(error.source || '-')} ${error.line ? ':' + number(error.line) : ''}</p>
-                    <p class="admin-ltr text-left text-[10px] text-slate/50 truncate">${escapeHtml(error.user_agent)}</p>
-                </div>
-            `).join('');
-        });
-    };
 
     const formatDuration = (seconds) => {
         if (seconds < 60) return `${seconds}s`;
@@ -1810,50 +1514,53 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
         });
     };
 
+    const loadAnalyticsTab = () => {
+        fetchJson(sectionUrl('reports')).then((data) => {
+            if (!data) return;
+            const countries = iconizeRows(data.countries, 'countries');
+            const deviceBrands = iconizeRows(data.device_brands, 'device-brands');
+            const browsers = iconizeRows(data.browsers, 'browsers');
+            const platforms = iconizeRows(data.platforms, 'platforms');
+            const searchEngines = iconizeRows(data.search_engines, 'search-engines');
+
+            renderBars(root.querySelector('[data-list="countries"]'), countries);
+            renderBars(root.querySelector('[data-list="referrers"]'), iconizeRows(data.referrers, 'referrers'));
+            renderBars(root.querySelector('[data-list="device-types"]'), data.device_types);
+            renderBars(root.querySelector('[data-list="device-brands"]'), deviceBrands);
+            renderBars(root.querySelector('[data-list="browsers"]'), browsers);
+            renderBars(root.querySelector('[data-list="platforms"]'), platforms);
+            renderBars(root.querySelector('[data-list="utm-sources"]'), iconizeRows(data.utm_sources, 'utm'));
+            renderBars(root.querySelector('[data-list="utm-mediums"]'), iconizeRows(data.utm_mediums, 'utm'));
+            renderBars(root.querySelector('[data-list="utm-campaigns"]'), iconizeRows(data.utm_campaigns, 'utm'));
+            renderBars(root.querySelector('[data-list="search-engines"]'), searchEngines);
+
+            const activitiesData = Array.isArray(data.activities) ? data.activities : (Array.isArray(data.activity) ? data.activity : []);
+            renderBars(root.querySelector('[data-list="activities"]'), activitiesData.map(a => {
+                return a.key === 'error' ? { ...a, isNegative: true } : a;
+            }));
+
+            const reportsMapContainer = root.querySelector('[data-map="reports"]');
+            if (reportsMapContainer) {
+                renderWorldMap(reportsMapContainer, data.map, 'reports', true);
+            }
+
+            const countryCount = root.querySelector('[data-reports-country-count]');
+            if (countryCount) countryCount.textContent = countries.length || 0;
+            const browserCount = root.querySelector('[data-reports-browser-count]');
+            if (browserCount) browserCount.textContent = browsers.length || 0;
+            const sourceCount = root.querySelector('[data-reports-source-count]');
+            if (sourceCount) sourceCount.textContent = iconizeRows(data.referrers, 'referrers').length || 0;
+        });
+        loadContent();
+    };
+
     const loaders = {
         'tab-overview': loadOverview,
         'tab-live': loadLive,
-        'tab-reports': () => {
-            fetchJson(sectionUrl('reports')).then((data) => {
-                if (!data) return;
-                const countries = iconizeRows(data.countries, 'countries');
-                const deviceBrands = iconizeRows(data.device_brands, 'device-brands');
-                const browsers = iconizeRows(data.browsers, 'browsers');
-                const platforms = iconizeRows(data.platforms, 'platforms');
-                const searchEngines = iconizeRows(data.search_engines, 'search-engines');
-
-                renderBars(root.querySelector('[data-list="countries"]'), countries);
-                renderBars(root.querySelector('[data-list="referrers"]'), iconizeRows(data.referrers, 'referrers'));
-                renderBars(root.querySelector('[data-list="device-types"]'), data.device_types);
-                renderBars(root.querySelector('[data-list="device-brands"]'), deviceBrands);
-                renderBars(root.querySelector('[data-list="browsers"]'), browsers);
-                renderBars(root.querySelector('[data-list="platforms"]'), platforms);
-                renderBars(root.querySelector('[data-list="utm-sources"]'), iconizeRows(data.utm_sources, 'utm'));
-                renderBars(root.querySelector('[data-list="utm-mediums"]'), iconizeRows(data.utm_mediums, 'utm'));
-                renderBars(root.querySelector('[data-list="utm-campaigns"]'), iconizeRows(data.utm_campaigns, 'utm'));
-                renderBars(root.querySelector('[data-list="search-engines"]'), searchEngines);
-
-                const activitiesData = Array.isArray(data.activities) ? data.activities : (Array.isArray(data.activity) ? data.activity : []);
-                renderBars(root.querySelector('[data-list="activities"]'), activitiesData.map(a => {
-                    return a.key === 'error' ? { ...a, isNegative: true } : a;
-                }));
-
-                const reportsMapContainer = root.querySelector('[data-map="reports"]');
-                if (reportsMapContainer) {
-                    renderWorldMap(reportsMapContainer, data.map, 'reports', true);
-                }
-            });
-        },
-        'tab-content': loadContent,
+        'tab-analytics': loadAnalyticsTab,
         'tab-search': loadSearch,
         'tab-goals': loadGoals,
-        'tab-users': loadUsers,
-        'tab-errors': loadErrors,
-        'tab-funnels': loadFunnels,
-        'tab-sessions': loadSessions,
-        'tab-cohort': loadCohort,
-        'tab-compare': loadCompare,
-        'tab-raw': () => loadRawEvents(1),
+        'tab-management': () => {},
     };
 
     if (dashboardRoot) {
@@ -1890,11 +1597,6 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
                 loadedSections.add(activeTab);
                 loaders[activeTab]?.();
             }
-        });
-
-        root.querySelector('#analytics-filter-toggle')?.addEventListener('click', () => {
-            isFilterPanelOpen = !isFilterPanelOpen;
-            syncFilterVisibility(currentTab);
         });
 
         root.querySelector('#analytics-filter-reset')?.addEventListener('click', () => {
@@ -1941,8 +1643,6 @@ import iranMap from '@highcharts/map-collection/countries/ir/ir-all.topo.json';
             }
         };
     });
-
-    root.querySelector('[data-raw-search]')?.addEventListener('click', () => loadRawEvents(1));
 
     let livePollingInterval = null;
     const startLivePolling = () => {

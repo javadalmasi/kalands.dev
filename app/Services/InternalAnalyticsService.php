@@ -523,56 +523,6 @@ class InternalAnalyticsService
         ];
     }
 
-    public function cohortAnalysis(?Carbon $start = null, int $periods = 12): array
-    {
-        $start = $start ?: now()->subMonths($periods)->startOfMonth();
-        $end = now()->endOfMonth();
-
-        $firstVisits = AnalyticsEvent::query()
-            ->selectRaw('visitor_hash, MIN(DATE(occurred_at)) as first_date')
-            ->where('event_type', 'pageview')
-            ->whereNotNull('visitor_hash')
-            ->where('occurred_at', '>=', $start)
-            ->groupBy('visitor_hash')
-            ->get()
-            ->groupBy('first_date');
-
-        $cohorts = [];
-        foreach ($firstVisits as $firstDate => $visitors) {
-            $hashes = $visitors->pluck('visitor_hash')->toArray();
-            $cohortMonth = Carbon::parse($firstDate)->startOfMonth()->toDateString();
-
-            $monthlyActivity = AnalyticsEvent::query()
-                ->selectRaw('strftime(\'%Y-%m\', occurred_at) as month, COUNT(DISTINCT visitor_hash) as active')
-                ->whereIn('visitor_hash', $hashes)
-                ->where('event_type', 'pageview')
-                ->where('occurred_at', '>=', $firstDate)
-                ->groupBy('month')
-                ->orderBy('month')
-                ->pluck('active', 'month');
-
-            $total = count($hashes);
-            $periodData = [];
-            for ($i = 0; $i < 6; $i++) {
-                $m = Carbon::parse($cohortMonth)->addMonthsNoOverflow($i)->format('Y-m');
-                $active = (int) ($monthlyActivity[$m] ?? 0);
-                $periodData[] = [
-                    'period' => $m,
-                    'active' => $active,
-                    'retention_pct' => $total > 0 ? round(($active / $total) * 100, 1) : 0,
-                ];
-            }
-
-            $cohorts[] = [
-                'cohort' => $cohortMonth,
-                'total' => $total,
-                'periods' => $periodData,
-            ];
-        }
-
-        return array_slice($cohorts, 0, 12);
-    }
-
     public function userJourney(string $sessionId, int $limit = 50): array
     {
         $session = AnalyticsSession::query()->where('session_id', $sessionId)->first();
@@ -709,74 +659,6 @@ class InternalAnalyticsService
             'to' => $t->to_path,
             'count' => (int) $t->count,
         ])->all();
-    }
-
-    public function rawData(array $filters = [], int $perPage = 50, int $page = 1): array
-    {
-        $query = AnalyticsEvent::query()
-            ->where('event_type', '!=', 'heartbeat');
-
-        if (!empty($filters['from'])) {
-            $query->where('occurred_at', '>=', Carbon::parse($filters['from']));
-        }
-        if (!empty($filters['to'])) {
-            $query->where('occurred_at', '<=', Carbon::parse($filters['to']));
-        }
-        if (!empty($filters['event_type'])) {
-            $query->where('event_type', $filters['event_type']);
-        }
-        if (!empty($filters['session_id'])) {
-            $query->where('session_id', $filters['session_id']);
-        }
-        if (!empty($filters['visitor_hash'])) {
-            $query->where('visitor_hash', $filters['visitor_hash']);
-        }
-        if (!empty($filters['path'])) {
-            $query->where('path', 'like', '%' . $filters['path'] . '%');
-        }
-        if (!empty($filters['search'])) {
-            $s = '%' . $filters['search'] . '%';
-            $query->where(fn($q) => $q->where('path', 'like', $s)
-                ->orWhere('title', 'like', $s)
-                ->orWhere('search_term', 'like', $s));
-        }
-
-        $total = $query->count();
-        $items = $query->latest('occurred_at')
-            ->skip(($page - 1) * $perPage)
-            ->limit($perPage)
-            ->get()
-            ->map(fn($e) => [
-                'id' => $e->id,
-                'type' => $e->event_type,
-                'session_id' => $e->session_id,
-                'user_id' => $e->user_id,
-                'path' => $e->path,
-                'title' => $e->title,
-                'goal' => $e->goal_label,
-                'referrer' => $e->referrer_type,
-                'country' => $e->country_name,
-                'city' => $e->city,
-                'device' => $e->device_brand . ' ' . $e->device_type,
-                'browser' => $e->browser,
-                'platform' => $e->platform,
-                'utm_source' => $e->utm_source,
-                'utm_campaign' => $e->utm_campaign,
-                'search_term' => $e->search_term,
-                'duration' => $e->session_duration,
-                'bounce' => $e->is_bounce,
-                'scroll' => $e->scroll_depth_pct,
-                'error' => $e->error_message,
-                'time' => $e->occurred_at->toDateTimeString(),
-            ]);
-
-        return [
-            'data' => $items,
-            'total' => $total,
-            'per_page' => $perPage,
-            'page' => $page,
-            'last_page' => max(1, (int) ceil($total / $perPage)),
-        ];
     }
 
     public function comparativeReport(string $metric, Carbon $currentStart, Carbon $currentEnd, Carbon $previousStart, Carbon $previousEnd): array
@@ -1041,74 +923,13 @@ class InternalAnalyticsService
                 'month' => $this->topEventsDimension($filters, 'goal_key', 'goal_label', 50, null, 'goal'),
             ]),
             'live' => $this->cachedLiveData(),
-            'users' => $this->cachedReport('users:' . $cacheKey, $cacheTtl, fn () => [
-                'filters' => $this->publicFilters($filters),
-                'users' => collect($this->topEventsDimension($filters, 'user_id', null, 50, fn ($value) => $this->userLabel((int) $value)))
-                    ->filter(fn ($row) => (int) ($row['key'] ?? 0) > 0)
-                    ->values()
-                    ->all(),
-            ]),
-            'errors' => $this->cachedReport('errors:' . $cacheKey, $cacheTtl, fn () => [
-                'filters' => $this->publicFilters($filters),
-                'total' => $this->filteredEventsCount($filters, 'error', $start, $end),
-                'items' => $this->topEventsDimension($filters, 'path', 'error_message', 30, null, 'error'),
-                'recent' => $this->recentErrors(),
-            ]),
-            'funnels' => $this->funnelsReport($start, $end),
-            'sessions' => $this->sessionsReport($start, $end),
             'journeys' => $this->popularPaths($start, $end),
-            'comparative' => $this->comparativeReport('pageview', $start, $end, Carbon::parse($start)->subDays($start->diffInDays($end) + 1), Carbon::parse($end)->subDays($start->diffInDays($end) + 1)),
-            'cohorts' => ['cohorts' => $this->cohortAnalysis($start)],
-            'raw' => $this->rawData($filters, 50, (int) ($filters['page'] ?? 1)),
             'alerts' => [
                 'alerts' => AnalyticsAlert::query()->where('is_active', true)->get()->toArray(),
                 'logs' => $this->alertLogs(),
             ],
             default => [],
         };
-    }
-
-    private function funnelsReport(Carbon $start, Carbon $end): array
-    {
-        $funnels = AnalyticsFunnel::query()->where('is_active', true)->get();
-        return [
-            'funnels' => $funnels->map(fn($f) => [
-                'key' => $f->key,
-                'name' => $f->name,
-                'steps' => is_string($f->steps) ? json_decode($f->steps, true) : ($f->steps ?? []),
-            ]),
-            'report' => $funnels->map(fn($f) => $this->funnelReport($f->key, $start, $end)),
-        ];
-    }
-
-    private function sessionsReport(Carbon $start, Carbon $end): array
-    {
-        $sessions = AnalyticsSession::query()
-            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
-            ->selectRaw('COUNT(*) as total, SUM(is_bounce) as bounces, AVG(duration_seconds) as avg_duration, SUM(pageviews_count) as total_pageviews')
-            ->first();
-
-        $total = (int) ($sessions->total ?? 0);
-        $bounces = (int) ($sessions->bounces ?? 0);
-        $avgDuration = (int) ($sessions->avg_duration ?? 0);
-        $totalPv = (int) ($sessions->total_pageviews ?? 0);
-
-        $byDevice = AnalyticsSession::query()
-            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
-            ->selectRaw('device_type, COUNT(*) as total, AVG(duration_seconds) as avg_dur, SUM(is_bounce) as bounces')
-            ->whereNotNull('device_type')
-            ->groupBy('device_type')
-            ->get();
-
-        return [
-            'total' => $total,
-            'bounces' => $bounces,
-            'bounce_rate' => $total > 0 ? round(($bounces / $total) * 100, 1) : 0,
-            'avg_duration_seconds' => $avgDuration,
-            'avg_duration_formatted' => gmdate('i:s', $avgDuration),
-            'avg_pageviews_per_session' => $total > 0 ? round($totalPv / $total, 1) : 0,
-            'by_device' => $byDevice,
-        ];
     }
 
     private function getMetricForDateRange(string $metric, Carbon $start, Carbon $end): int
@@ -1143,20 +964,6 @@ class InternalAnalyticsService
         $data = $this->report($section, $filters);
         $rows = [];
 
-        $headerMap = [
-            'overview' => ['معیار', 'مقدار'],
-            'reports' => ['کلید', 'برچسب', 'تعداد'],
-            'content' => ['صفحه', 'عنوان', 'بازدید'],
-            'search' => ['کلمه جستجو', 'تعداد'],
-            'goals' => ['هدف', 'تعداد'],
-            'users' => ['کاربر', 'بازدید'],
-            'errors' => ['خطا', 'مسیر', 'تعداد'],
-            'sessions' => ['نوع', 'مقدار'],
-            'raw' => ['آی‌دی', 'نوع', 'مسیر', 'عنوان', 'کشور', 'مرورگر', 'دستگاه', 'زمان'],
-        ];
-
-        $headers = $headerMap[$section] ?? ['کلید', 'مقدار'];
-
         return match ($section) {
             'overview' => $this->arrayToCsv(array_merge(
                 [['معیار', 'مقدار']],
@@ -1172,14 +979,6 @@ class InternalAnalyticsService
             'content' => $this->arrayToCsv($this->flattenReport($data, ['pages', 'products', 'categories', 'sellers'])),
             'search' => $this->arrayToCsv(($data['keywords'] ?? []), ['برچسب', 'تعداد']),
             'goals' => $this->arrayToCsv(($data['month'] ?? []), ['هدف', 'تعداد']),
-            'sessions' => $this->arrayToCsv([
-                ['معیار', 'مقدار'],
-                ['کل جلسات', $data['total'] ?? 0],
-                ['نرخ پرش', ($data['bounce_rate'] ?? 0) . '%'],
-                ['مدت متوسط', $data['avg_duration_formatted'] ?? '0:00'],
-                ['میانگین صفحات', $data['avg_pageviews_per_session'] ?? 0],
-            ]),
-            'raw' => $this->eventsToCsv($data['data'] ?? []),
             default => '',
         };
     }
@@ -1236,7 +1035,6 @@ class InternalAnalyticsService
             'exported_at' => now()->toDateTimeString(),
             'settings' => $this->settings(),
             'daily_stats' => AnalyticsDailyStat::query()->latest('date')->limit(5000)->get()->toArray(),
-            'funnels' => AnalyticsFunnel::query()->get()->toArray(),
             'alerts' => AnalyticsAlert::query()->get()->toArray(),
         ];
     }
@@ -1308,15 +1106,6 @@ class InternalAnalyticsService
                 $imported++;
             }
         });
-
-        if (!empty($payload['funnels'])) {
-            foreach ($payload['funnels'] as $f) {
-                AnalyticsFunnel::query()->updateOrCreate(
-                    ['key' => $f['key']],
-                    ['name' => $f['name'], 'steps' => $f['steps'], 'is_active' => $f['is_active'] ?? true]
-                );
-            }
-        }
 
         if (!empty($payload['alerts'])) {
             foreach ($payload['alerts'] as $a) {

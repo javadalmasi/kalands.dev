@@ -1,11 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // ─── Tab Switcher ──────────────────────────────────────────────
     const tabs = document.querySelectorAll('#home-tabs [data-tab-target]');
     const urlParams = new URLSearchParams(window.location.search);
     let activeTab = urlParams.get('tab');
 
     const switchTab = (targetId) => {
         if (!targetId || !document.getElementById(targetId)) return;
-        
+
         tabs.forEach(t => {
             const isActive = t.getAttribute('data-tab-target') === targetId;
             if (isActive) {
@@ -41,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         switchTab(activeTab);
     }
 
+    // ─── Scroll-spy for doc nav links ─────────────────────────────
     const docNavLinks = document.querySelectorAll('.doc-nav-link');
     const docSections = document.querySelectorAll('section[id^="doc-"]');
 
@@ -83,5 +85,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ─── Affiliate Date Filter: convert Shamsi → Gregorian ────────
+    // The Shamsi datepicker stores gregorian equivalent in input.dataset.gregorian
+    // but the form submits the Persian value. We intercept submit to swap the values.
+    const affiliateFilterForms = document.querySelectorAll('form[method="GET"]');
 
+    affiliateFilterForms.forEach(form => {
+        const startInput = form.querySelector('input[name="start_date"]');
+        const endInput = form.querySelector('input[name="end_date"]');
+
+        if (!startInput && !endInput) return;
+
+        form.addEventListener('submit', (e) => {
+            // Use the gregorian value stored by admin-datepicker.js as dataset.gregorian
+            // If not available, fall back to window.toGregorianFromShamsi conversion
+            const convert = (input) => {
+                if (!input || !input.value.trim()) return;
+                const gregorian = input.dataset.gregorian
+                    || (typeof window.toGregorianFromShamsi === 'function'
+                        ? window.toGregorianFromShamsi(input.value.trim())
+                        : null);
+                if (gregorian) {
+                    input.value = gregorian;
+                }
+            };
+
+            convert(startInput);
+            convert(endInput);
+        });
+    });
 });

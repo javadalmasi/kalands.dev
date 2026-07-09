@@ -8,59 +8,23 @@
         <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="analytics-tabs">
             <button class="px-5 py-3.5 text-sm font-bold transition-colors border-b-2 border-success text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-overview">
                 <span class="material-icons text-lg">dashboard</span>
-                <span class="hidden sm:inline">نمای کلی</span>
+                <span class="hidden sm:inline">داشبورد</span>
             </button>
             <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-live">
                 <span class="material-icons text-lg">sensors</span>
                 <span class="hidden sm:inline">زنده</span>
             </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-reports">
-                <span class="material-icons text-lg">public</span>
-                <span class="hidden sm:inline">گزارش‌ها</span>
-            </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-content">
-                <span class="material-icons text-lg">inventory_2</span>
-                <span class="hidden sm:inline">محتوا</span>
+            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-analytics">
+                <span class="material-icons text-lg">bar_chart</span>
+                <span class="hidden sm:inline">آنالیز</span>
             </button>
             <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-goals">
-                <span class="material-icons text-lg">touch_app</span>
+                <span class="material-icons text-lg">emoji_events</span>
                 <span class="hidden sm:inline">اهداف</span>
             </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-funnels">
-                <span class="material-icons text-lg">filter_alt</span>
-                <span class="hidden sm:inline">قیف</span>
-            </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-sessions">
-                <span class="material-icons text-lg">timeline</span>
-                <span class="hidden sm:inline">جلسات</span>
-            </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-users">
-                <span class="material-icons text-lg">manage_search</span>
-                <span class="hidden sm:inline">کاربران</span>
-            </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-errors">
-                <span class="material-icons text-lg">bug_report</span>
-                <span class="hidden sm:inline">خطاها</span>
-            </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-cohort">
-                <span class="material-icons text-lg">group_work</span>
-                <span class="hidden sm:inline">هم‌گروه</span>
-            </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-compare">
-                <span class="material-icons text-lg">compare_arrows</span>
-                <span class="hidden sm:inline">مقایسه</span>
-            </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-raw">
-                <span class="material-icons text-lg">explore</span>
-                <span class="hidden sm:inline">خام</span>
-            </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-maintenance">
-                <span class="material-icons text-lg">cleaning_services</span>
-                <span class="hidden sm:inline">نگهداری</span>
-            </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-settings">
-                <span class="material-icons text-lg">settings</span>
-                <span class="hidden sm:inline">تنظیمات</span>
+            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-management">
+                <span class="material-icons text-lg">admin_panel_settings</span>
+                <span class="hidden sm:inline">مدیریت</span>
             </button>
         </div>
     </div>
@@ -68,31 +32,19 @@
     <div id="analytics-hub-root"
          data-report-url="{{ route('dash.admin.analytics_report', ['authkey' => $authkey]) }}"
          data-user-activity-url="{{ route('dash.admin.analytics_user_details', ['authkey' => $authkey, 'userId' => ':id']) }}"
-         data-user-journey-url="{{ route('dash.admin.analytics_user_journey', ['authkey' => $authkey]) }}"
-         data-funnel-delete-url="{{ route('dash.admin.analytics_funnels_delete', ['authkey' => $authkey, 'key' => ':key']) }}">
+         data-user-journey-url="{{ route('dash.admin.analytics_user_journey', ['authkey' => $authkey]) }}">
+
         <div class="admin-card mb-6 !p-0 overflow-hidden hidden" id="analytics-filter-card">
             <form data-analytics-filters>
-                <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate/10 bg-slate/5">
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-2">
-                            <span class="material-icons text-success text-base">filter_alt</span>
-                            <p class="text-sm font-bold text-slate" id="analytics-filter-title">فیلترهای گزارش</p>
-                        </div>
-                        <p class="text-[11px] text-slate/55 mt-1" id="analytics-filter-description">فقط فیلترهای مرتبط با تب فعال نمایش داده می‌شوند.</p>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <button type="button" id="analytics-filter-toggle" class="admin-btn admin-btn-secondary h-10 px-3 text-xs">
-                            <span class="material-icons text-base" id="analytics-filter-toggle-icon">expand_more</span>
-                            <span id="analytics-filter-toggle-text">فیلتر</span>
-                        </button>
-                        <button class="admin-btn !bg-success !text-white h-10 px-3" type="submit">
-                            <span class="material-icons text-base">search</span>
-                        </button>
+                <div class="px-4 pt-3 pb-1">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="material-icons text-success text-base">filter_alt</span>
+                        <p class="text-sm font-bold text-slate" id="analytics-filter-title">فیلترها</p>
+                        <p class="text-[11px] text-slate/50 mr-1" id="analytics-filter-description">فیلترهای مرتبط با تب فعال</p>
                     </div>
                 </div>
-
-                <div class="px-4 py-4 hidden" id="analytics-filter-panel">
-                    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4" id="analytics-filter-primary">
+                <div class="px-4 pb-4" id="analytics-filter-panel">
+                    <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-5" id="analytics-filter-primary">
                         <div class="space-y-1" data-filter-field="from">
                             <label class="text-xs font-bold text-slate">از تاریخ</label>
                             <div data-shamsi-datepicker="from">
@@ -112,10 +64,6 @@
                                 <option value="week">هفتگی</option>
                                 <option value="month">ماهانه</option>
                             </select>
-                        </div>
-                        <div class="space-y-1" data-filter-field="search">
-                            <label class="text-xs font-bold text-slate">جستجوی آزاد</label>
-                            <input type="search" name="search" placeholder="مسیر، عنوان، شهر، مرورگر..." class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
                         </div>
                         <div class="space-y-1" data-filter-field="country">
                             <label class="text-xs font-bold text-slate">کشور</label>
@@ -166,14 +114,6 @@
                                 <option value="error">خطا</option>
                             </select>
                         </div>
-                        <div class="space-y-1" data-filter-field="path">
-                            <label class="text-xs font-bold text-slate">مسیر / URL</label>
-                            <input type="text" name="path" placeholder="/product /result /seller" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                        </div>
-                        <div class="space-y-1" data-filter-field="goal_key">
-                            <label class="text-xs font-bold text-slate">Goal Key</label>
-                            <input type="text" name="goal_key" placeholder="tr_dk / tr_bs / ..." class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                        </div>
                         <div class="space-y-1" data-filter-field="source">
                             <label class="text-xs font-bold text-slate">سورس / Referrer</label>
                             <input type="text" name="source" placeholder="google / direct / instagram" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
@@ -181,6 +121,14 @@
                         <div class="space-y-1" data-filter-field="campaign">
                             <label class="text-xs font-bold text-slate">کمپین / UTM</label>
                             <input type="text" name="campaign" placeholder="spring_sale / cpc" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                        </div>
+                        <div class="space-y-1" data-filter-field="path">
+                            <label class="text-xs font-bold text-slate">مسیر / URL</label>
+                            <input type="text" name="path" placeholder="/product /result /seller" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                        </div>
+                        <div class="space-y-1" data-filter-field="goal_key">
+                            <label class="text-xs font-bold text-slate">Goal Key</label>
+                            <input type="text" name="goal_key" placeholder="tr_dk / tr_bs / ..." class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
                         </div>
                         <div class="space-y-1" data-filter-field="browser">
                             <label class="text-xs font-bold text-slate">مرورگر</label>
@@ -200,18 +148,26 @@
                                 <option value="long">بیش از ۵ دقیقه</option>
                             </select>
                         </div>
+                        <div class="space-y-1" data-filter-field="search">
+                            <label class="text-xs font-bold text-slate">جستجوی آزاد</label>
+                            <input type="search" name="search" placeholder="مسیر، عنوان، شهر، مرورگر..." class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                        </div>
                     </div>
-                    <div class="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-slate/10">
-                        <p class="text-[11px] text-slate/50">فیلترها بر اساس تب فعال تغییر می‌کنند و فقط روی همان داده‌های مرتبط تمرکز دارند.</p>
-                        <button type="reset" id="analytics-filter-reset" class="admin-btn admin-btn-secondary h-10 px-3 text-xs">
+                    <div class="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-slate/10">
+                        <button type="reset" id="analytics-filter-reset" class="admin-btn admin-btn-secondary h-9 px-3 text-xs">
                             <span class="material-icons text-base">restart_alt</span>
                             <span>پاک‌کردن</span>
+                        </button>
+                        <button class="admin-btn !bg-success !text-white h-9 px-4 text-xs" type="submit">
+                            <span class="material-icons text-base">search</span>
+                            <span>اعمال فیلتر</span>
                         </button>
                     </div>
                 </div>
             </form>
         </div>
 
+        {{-- ═══ تب داشبورد ═══ --}}
         <div id="tab-overview" class="analytics-tab-content space-y-5">
             <div class="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-4">
                 <div class="admin-card text-center">
@@ -297,6 +253,7 @@
             </div>
         </dialog>
 
+        {{-- ═══ تب زنده ═══ --}}
         <div id="tab-live" class="analytics-tab-content hidden space-y-5">
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <div class="admin-card border-success/40 overflow-hidden relative" id="live-summary-card">
@@ -475,7 +432,8 @@
             </div>
         </dialog>
 
-        <div id="tab-reports" class="analytics-tab-content hidden space-y-5">
+        {{-- ═══ تب آنالیز (ادغام گزارش‌ها + محتوا) ═══ --}}
+        <div id="tab-analytics" class="analytics-tab-content hidden space-y-5">
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <div class="admin-card border-success/20 bg-success/[0.03]">
                     <div class="flex items-center justify-between gap-3">
@@ -634,6 +592,7 @@
                     </div>
                 </div>
             </div>
+
             <details class="admin-card group">
                 <summary class="font-bold text-slate flex items-center gap-2 text-sm cursor-pointer select-none [&::-webkit-details-marker]:hidden">
                     <span class="material-icons text-success text-lg group-open:rotate-180 transition-transform">expand_more</span>
@@ -662,6 +621,7 @@
                     </div>
                 </div>
             </details>
+
             <div class="admin-card">
                 <h3 class="font-bold text-slate mb-4 flex items-center gap-2 text-sm border-b border-slate/10 pb-2">
                     <span class="material-icons text-success text-lg">timeline</span>
@@ -671,10 +631,8 @@
                     <p class="text-center py-8 opacity-50">در حال بارگذاری...</p>
                 </div>
             </div>
-        </div>
 
-        <div id="tab-content" class="analytics-tab-content hidden space-y-6">
-            <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div class="admin-card">
                     <h3 class="font-bold text-slate mb-4 text-sm border-b border-slate/10 pb-2">صفحات پربازدید</h3>
                     <div data-list="pages" class="space-y-3">
@@ -702,18 +660,7 @@
             </div>
         </div>
 
-        <div id="tab-search" class="analytics-tab-content hidden space-y-6">
-            <div class="admin-card">
-                <h3 class="font-bold text-slate mb-4 flex items-center gap-2">
-                    <span class="material-icons text-success">search</span>
-                    <span>پر سرچ‌ترین کلمات سایت</span>
-                </h3>
-                <div data-list="keywords" class="space-y-1">
-                    <p class="text-center py-10 opacity-50">در حال بارگذاری...</p>
-                </div>
-            </div>
-        </div>
-
+        {{-- ═══ تب اهداف ═══ --}}
         <div id="tab-goals" class="analytics-tab-content hidden space-y-6">
             <div class="grid gap-6 md:grid-cols-2 mb-6">
                 <div class="admin-card border-r-4 border-success">
@@ -757,330 +704,159 @@
             </div>
         </div>
 
-        <div id="tab-users" class="analytics-tab-content hidden space-y-6">
-            <div class="admin-card">
-                <h3 class="font-bold text-slate mb-4 flex items-center gap-2">
-                    <span class="material-icons text-success">manage_search</span>
-                    <span>کاربران لاگین‌شده پربازدید</span>
-                </h3>
-                <div data-list="users" class="space-y-2">
-                    <p class="text-center py-10 opacity-50">در حال بارگذاری...</p>
-                </div>
-            </div>
-        </div>
+        {{-- ═══ تب مدیریت (ادغام تنظیمات + نگهداری) ═══ --}}
+        <div id="tab-management" class="analytics-tab-content hidden space-y-6">
 
-        <div id="tab-errors" class="analytics-tab-content hidden space-y-6">
-            <div class="admin-card">
-                <div class="flex items-center justify-between gap-4 mb-4">
-                    <h3 class="font-bold text-slate flex items-center gap-2">
-                        <span class="material-icons text-danger">bug_report</span>
-                        <span>Error Tracker</span>
-                    </h3>
-                    <span class="text-sm font-bold text-danger" data-errors-total>...</span>
-                </div>
-                <div data-errors-list class="space-y-3">
-                    <p class="text-center py-10 opacity-50">در حال بارگذاری...</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-funnels" class="analytics-tab-content hidden space-y-6">
-            <div class="admin-card">
-                <div class="flex items-center justify-between gap-4 mb-4">
-                    <h3 class="font-bold text-slate flex items-center gap-2">
-                        <span class="material-icons text-success">filter_alt</span>
-                        <span>قیف‌های تبدیل</span>
-                    </h3>
-                    <a href="#funnel-form" class="admin-btn !bg-success/10 !text-success !border-success/20 text-xs">
-                        <span class="material-icons text-base">add</span>
-                        قیف جدید
-                    </a>
-                </div>
-                <div data-list="funnels" class="space-y-4">
-                    <p class="text-center py-10 opacity-50">در حال بارگذاری...</p>
-                </div>
-            </div>
-
-            <div class="admin-card" id="funnel-form">
-                <h3 class="font-bold text-slate mb-4">ایجاد قیف جدید</h3>
-                <form action="{{ route('dash.admin.analytics_funnels_save', ['authkey' => $authkey]) }}" method="POST" class="space-y-4">
-                    @csrf
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold text-slate">شناسه قیف (کلید)</label>
-                            <input type="text" name="key" required maxlength="80" placeholder="product_to_cart" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold text-slate">نام قیف</label>
-                            <input type="text" name="name" required maxlength="200" placeholder="از محصول تا سبد خرید" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                        </div>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate">مراحل قیف (JSON)</label>
-                        <textarea name="steps" required rows="4" class="admin-ltr w-full rounded border border-slate p-2 text-sm font-mono dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder='[{"name":"مشاهده محصول"},{"name":"افزودن به سبد"},{"name":"کلیک دیجی‌کالا"}]'></textarea>
-                    </div>
-                    <label class="flex items-center gap-2 text-sm">
-                        <input type="checkbox" name="is_active" value="1" checked>
-                        <span>فعال</span>
-                    </label>
-                    <button type="submit" class="admin-btn !bg-success !text-white">
-                        <span class="material-icons">save</span>
-                        ذخیره قیف
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <div id="tab-sessions" class="analytics-tab-content hidden space-y-6">
-            <div class="grid gap-4 md:grid-cols-4">
-                <div class="admin-card text-center">
-                    <p class="text-xs text-slate opacity-60 mb-1">کل جلسات</p>
-                    <p class="text-2xl font-bold" data-session-total>...</p>
-                </div>
-                <div class="admin-card text-center">
-                    <p class="text-xs text-slate opacity-60 mb-1">نرخ پرش</p>
-                    <p class="text-2xl font-bold text-amber-500" data-session-bounce>...</p>
-                </div>
-                <div class="admin-card text-center">
-                    <p class="text-xs text-slate opacity-60 mb-1">مدت متوسط</p>
-                    <p class="text-2xl font-bold text-info" data-session-duration>...</p>
-                </div>
-                <div class="admin-card text-center">
-                    <p class="text-xs text-slate opacity-60 mb-1">صفحات در هر جلسه</p>
-                    <p class="text-2xl font-bold" data-session-ppv>...</p>
-                </div>
-            </div>
-            <div class="admin-card">
-                <div data-list="sessions-by-device" class="space-y-3">
-                    <p class="text-center py-10 opacity-50">در حال بارگذاری...</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-cohort" class="analytics-tab-content hidden space-y-6">
-            <div class="admin-card overflow-x-auto">
-                <h3 class="font-bold text-slate mb-4 flex items-center gap-2">
-                    <span class="material-icons text-success">group_work</span>
-                    <span>تحلیل هم‌گروه (Cohort) - نرخ بازگشت</span>
-                </h3>
-                <div data-cohort-table class="min-w-full">
-                    <p class="text-center py-10 opacity-50">در حال بارگذاری...</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-compare" class="analytics-tab-content hidden space-y-6">
-            <div class="grid gap-6 md:grid-cols-2">
-                <div class="admin-card text-center">
-                    <p class="text-xs text-slate opacity-60 mb-1">بازه فعلی</p>
-                    <p class="text-lg font-bold" data-compare-current-period>...</p>
-                    <p class="text-3xl font-bold text-success mt-2" data-compare-current>...</p>
-                </div>
-                <div class="admin-card text-center">
-                    <p class="text-xs text-slate opacity-60 mb-1">بازه قبلی</p>
-                    <p class="text-lg font-bold" data-compare-previous-period>...</p>
-                    <p class="text-3xl font-bold text-slate mt-2" data-compare-previous>...</p>
-                </div>
-            </div>
-            <div class="admin-card text-center">
-                <p class="text-xs text-slate opacity-60 mb-1">تغییرات</p>
-                <p class="text-4xl font-black" data-compare-change>...</p>
-            </div>
-            <div class="admin-card">
-                <h3 class="font-bold text-slate mb-4">نمودار مقایسه</h3>
-                <div class="min-h-72 flex items-center justify-center bg-slate/5 border border-dashed border-slate/20" data-chart="compare">
-                    <p class="text-sm opacity-50">در حال بارگذاری...</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-raw" class="analytics-tab-content hidden space-y-6">
-            <div class="flex items-center justify-between gap-4 mb-4">
-                <h3 class="font-bold text-slate flex items-center gap-2">
-                    <span class="material-icons text-success">explore</span>
-                    <span>رویدادهای خام</span>
-                </h3>
-                <a href="{{ route('dash.admin.analytics_csv_export', ['authkey' => $authkey, 'section' => 'raw']) }}" class="admin-btn !bg-success/10 !text-success !border-success/20 text-xs" target="_blank">
-                    <span class="material-icons text-base">file_download</span>
-                    خروجی CSV
-                </a>
-            </div>
-            <div class="admin-card">
-                <div data-raw-events-filter class="grid gap-4 md:grid-cols-4 mb-4">
-                    <input type="text" data-raw-filter="search" placeholder="جستجو..." class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                    <select data-raw-filter="event_type" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                        <option value="">همه رویدادها</option>
-                        <option value="pageview">بازدید</option>
-                        <option value="goal">هدف</option>
-                        <option value="error">خطا</option>
-                    </select>
-                    <input type="text" data-raw-filter="session_id" placeholder="شناسه جلسه..." class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                    <button class="admin-btn !bg-success !text-white" data-raw-search>
-                        <span class="material-icons text-base">search</span>
-                        جستجو
-                    </button>
-                </div>
-                <div data-list="raw-events" class="space-y-2">
-                    <p class="text-center py-10 opacity-50">در حال بارگذاری...</p>
-                </div>
-                <div data-raw-pagination class="flex items-center justify-center gap-2 mt-4"></div>
-            </div>
-        </div>
-
-        <div id="tab-maintenance" class="analytics-tab-content hidden space-y-6">
-            <div class="grid gap-6 md:grid-cols-2">
-                <div class="admin-card">
-                    <h3 class="font-bold text-slate mb-4 flex items-center gap-2">
-                        <span class="material-icons text-danger">auto_delete</span>
-                        <span>پاکسازی پیشرفته داده‌ها</span>
-                    </h3>
-                    <p class="text-xs text-slate/60 mb-6">در این بخش می‌توانید داده‌های قدیمی یا غیرضروری را برای آزاد کردن فضای دیتابیس حذف کنید. این عملیات غیرقابل بازگشت است.</p>
-
-                    <form action="{{ route('dash.admin.analytics_prune', ['authkey' => $authkey]) }}" method="POST" class="space-y-4">
-                        @csrf
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold text-slate px-1">نوع داده</label>
-                            <select name="type" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                                <option value="errors">فقط گزارش‌های خطا</option>
-                                <option value="sessions">جلسات قدیمی</option>
-                                <option value="all">تمامی رویدادها (بازدید، هدف، خطا)</option>
-                            </select>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold text-slate px-1">بازه زمانی</label>
-                            <select name="older_than" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                                <option value="all">همه زمان‌ها</option>
-                                <option value="30">قدیمی‌تر از یک ماه</option>
-                                <option value="90">قدیمی‌تر از ۳ ماه</option>
-                                <option value="180">قدیمی‌تر از ۶ ماه</option>
-                                <option value="365">قدیمی‌تر از یک سال</option>
-                            </select>
-                        </div>
-                        <div class="pt-2">
-                            <button type="submit" class="admin-btn !bg-danger !text-white w-full justify-center" onclick="return confirm('آیا از حذف این داده‌ها اطمینان دارید؟ این عملیات غیرقابل بازگشت است.')">
-                                <span class="material-icons">delete_forever</span>
-                                شروع پاکسازی
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="space-y-6">
-                    <div class="admin-card">
-                        <h3 class="font-bold text-slate mb-3 flex items-center gap-2">
-                            <span class="material-icons text-success">download</span>
-                            <span>Export آمار</span>
-                        </h3>
-                        <p class="text-xs text-slate/60 mb-4">تنظیمات و آمار تجمیعی برای انتقال یا بکاپ خروجی JSON می‌گیرد.</p>
-                        <a href="{{ route('dash.admin.analytics_export', ['authkey' => $authkey]) }}" class="admin-btn !bg-success/10 !text-success !border-success/20 justify-center w-full">
-                            <span class="material-icons">file_download</span>
-                            دریافت فایل JSON
-                        </a>
-                    </div>
-                    <div class="admin-card">
-                        <h3 class="font-bold text-slate mb-3 flex items-center gap-2">
-                            <span class="material-icons text-success">upload</span>
-                            <span>Import آمار</span>
-                        </h3>
-                        <form action="{{ route('dash.admin.analytics_import', ['authkey' => $authkey]) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
-                            @csrf
-                            <input type="file" name="analytics_file" accept="application/json,.json" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10" required>
-                            <button class="admin-btn !bg-success !text-white justify-center w-full">
-                                <span class="material-icons">file_upload</span>
-                                درون‌ریزی فایل
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-settings" class="analytics-tab-content hidden space-y-5">
-            <form action="{{ route('dash.admin.analytics_settings_save', ['authkey' => $authkey]) }}" method="POST" class="space-y-5">
+            <form action="{{ route('dash.admin.analytics_settings_save', ['authkey' => $authkey]) }}" method="POST" class="space-y-4">
                 @csrf
-                <div class="admin-card">
-                    <div class="flex items-center justify-between gap-4 mb-5 pb-4 border-b border-slate/10">
-                        <div class="flex items-center gap-3">
-                            <div class="rounded bg-success/10 p-2 text-success">
-                                <span class="material-icons">analytics</span>
-                            </div>
-                            <div>
-                                <h2 class="font-bold text-slate">تنظیمات عمومی</h2>
-                                <p class="text-xs text-slate/60 mt-1">فعالسازی و پیکربندی ماژول آنالیزور</p>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="space-y-1">
-                        <div class="flex items-center justify-between gap-4 py-3 border-b border-slate/5">
-                            <div>
-                                <p class="text-sm font-bold text-slate">فعالسازی آنالیزور</p>
-                                <p class="text-xs text-slate/40">ثبت رویدادها و نمایش گزارش‌ها در پنل ادمین</p>
-                            </div>
-                            <label class="admin-switch"><input type="checkbox" name="enabled" value="1" class="admin-switch-input" @checked(old('enabled', $settings['enabled'] ?? true))><div class="admin-switch-track"></div><div class="admin-switch-ball"></div></label>
-                        </div>
-                        <div class="flex items-center justify-between gap-4 py-3 border-b border-slate/5">
-                            <div>
-                                <p class="text-sm font-bold text-slate">اسکریپت رهگیری</p>
-                                <p class="text-xs text-slate/40">ارسال pageview و goal با sendBeacon, fetch, pixel fallback</p>
-                            </div>
-                            <label class="admin-switch"><input type="checkbox" name="tracking_script_enabled" value="1" class="admin-switch-input" @checked(old('tracking_script_enabled', $settings['tracking_script_enabled'] ?? true))><div class="admin-switch-track"></div><div class="admin-switch-ball"></div></label>
-                        </div>
-                        <div class="flex items-center justify-between gap-4 py-3 border-b border-slate/5">
-                            <div>
-                                <p class="text-sm font-bold text-slate">Error Tracker</p>
-                                <p class="text-xs text-slate/40">ثبت خطاهای سمت کاربر با محدودیت ۵ خطا در هر نشست</p>
-                            </div>
-                            <label class="admin-switch"><input type="checkbox" name="error_tracking_enabled" value="1" class="admin-switch-input" @checked(old('error_tracking_enabled', $settings['error_tracking_enabled'] ?? true))><div class="admin-switch-track"></div><div class="admin-switch-ball"></div></label>
-                        </div>
-                        <div class="flex items-center justify-between gap-4 py-3 border-b border-slate/5">
-                            <div>
-                                <p class="text-sm font-bold text-slate">Heartbeat</p>
-                                <p class="text-xs text-slate/40">ارسال سیگنال هر ۳۰ ثانیه برای محاسبه دقیق مدت جلسه</p>
-                            </div>
-                            <label class="admin-switch"><input type="checkbox" name="heartbeat_enabled" value="1" class="admin-switch-input" @checked(old('heartbeat_enabled', $settings['heartbeat_enabled'] ?? true))><div class="admin-switch-track"></div><div class="admin-switch-ball"></div></label>
-                        </div>
-                        <div class="flex items-center justify-between gap-4 py-3">
-                            <div>
-                                <p class="text-sm font-bold text-slate">هشدار خودکار (Alerting)</p>
-                                <p class="text-xs text-slate/40">بررسی ناهنجاری‌های آماری پس از هر Aggregation</p>
-                            </div>
-                            <label class="admin-switch"><input type="checkbox" name="alerting_enabled" value="1" class="admin-switch-input" @checked(old('alerting_enabled', $settings['alerting_enabled'] ?? true))><div class="admin-switch-track"></div><div class="admin-switch-ball"></div></label>
-                        </div>
-                    </div>
+                <x-admin.form-section title="ردیابی و جمع‌آوری داده" icon="track_changes" description="کنترل اینکه چه داده‌هایی از بازدیدکنندگان جمع‌آوری شود">
+                    <x-admin.toggle-row
+                        name="enabled"
+                        label="فعالسازی آنالیزور"
+                        description="ثبت رویدادها و نمایش گزارش‌ها در پنل ادمین"
+                        :checked="old('enabled', $settings['enabled'] ?? true)"
+                    />
+                    <x-admin.toggle-row
+                        name="tracking_script_enabled"
+                        label="اسکریپت رهگیری"
+                        description="ارسال pageview و goal با sendBeacon، fetch و pixel fallback"
+                        :checked="old('tracking_script_enabled', $settings['tracking_script_enabled'] ?? true)"
+                    />
+                    <x-admin.toggle-row
+                        name="error_tracking_enabled"
+                        label="Error Tracker"
+                        description="ثبت خطاهای سمت کاربر — حداکثر ۵ خطا در هر نشست"
+                        badge="JS"
+                        :checked="old('error_tracking_enabled', $settings['error_tracking_enabled'] ?? true)"
+                    />
+                    <x-admin.toggle-row
+                        name="heartbeat_enabled"
+                        label="Heartbeat"
+                        description="ارسال سیگنال هر ۳۰ ثانیه برای محاسبه دقیق مدت جلسه"
+                        :checked="old('heartbeat_enabled', $settings['heartbeat_enabled'] ?? true)"
+                    />
+                    <x-admin.toggle-row
+                        name="alerting_enabled"
+                        label="هشدار خودکار"
+                        description="بررسی ناهنجاری‌های آماری پس از هر Aggregation"
+                        :checked="old('alerting_enabled', $settings['alerting_enabled'] ?? true)"
+                    />
+                </x-admin.form-section>
 
-                    <div class="grid gap-5 md:grid-cols-2 mt-5 pt-4 border-t border-slate/10">
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold text-slate">TTL کش گزارش‌ها (ثانیه)</label>
-                            <input type="number" name="report_cache_seconds" min="10" max="3600" value="{{ old('report_cache_seconds', $settings['report_cache_seconds'] ?? 60) }}" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10" required>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold text-slate">پنجره کاربران زنده (دقیقه)</label>
-                            <input type="number" name="live_user_window_minutes" min="1" max="60" value="{{ old('live_user_window_minutes', $settings['live_user_window_minutes'] ?? 5) }}" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10" required>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold text-slate">مدت زمان نشست (دقیقه)</label>
-                            <input type="number" name="session_timeout_minutes" min="5" max="120" value="{{ old('session_timeout_minutes', $settings['session_timeout_minutes'] ?? 30) }}" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10" required>
-                            <p class="text-[10px] text-slate/40">بعد از این مدت بدون فعالیت، جلسه بسته می‌شود</p>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold text-slate">نگهداری رویداد خام (روز)</label>
-                            <input type="number" name="raw_event_retention_days" min="1" max="365" value="{{ old('raw_event_retention_days', $settings['raw_event_retention_days'] ?? 90) }}" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10" required>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-xs font-bold text-slate">نگهداری آمار تجمیعی (روز)</label>
-                            <input type="number" name="stats_retention_days" min="30" max="1825" value="{{ old('stats_retention_days', $settings['stats_retention_days'] ?? 365) }}" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10" required>
-                        </div>
-                    </div>
+                <x-admin.form-section title="عملکرد و نگهداری" icon="speed" description="تنظیم مقادیر کارایی، زمان‌بندی نشست‌ها و دوره نگهداری داده‌ها">
+                    <x-admin.number-field
+                        name="report_cache_seconds"
+                        label="TTL کش گزارش‌ها"
+                        description="مدت زمان cache ماندن نتایج API — کاهش فشار روی دیتابیس"
+                        :value="old('report_cache_seconds', $settings['report_cache_seconds'] ?? 60)"
+                        min="10" max="3600" unit="ثانیه" required
+                    />
+                    <x-admin.number-field
+                        name="live_user_window_minutes"
+                        label="پنجره کاربران زنده"
+                        description="بازدیدکنندگانی که در این مدت فعال بوده‌اند زنده شمرده می‌شوند"
+                        :value="old('live_user_window_minutes', $settings['live_user_window_minutes'] ?? 5)"
+                        min="1" max="60" unit="دقیقه" required
+                    />
+                    <x-admin.number-field
+                        name="session_timeout_minutes"
+                        label="مهلت پایان نشست"
+                        description="بعد از این مدت بی‌فعالیت، جلسه کاربر بسته می‌شود"
+                        :value="old('session_timeout_minutes', $settings['session_timeout_minutes'] ?? 30)"
+                        min="5" max="120" unit="دقیقه" required
+                    />
+                    <x-admin.number-field
+                        name="raw_event_retention_days"
+                        label="نگهداری رویداد خام"
+                        description="رویدادهای قدیمی‌تر از این مدت به‌طور خودکار پاکسازی می‌شوند"
+                        :value="old('raw_event_retention_days', $settings['raw_event_retention_days'] ?? 90)"
+                        min="1" max="365" unit="روز" required
+                    />
+                    <x-admin.number-field
+                        name="stats_retention_days"
+                        label="نگهداری آمار تجمیعی"
+                        description="آمار روزانه تجمیع‌شده تا این مدت حفظ می‌شوند"
+                        :value="old('stats_retention_days', $settings['stats_retention_days'] ?? 365)"
+                        min="30" max="1825" unit="روز" required
+                    />
+                </x-admin.form-section>
 
-                    <div class="pt-5 border-t border-slate/10 flex justify-between items-center">
-                        <button class="admin-btn !bg-success !text-white w-full sm:w-auto px-10 h-11 justify-center">
-                            <span class="material-icons">save</span>
-                            ذخیره تنظیمات
-                        </button>
-                    </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="admin-btn !bg-success !text-white px-8 h-10">
+                        <span class="material-icons text-base">save</span>
+                        ذخیره تنظیمات
+                    </button>
                 </div>
             </form>
+
+            <div>
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="material-icons text-slate/40 text-lg">build</span>
+                    <h3 class="font-bold text-sm text-slate">نگهداری داده‌ها</h3>
+                    <span class="text-[11px] text-slate/40">پاکسازی، بکاپ و بازگردانی</span>
+                </div>
+                <div class="grid gap-4 md:grid-cols-3">
+
+                    <form action="{{ route('dash.admin.analytics_prune', ['authkey' => $authkey]) }}" method="POST" class="h-full"
+                          onsubmit="return confirm('آیا از حذف این داده‌ها اطمینان دارید؟ این عملیات غیرقابل بازگشت است.')">
+                        @csrf
+                        <x-admin.action-card title="پاکسازی داده‌ها" icon="auto_delete" variant="danger"
+                            description="حذف رویدادها و جلسات قدیمی برای آزاد کردن فضای دیتابیس. غیرقابل بازگشت.">
+                            <x-slot:body>
+                                <x-admin.select-field
+                                    name="type"
+                                    label="نوع داده"
+                                    :options="['errors' => 'فقط گزارش‌های خطا', 'sessions' => 'جلسات قدیمی', 'all' => 'همه رویدادها']"
+                                />
+                                <x-admin.select-field
+                                    name="older_than"
+                                    label="بازه زمانی"
+                                    :options="['all' => 'همه زمان‌ها', '30' => 'قدیمی‌تر از ۱ ماه', '90' => 'قدیمی‌تر از ۳ ماه', '180' => 'قدیمی‌تر از ۶ ماه', '365' => 'قدیمی‌تر از ۱ سال']"
+                                />
+                            </x-slot:body>
+                            <x-slot:action>
+                                <button type="submit" class="admin-btn !bg-danger !text-white w-full justify-center">
+                                    <span class="material-icons text-base">delete_forever</span>
+                                    شروع پاکسازی
+                                </button>
+                            </x-slot:action>
+                        </x-admin.action-card>
+                    </form>
+
+                    <x-admin.action-card title="Export آمار" icon="file_download" variant="success"
+                        description="دریافت فایل JSON از تنظیمات و آمار تجمیعی — مناسب برای بکاپ یا انتقال به سرور دیگر.">
+                        <x-slot:action>
+                            <a href="{{ route('dash.admin.analytics_export', ['authkey' => $authkey]) }}"
+                               class="admin-btn !bg-success/10 !text-success !border-success/20 w-full justify-center">
+                                <span class="material-icons text-base">download</span>
+                                دریافت فایل JSON
+                            </a>
+                        </x-slot:action>
+                    </x-admin.action-card>
+
+                    <form action="{{ route('dash.admin.analytics_import', ['authkey' => $authkey]) }}" method="POST" enctype="multipart/form-data" class="h-full">
+                        @csrf
+                        <x-admin.action-card title="Import آمار" icon="file_upload" variant="info"
+                            description="بارگذاری فایل JSON برای بازگردانی آمار تجمیعی و تنظیمات.">
+                            <x-slot:body>
+                                <label class="block">
+                                    <span class="text-[11px] font-medium text-slate/60 mb-1.5 block">فایل JSON</span>
+                                    <input type="file" name="analytics_file" accept="application/json,.json" required
+                                        class="block w-full text-xs text-slate/70 dark:text-white/50 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-slate/10 file:text-slate dark:file:bg-white/10 dark:file:text-white/70 hover:file:bg-slate/20 cursor-pointer">
+                                </label>
+                            </x-slot:body>
+                            <x-slot:action>
+                                <button type="submit" class="admin-btn !bg-info/10 !text-info !border-info/20 w-full justify-center">
+                                    <span class="material-icons text-base">upload</span>
+                                    درون‌ریزی فایل
+                                </button>
+                            </x-slot:action>
+                        </x-admin.action-card>
+                    </form>
+
+                </div>
+            </div>
         </div>
 
     </div>
