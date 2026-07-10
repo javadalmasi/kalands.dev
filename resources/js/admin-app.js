@@ -78,52 +78,63 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-bulk-bar]').forEach((bar) => {
         const barId = bar.dataset.bulkBar;
         const selectAllEl = bar.querySelector(`[data-select-all="${barId}"]`);
-        const countEl = bar.querySelector(`[data-bulk-count="${barId}"]`);
-        const clearBtn = bar.querySelector(`[data-bulk-clear="${barId}"]`);
+        const numEl      = bar.querySelector(`[data-bulk-num="${barId}"]`);
+        const clearBtn   = bar.querySelector(`[data-bulk-clear="${barId}"]`);
         const confirmMsg = bar.dataset.confirm || null;
 
-        const getItems = () => [...document.querySelectorAll(`[data-bulk-item][form="${barId}"]`)];
+        const getItems    = () => [...document.querySelectorAll(`[data-bulk-item][form="${barId}"]`)];
         const getSelected = () => getItems().filter((c) => c.checked);
 
         const update = () => {
-            const items = getItems();
+            const items    = getItems();
             const selected = getSelected();
-            const count = selected.length;
+            const count    = selected.length;
 
+            // Show/hide the bar
             bar.classList.toggle('is-visible', count > 0);
+            // Pad page bottom so content isn't hidden under bar
+            document.body.style.paddingBottom = count > 0 ? '60px' : '';
 
-            if (countEl) {
-                const label = countEl.dataset.label || countEl.textContent.replace(/^\d+\s*/, '');
-                countEl.textContent = `${new Intl.NumberFormat('fa-IR').format(count)} ${label}`;
+            // Update count display
+            if (numEl) {
+                numEl.textContent = new Intl.NumberFormat('fa-IR').format(count);
             }
 
+            // Update select-all state
             if (selectAllEl) {
-                selectAllEl.checked = count > 0 && count === items.length;
+                selectAllEl.checked       = items.length > 0 && count === items.length;
                 selectAllEl.indeterminate = count > 0 && count < items.length;
             }
         };
 
-        // Listen for checkbox changes anywhere in document
+        // Item checkboxes
         document.addEventListener('change', (e) => {
             const cb = e.target;
-            if (cb.dataset.bulkItem !== undefined && cb.getAttribute('form') === barId) {
+
+            // A bulk item checkbox changed
+            if (Object.prototype.hasOwnProperty.call(cb.dataset, 'bulkItem')
+                && cb.getAttribute('form') === barId) {
                 update();
                 return;
             }
+
+            // The select-all checkbox changed
             if (selectAllEl && cb === selectAllEl) {
                 getItems().forEach((item) => { item.checked = selectAllEl.checked; });
                 update();
             }
         });
 
+        // Clear button
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
                 getItems().forEach((item) => { item.checked = false; });
-                if (selectAllEl) selectAllEl.checked = false;
+                if (selectAllEl) { selectAllEl.checked = false; selectAllEl.indeterminate = false; }
                 update();
             });
         }
 
+        // Form submit guard
         bar.addEventListener('submit', (e) => {
             if (getSelected().length === 0) {
                 e.preventDefault();

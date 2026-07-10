@@ -34,16 +34,22 @@
     <x-admin.bulk-bar
         action="{{ route('dash.admin.products.bulk', ['authkey' => $authkey]) }}"
         id="bulk-action-form"
+        label="محصول"
         confirm="آیا از انجام این عملیات روی محصولات انتخاب شده مطمئن هستید؟"
     >
         <x-slot:actions>
-            <select name="action" class="admin-input !text-xs !py-2">
+            <select name="action" class="admin-input !w-auto !h-8 !text-xs !min-h-0">
                 <option value="">عملیات گروهی...</option>
                 <option value="activate">فعالسازی</option>
                 <option value="deactivate">غیرفعالسازی</option>
                 <option value="delete">حذف قطعی</option>
             </select>
+            <button type="submit" class="admin-btn admin-btn-primary !h-8 !text-xs">
+                <span class="material-icons !text-sm">done_all</span>
+                اجرا
+            </button>
         </x-slot:actions>
+    </x-admin.bulk-bar>
 
         <div class="space-y-3">
             @forelse($products as $product)
@@ -100,10 +106,7 @@
             @endforelse
         </div>
 
-        <div class="mt-6">
-            <x-admin.pagination :paginator="$products" />
-        </div>
-    </x-admin.bulk-bar>
+        <x-admin.pagination :paginator="$products" />
 
     @vite(['resources/js/admin-products-hub.js'])
 

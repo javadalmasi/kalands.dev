@@ -29,7 +29,7 @@
     <x-admin.bulk-bar
         action="{{ route('dash.admin.comments.bulk', ['authkey' => $authkey]) }}"
         id="bulk-comments-form"
-        label="اجرای گروهی"
+        label="مورد"
         confirm="این اقدام روی نظرات انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟"
     >
         <x-slot:actions>

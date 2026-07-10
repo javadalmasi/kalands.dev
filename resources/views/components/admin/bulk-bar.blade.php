@@ -49,9 +49,10 @@
         <div class="w-px h-5 shrink-0" style="background: rgba(255,255,255,0.12)"></div>
 
         {{-- Count --}}
-        <span class="text-sm font-bold shrink-0" style="color: rgba(255,255,255,0.9)" data-bulk-count="{{ $id }}">
-            ۰ {{ $label }}
-        </span>
+        <div class="flex items-center gap-1.5 shrink-0">
+            <span class="text-sm font-bold tabular-nums" style="color: rgba(255,255,255,0.95)" data-bulk-num="{{ $id }}">۰</span>
+            <span class="text-sm" style="color: rgba(255,255,255,0.65)">{{ $label }}</span>
+        </div>
 
         <div class="flex-1"></div>
 

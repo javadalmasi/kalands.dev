@@ -54,13 +54,13 @@
             confirm="این اقدام روی تیکت‌های انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟"
         >
             <x-slot:actions>
-                <select name="action" class="admin-input !text-xs">
+                <select name="action" class="admin-input !w-auto !h-8 !text-xs !min-h-0">
                     <option value="answered">پاسخ داده شده</option>
                     <option value="closed">بسته شده</option>
                     <option value="spam">اسپم</option>
                     <option value="delete">حذف دائمی</option>
                 </select>
-                <button class="admin-btn admin-btn-primary !py-2" type="submit">
+                <button class="admin-btn admin-btn-primary !h-8 !text-xs" type="submit">
                     <span class="material-icons !text-sm">done_all</span>
                     تایید و اجرا
                 </button>

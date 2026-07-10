@@ -32,22 +32,25 @@
     <x-admin.bulk-bar
         action="{{ route('dash.admin.users.bulk', ['authkey' => $authkey]) }}"
         id="bulk-action-form"
-        label="تعداد کل کاربران: {{ $users->total() }}"
-        confirm="confirmBulkAction">
+        label="کاربر"
+        confirm="این اقدام روی کاربران انتخاب‌شده اجرا می‌شود. ادامه می‌دهید؟">
         <x-slot:actions>
-            <select name="action" id="bulk-action-select" class="rounded-lg border border-slate/20 bg-white p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10 focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+            <select name="action" id="bulk-action-select" class="admin-input !w-auto !h-8 !text-xs !min-h-0">
                 <option value="">عملیات گروهی...</option>
                 <option value="activate">فعال‌سازی</option>
                 <option value="deactivate">غیرفعال‌سازی</option>
                 <option value="assign_role">تخصیص نقش</option>
                 <option value="delete">حذف</option>
             </select>
-            <select name="role_id" id="bulk-role-select" class="hidden rounded-lg border border-slate/20 bg-white p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+            <select name="role_id" id="bulk-role-select" class="hidden admin-input !w-auto !h-8 !text-xs !min-h-0">
                 @foreach(\App\Models\Role::all() as $role)
                     <option value="{{ $role->id }}">{{ $role->label }}</option>
                 @endforeach
             </select>
-            <button type="button" onclick="confirmBulkAction()" class="admin-btn !py-2">تایید و اجرا</button>
+            <button type="submit" class="admin-btn admin-btn-primary !h-8 !text-xs">
+                <span class="material-icons !text-sm">done_all</span>
+                اجرا
+            </button>
         </x-slot:actions>
     </x-admin.bulk-bar>
 

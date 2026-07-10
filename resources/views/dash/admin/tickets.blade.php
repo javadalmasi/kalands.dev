@@ -30,7 +30,7 @@
     <x-admin.bulk-bar
         action="{{ route('dash.admin.tickets.bulk', ['authkey' => $authkey]) }}"
         id="bulk-tickets-form"
-        label="اجرای گروهی"
+        label="مورد"
         confirm="این اقدام روی تیکت‌های انتخاب‌شده اجرا می‌شود. ادامه می‌دهید؟"
     >
         <x-slot:actions>

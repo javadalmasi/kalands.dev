@@ -45,19 +45,19 @@
         <x-admin.bulk-bar
             action="{{ route('dash.admin.comments.bulk', ['authkey' => $authkey]) }}"
             id="bulk-comments-form"
-            label="تعداد کل نظرات: {{ $comments->total() }}"
+            label="نظر"
             confirm="این اقدام روی نظرات انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟"
         >
             <x-slot:actions>
-                <select name="action" class="admin-input text-xs">
+                <select name="action" class="admin-input !w-auto !h-8 !text-xs !min-h-0">
                     <option value="approved">تایید</option>
                     <option value="rejected">رد</option>
                     <option value="spam">اسپم</option>
                     <option value="delete">حذف دائمی</option>
                 </select>
-                <button class="admin-btn admin-btn-primary !py-2" type="submit" data-admin-confirm="این اقدام روی نظرات انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟">
+                <button class="admin-btn admin-btn-primary !h-8 !text-xs" type="submit">
                     <span class="material-icons !text-sm">done_all</span>
-                    تایید و اجرا
+                    اجرا
                 </button>
             </x-slot:actions>
         </x-admin.bulk-bar>
