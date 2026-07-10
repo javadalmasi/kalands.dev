@@ -1,28 +1,25 @@
 <x-layouts.admin-dashboard title="مدیریت فایل‌ها" :helpModuleKey="'file_manager'">
     @php($authkey = request()->route('authkey'))
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">مدیریت فایل‌ها</h1>
-        <div class="flex items-center gap-3">
+    <x-admin.page-header title="مدیریت فایل‌ها">
+        <x-slot:actions>
             <a href="{{ route('dash.admin.modules', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary">
                 <span class="material-icons">arrow_forward</span>
                 بازگشت به ماژول‌ها
             </a>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="file-manager-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-files">
-                <span class="material-icons text-base">folder</span>
-                <span>فایل‌ها</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-settings">
-                <span class="material-icons text-base">settings</span>
-                <span>تنظیمات</span>
-            </button>
-</div>
-    </div>
+    <x-admin.tab-bar id="file-manager-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-files">
+            <span class="material-icons text-base">folder</span>
+            <span>فایل‌ها</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-settings">
+            <span class="material-icons text-base">settings</span>
+            <span>تنظیمات</span>
+        </button>
+    </x-admin.tab-bar>
 
     <div id="tab-files" class="tab-content space-y-4">
         <div class="admin-card">
@@ -68,7 +65,7 @@
                     <div class="space-y-2">
                         <label class="text-sm font-bold px-1">مسیر ریشه (Root Path)</label>
                         <input type="text" name="root_path" value="{{ old('root_path', $settings['root_path'] ?? 'uploads') }}"
-                               class="w-full rounded-lg border border-slate p-3 dark:bg-slate-800 dark:text-white dark:border-white/10"
+                               class="admin-input"
                                placeholder="e.g. uploads">
                         <p class="text-[11px] text-slate/50">پوشه‌ای در دایرکتوری public که فایل‌ها در آن ذخیره می‌شوند.</p>
                     </div>
@@ -76,7 +73,7 @@
                     <div class="space-y-2">
                         <label class="text-sm font-bold px-1">آدرس پایه CDN (اختیاری)</label>
                         <input type="text" name="cdn_base_url" value="{{ old('cdn_base_url', $settings['cdn_base_url'] ?? '') }}"
-                               class="w-full rounded-lg border border-slate p-3 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr"
+                               class="admin-input admin-ltr"
                                placeholder="https://cdn.example.com">
                         <p class="text-[11px] text-slate/50">در صورت استفاده از CDN، آدرس آن را اینجا وارد کنید.</p>
                     </div>

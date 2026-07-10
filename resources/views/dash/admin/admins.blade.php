@@ -1,13 +1,14 @@
 <x-layouts.admin-dashboard title="مدیریت ادمین‌ها">
     @php($authkey = request()->route('authkey'))
 
-    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-        <h1 class="admin-page-title !mb-0">مدیریت ادمین‌ها</h1>
-        <button type="button" class="admin-btn" onclick="document.getElementById('add-admin-dialog').showModal()">
-            <span class="material-icons">person_add</span>
-            افزودن ادمین جدید
-        </button>
-    </div>
+    <x-admin.page-header title="مدیریت ادمین‌ها">
+        <x-slot:actions>
+            <button type="button" class="admin-btn" onclick="document.getElementById('add-admin-dialog').showModal()">
+                <span class="material-icons">person_add</span>
+                افزودن ادمین جدید
+            </button>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     <div class="space-y-3">
         @foreach($admins as $adminItem)
@@ -34,7 +35,11 @@
                     <div class="flex items-center gap-4 border-t border-slate/5 pt-3 md:border-0 md:pt-0">
                         <div class="flex flex-col gap-1 items-center">
                             <span class="text-[9px] font-bold opacity-40">وضعیت</span>
-                            <label class="admin-switch"><input type="checkbox" class="admin-switch-input admin-status-toggle" data-id="{{ $adminItem->id }}<div class="admin-switch-track"></div><div class="admin-switch-ball"></div></label>
+                            <label class="admin-switch">
+                                <input type="checkbox" class="admin-switch-input admin-status-toggle" data-id="{{ $adminItem->id }}" {{ $adminItem->is_active ? 'checked' : '' }}>
+                                <div class="admin-switch-track"></div>
+                                <div class="admin-switch-ball"></div>
+                            </label>
                             <form id="toggle-form-{{ $adminItem->id }}" action="{{ route('dash.admin.admins.update', ['authkey' => $authkey, 'admin' => $adminItem->id]) }}" method="POST" class="hidden">
                                 @csrf
                                 <input type="hidden" name="is_active" value="{{ $adminItem->is_active ? 0 : 1 }}">
@@ -119,9 +124,7 @@
         @endforeach
     </div>
 
-    <div class="mt-6">
-        {{ $admins->links('vendor.pagination.admin') }}
-    </div>
+    <x-admin.pagination :paginator="$admins" />
 
     <!-- Add Admin Dialog -->
     <dialog id="add-admin-dialog" class="admin-dialog w-[min(100vw-16px,720px)] max-w-[720px]">

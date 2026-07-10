@@ -3,9 +3,8 @@
         <meta name="authkey" content="{{ request()->route('authkey') }}">
     @endpush
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">مدیریت مگا منو</h1>
-        <div class="flex items-center gap-3">
+    <x-admin.page-header title="مدیریت مگا منو">
+        <x-slot:actions>
             <label class="flex items-center gap-2 text-xs font-bold bg-white/5 border border-slate/10 px-3 py-2 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
                 <label class="admin-switch !w-9 !h-5"><input type="checkbox" id="auto-save-toggle" class="admin-switch-input"><div class="admin-switch-track"></div><div class="admin-switch-ball"></div></label>
                 ذخیره خودکار
@@ -14,30 +13,28 @@
                 <i class="material-icons !text-lg">save</i>
                 <span>ذخیره تمامی تغییرات</span>
             </button>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="megamenu-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-editor">
-                <span class="material-icons text-base">edit_note</span>
-                <span>ویرایشگر منو</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-broken-links">
-                <span class="material-icons text-base">link_off</span>
-                <span>تست لینک‌های شکسته</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-settings">
-                <span class="material-icons text-base">settings</span>
-                <span>تنظیمات عمومی</span>
-            </button>
-<div class="flex-grow"></div>
-            <button onclick="window.addGroup()" class="px-6 py-4 text-sm font-bold text-emerald-600 hover:bg-emerald-50 transition-colors flex items-center gap-2 border-r border-slate/10">
-                <span class="material-icons text-base">add_circle</span>
-                <span>افزودن گروه اصلی</span>
-            </button>
-        </div>
-    </div>
+    <x-admin.tab-bar id="megamenu-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-editor">
+            <span class="material-icons text-base">edit_note</span>
+            <span>ویرایشگر منو</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-broken-links">
+            <span class="material-icons text-base">link_off</span>
+            <span>تست لینک‌های شکسته</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-settings">
+            <span class="material-icons text-base">settings</span>
+            <span>تنظیمات عمومی</span>
+        </button>
+        <div class="flex-grow"></div>
+        <button onclick="window.addGroup()" class="px-6 py-4 text-sm font-bold text-emerald-600 hover:bg-emerald-50 transition-colors flex items-center gap-2 border-r border-slate/10">
+            <span class="material-icons text-base">add_circle</span>
+            <span>افزودن گروه اصلی</span>
+        </button>
+    </x-admin.tab-bar>
 
     <div id="tab-editor" class="tab-content space-y-6">
         <div class="admin-card">

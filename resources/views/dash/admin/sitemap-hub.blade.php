@@ -2,9 +2,9 @@
     @php
         $authkey = request()->route('authkey');
     @endphp
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">مدیریت سایت مپ</h1>
-        <div class="flex items-center gap-3">
+
+    <x-admin.page-header title="مدیریت سایت مپ">
+        <x-slot:actions>
             @if($isRunning)
                 <span class="flex items-center gap-2 px-4 py-2 rounded-xl bg-warning/10 text-warning font-bold text-xs">
                     <span class="w-2 h-2 rounded-full bg-warning animate-pulse"></span>
@@ -16,33 +16,31 @@
                     غیرفعال
                 </span>
             @endif
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="sitemap-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-overview">
-                <span class="material-icons text-base">map</span>
-                <span>وضعیت و آمار</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-logs">
-                <span class="material-icons text-base">history</span>
-                <span>گزارش اجراها</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-periodic">
-                <span class="material-icons text-base">schedule</span>
-                <span>بازسازی دوره‌ای</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-queue">
-                <span class="material-icons text-base">queue</span>
-                <span>مدیریت صف</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-actions">
-                <span class="material-icons text-base">settings</span>
-                <span>تنظیمات و کنترل</span>
-            </button>
-</div>
-    </div>
+    <x-admin.tab-bar id="sitemap-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-overview">
+            <span class="material-icons text-base">map</span>
+            <span>وضعیت و آمار</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-logs">
+            <span class="material-icons text-base">history</span>
+            <span>گزارش اجراها</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-periodic">
+            <span class="material-icons text-base">schedule</span>
+            <span>بازسازی دوره‌ای</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-queue">
+            <span class="material-icons text-base">queue</span>
+            <span>مدیریت صف</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-actions">
+            <span class="material-icons text-base">settings</span>
+            <span>تنظیمات و کنترل</span>
+        </button>
+    </x-admin.tab-bar>
 
     <div id="tab-overview" class="tab-content space-y-6">
         @if($currentRun)

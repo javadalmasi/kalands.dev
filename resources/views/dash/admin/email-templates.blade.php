@@ -2,20 +2,18 @@
     @php($authkey = request()->route('authkey'))
     @php($currentKey = isset($templateCatalog[$activeKey ?? '']) ? ($activeKey ?? '') : array_key_first($templateCatalog))
 
-    <h1 class="admin-page-title">مدیریت تمپلیت ایمیل‌ها</h1>
+    <x-admin.page-header title="مدیریت تمپلیت ایمیل‌ها" />
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="email-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="templates-tab">
-                <span class="material-icons text-base">mail</span>
-                <span>تمپلیت‌ها</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="common-features-tab">
-                <span class="material-icons text-base">palette</span>
-                <span>هدر و فوتر</span>
-            </button>
-        </div>
-    </div>
+    <x-admin.tab-bar id="email-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="templates-tab">
+            <span class="material-icons text-base">mail</span>
+            <span>تمپلیت‌ها</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="common-features-tab">
+            <span class="material-icons text-base">palette</span>
+            <span>هدر و فوتر</span>
+        </button>
+    </x-admin.tab-bar>
 
     <div id="templates-tab" class="tab-content">
         <div class="grid gap-4 lg:grid-cols-[280px_1fr]" id="templates-grid">
@@ -40,8 +38,8 @@
                         </div>
                         <form action="{{ route('dash.admin.email.templates.save', ['authkey' => $authkey, 'key' => $key]) }}" method="POST" class="space-y-3 template-form" data-template-form="{{ $key }}">
                             @csrf
-                            <input name="subject" value="{{ old('subject', $current['subject'] ?? $meta['default_subject']) }}" placeholder="Subject" class="rounded border border-slate bg-slate p-2 w-full dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
-                            <textarea name="body_html" rows="12" class="rounded border border-slate bg-slate p-2 w-full dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" data-rich-editor>{{ old('body_html', $current['body_html'] ?? $meta['default_body_html']) }}</textarea>
+                            <input name="subject" value="{{ old('subject', $current['subject'] ?? $meta['default_subject']) }}" placeholder="Subject" class="admin-input">
+                            <textarea name="body_html" rows="12" class="admin-input" data-rich-editor>{{ old('body_html', $current['body_html'] ?? $meta['default_body_html']) }}</textarea>
                             <div class="rounded-squircle border border-slate/70 bg-white/5 p-3 text-xs text-slate">متغیرها: {{ implode(' , ', $meta['variables']) }}</div>
                             <div class="admin-actions">
                                 <button class="admin-btn" type="submit"><span class="material-icons">save</span>ذخیره</button>
@@ -89,7 +87,7 @@
                             HTML هدر
                         </summary>
                         <div class="space-y-2 pt-2">
-                            <textarea name="header_html" rows="3" placeholder="محتوایی که در ابتدای تمامی ایمیل‌ها نمایش داده می‌شود" class="rounded border border-slate bg-slate p-2 w-full dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" data-rich-editor>{{ old('header_html', $layout['header_html'] ?? '') }}</textarea>
+                            <textarea name="header_html" rows="3" placeholder="محتوایی که در ابتدای تمامی ایمیل‌ها نمایش داده می‌شود" class="admin-input" data-rich-editor>{{ old('header_html', $layout['header_html'] ?? '') }}</textarea>
                         </div>
                     </details>
 
@@ -99,7 +97,7 @@
                             HTML فوتر
                         </summary>
                         <div class="space-y-2 pt-2">
-                            <textarea name="footer_html" rows="3" placeholder="محتوایی که در انتهای تمامی ایمیل‌ها نمایش داده می‌شود" class="rounded border border-slate bg-slate p-2 w-full dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" data-rich-editor>{{ old('footer_html', $layout['footer_html'] ?? '') }}</textarea>
+                            <textarea name="footer_html" rows="3" placeholder="محتوایی که در انتهای تمامی ایمیل‌ها نمایش داده می‌شود" class="admin-input" data-rich-editor>{{ old('footer_html', $layout['footer_html'] ?? '') }}</textarea>
                         </div>
                     </details>
 
@@ -120,8 +118,8 @@
                         @foreach($links as $index => $link)
                             <div class="grid gap-2 grid-cols-[1fr_30px] items-end useful-link-row">
                                 <div class="grid gap-1">
-                                    <input name="useful_links[{{ $index }}][label]" value="{{ $link['label'] ?? '' }}" placeholder="عنوان" class="rounded border border-slate bg-slate p-2 text-xs w-full dark:bg-slate-800 dark:text-white dark:border-white/10">
-                                    <input name="useful_links[{{ $index }}][url]" value="{{ $link['url'] ?? '' }}" placeholder="https://..." class="rounded border border-slate bg-slate p-2 text-xs w-full dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                    <input name="useful_links[{{ $index }}][label]" value="{{ $link['label'] ?? '' }}" placeholder="عنوان" class="admin-input text-xs">
+                                    <input name="useful_links[{{ $index }}][url]" value="{{ $link['url'] ?? '' }}" placeholder="https://..." class="admin-input text-xs">
                                 </div>
                                 <button type="button" class="remove-link-row h-[42px] flex items-center justify-center text-danger hover:bg-danger/10 rounded transition-colors">
                                     <span class="material-icons text-sm">delete</span>

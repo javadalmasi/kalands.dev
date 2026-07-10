@@ -1,86 +1,72 @@
 <x-layouts.admin-dashboard title="ماژول نظرات" :helpModuleKey="'comments'">
     @php($authkey = request()->route('authkey'))
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">ماژول نظرات</h1>
-    </div>
+    <x-admin.page-header title="ماژول نظرات" />
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="comment-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-moderation">
-                <span class="material-icons text-base">fact_check</span>
-                <span>تایید نظرات</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-reports">
-                <span class="material-icons text-base">assessment</span>
-                <span>گزارش نظرات</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-settings">
-                <span class="material-icons text-base">settings</span>
-                <span>تنظیمات</span>
-            </button>
-</div>
-    </div>
+    <x-admin.tab-bar id="comment-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-moderation">
+            <span class="material-icons text-base">fact_check</span>
+            <span>تایید نظرات</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-reports">
+            <span class="material-icons text-base">assessment</span>
+            <span>گزارش نظرات</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-settings">
+            <span class="material-icons text-base">settings</span>
+            <span>تنظیمات</span>
+        </button>
+    </x-admin.tab-bar>
 
     <div id="tab-moderation" class="tab-content space-y-4">
-        <form method="GET" class="admin-card grid gap-3 md:grid-cols-4">
+        <x-admin.filter-bar>
             <input type="hidden" name="tab" value="tab-moderation">
-            <div class="space-y-1">
-                <label class="text-[10px] font-bold opacity-60 px-1">مرتب‌سازی</label>
-                <select name="sort" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+            <x-admin.filter-field label="مرتب‌سازی">
+                <select name="sort" class="admin-input">
                     <option value="latest" @selected(($sort ?? 'latest') === 'latest')>جدیدترین</option>
                     <option value="oldest" @selected(($sort ?? '') === 'oldest')>قدیمی‌ترین</option>
                     <option value="status" @selected(($sort ?? '') === 'status')>بر اساس وضعیت</option>
                 </select>
-            </div>
-            <div class="space-y-1">
-                <label class="text-[10px] font-bold opacity-60 px-1">وضعیت</label>
-                <select name="status" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+            </x-admin.filter-field>
+            <x-admin.filter-field label="وضعیت">
+                <select name="status" class="admin-input">
                     <option value="all" @selected(($status ?? 'all') === 'all')>همه وضعیت‌ها</option>
                     <option value="pending" @selected(($status ?? '') === 'pending')>در انتظار</option>
                     <option value="approved" @selected(($status ?? '') === 'approved')>تایید</option>
                     <option value="rejected" @selected(($status ?? '') === 'rejected')>رد</option>
                     <option value="spam" @selected(($status ?? '') === 'spam')>اسپم</option>
                 </select>
-            </div>
-            <div class="md:col-span-2 flex items-end">
+            </x-admin.filter-field>
+            <x-admin.filter-field label=" " span="2">
                 <button class="admin-btn justify-center w-full h-[38px]"><span class="material-icons">filter_alt</span>اعمال فیلتر</button>
-            </div>
-        </form>
+            </x-admin.filter-field>
+        </x-admin.filter-bar>
 
-        <form id="bulk-comments-form" method="POST" action="{{ route('dash.admin.comments.bulk', ['authkey' => $authkey]) }}" class="admin-card mb-4">
-            @csrf
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-center gap-4">
-                    <label class="inline-flex items-center gap-2 text-xs cursor-pointer bg-slate/5 px-3 py-2 rounded-lg border border-slate/10 hover:bg-slate/10 transition-colors">
-                        <input type="checkbox" id="select-all-comments" class="rounded border-slate/30">
-                        <span class="font-bold opacity-70">انتخاب همه</span>
-                    </label>
-                    <div class="h-8 w-px bg-slate/10"></div>
-                    <div class="flex items-center gap-2">
-                        <select name="action" class="rounded-lg border border-slate/20 bg-white p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10 focus:ring-2 focus:ring-primary/20 outline-none transition-all">
-                            <option value="approved">تایید</option>
-                            <option value="rejected">رد</option>
-                            <option value="spam">اسپم</option>
-                            <option value="delete">حذف دائمی</option>
-                        </select>
-                        <button class="admin-btn admin-btn-primary !py-2" type="submit" data-admin-confirm="این اقدام روی نظرات انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟">
-                            <span class="material-icons !text-sm">done_all</span>
-                            تایید و اجرا
-                        </button>
-                    </div>
-                </div>
-                <div class="text-[10px] font-bold opacity-40">
-                    تعداد کل نظرات: {{ $comments->total() }}
-                </div>
-            </div>
-        </form>
+        <x-admin.bulk-bar
+            action="{{ route('dash.admin.comments.bulk', ['authkey' => $authkey]) }}"
+            id="bulk-comments-form"
+            label="تعداد کل نظرات: {{ $comments->total() }}"
+            confirm="این اقدام روی نظرات انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟"
+        >
+            <x-slot:actions>
+                <select name="action" class="admin-input text-xs">
+                    <option value="approved">تایید</option>
+                    <option value="rejected">رد</option>
+                    <option value="spam">اسپم</option>
+                    <option value="delete">حذف دائمی</option>
+                </select>
+                <button class="admin-btn admin-btn-primary !py-2" type="submit" data-admin-confirm="این اقدام روی نظرات انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟">
+                    <span class="material-icons !text-sm">done_all</span>
+                    تایید و اجرا
+                </button>
+            </x-slot:actions>
+        </x-admin.bulk-bar>
 
         <div class="space-y-3">
             @forelse($comments as $comment)
                 <div class="admin-card !p-4 {{ $comment->status === 'pending' ? 'border-r-4 border-amber-500' : '' }}">
                     <div class="mb-2 flex items-start gap-3">
-                        <input type="checkbox" form="bulk-comments-form" name="comment_ids[]" value="{{ $comment->id }}" class="comment-item-checkbox mt-1">
+                        <input type="checkbox" form="bulk-comments-form" name="comment_ids[]" value="{{ $comment->id }}" class="comment-item-checkbox mt-1" data-bulk-item>
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center justify-between gap-2 mb-1">
                                 <p class="text-xs font-bold text-slate">
@@ -118,7 +104,7 @@
                 </div>
             @endforelse
         </div>
-        <div class="mt-4">{{ $comments->links() }}</div>
+        <x-admin.pagination :paginator="$comments" />
     </div>
 
     <div id="tab-reports" class="tab-content hidden space-y-4">
@@ -161,7 +147,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="mt-4">{{ $reports->links() }}</div>
+        <x-admin.pagination :paginator="$reports" />
     </div>
 
     <div id="tab-settings" class="tab-content hidden space-y-6">
@@ -183,7 +169,7 @@
 
                 <div class="space-y-2">
                     <label class="text-sm font-bold px-1">پیام هشدار هنگام غیرفعال بودن</label>
-                    <textarea name="disabled_message" rows="4" class="w-full rounded-lg border border-slate p-3 dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="پیامی که در صورت غیرفعال بودن ارسال نظر به کاربر نمایش داده می‌شود...">{{ old('disabled_message', $settings['disabled_message'] ?? '') }}</textarea>
+                    <textarea name="disabled_message" rows="4" class="admin-input" placeholder="پیامی که در صورت غیرفعال بودن ارسال نظر به کاربر نمایش داده می‌شود...">{{ old('disabled_message', $settings['disabled_message'] ?? '') }}</textarea>
                     <p class="text-[11px] text-slate/50">این پیام در بالای فرم نظردهی (در صورت غیرفعال بودن) نمایش داده می‌شود.</p>
                 </div>
 

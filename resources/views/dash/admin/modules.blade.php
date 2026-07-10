@@ -1,7 +1,6 @@
 <x-layouts.admin-dashboard title="ماژول‌ها">
     @php($authkey = request()->route('authkey'))
-    <h1 class="admin-page-title">ماژول‌ها</h1>
-    <p class="mb-4 text-sm text-slate">برای هر ماژول روی تنظیمات بزنید تا صفحه اختصاصی همان ماژول باز شود.</p>
+    <x-admin.page-header title="ماژول‌ها" description="برای هر ماژول روی تنظیمات بزنید تا صفحه اختصاصی همان ماژول باز شود." />
 
     <div class="flex flex-wrap items-center gap-2 mb-6" id="module-filters">
         <button class="admin-btn admin-btn-primary !text-xs px-4 py-2" data-filter="all">

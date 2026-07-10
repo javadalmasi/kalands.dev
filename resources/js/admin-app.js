@@ -73,4 +73,65 @@ document.addEventListener('DOMContentLoaded', () => {
             : fallbackBtn.getAttribute('data-tab-target');
         activateTab(tabsWrap, initialId);
     });
+
+    // ── Bulk Bar (floating bottom action bar) ──────────────────────────────
+    document.querySelectorAll('[data-bulk-bar]').forEach((bar) => {
+        const barId = bar.dataset.bulkBar;
+        const selectAllEl = bar.querySelector(`[data-select-all="${barId}"]`);
+        const countEl = bar.querySelector(`[data-bulk-count="${barId}"]`);
+        const clearBtn = bar.querySelector(`[data-bulk-clear="${barId}"]`);
+        const confirmMsg = bar.dataset.confirm || null;
+
+        const getItems = () => [...document.querySelectorAll(`[data-bulk-item][form="${barId}"]`)];
+        const getSelected = () => getItems().filter((c) => c.checked);
+
+        const update = () => {
+            const items = getItems();
+            const selected = getSelected();
+            const count = selected.length;
+
+            bar.classList.toggle('is-visible', count > 0);
+
+            if (countEl) {
+                const label = countEl.dataset.label || countEl.textContent.replace(/^\d+\s*/, '');
+                countEl.textContent = `${new Intl.NumberFormat('fa-IR').format(count)} ${label}`;
+            }
+
+            if (selectAllEl) {
+                selectAllEl.checked = count > 0 && count === items.length;
+                selectAllEl.indeterminate = count > 0 && count < items.length;
+            }
+        };
+
+        // Listen for checkbox changes anywhere in document
+        document.addEventListener('change', (e) => {
+            const cb = e.target;
+            if (cb.dataset.bulkItem !== undefined && cb.getAttribute('form') === barId) {
+                update();
+                return;
+            }
+            if (selectAllEl && cb === selectAllEl) {
+                getItems().forEach((item) => { item.checked = selectAllEl.checked; });
+                update();
+            }
+        });
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                getItems().forEach((item) => { item.checked = false; });
+                if (selectAllEl) selectAllEl.checked = false;
+                update();
+            });
+        }
+
+        bar.addEventListener('submit', (e) => {
+            if (getSelected().length === 0) {
+                e.preventDefault();
+                return;
+            }
+            if (confirmMsg && !window.confirm(confirmMsg)) {
+                e.preventDefault();
+            }
+        });
+    });
 });

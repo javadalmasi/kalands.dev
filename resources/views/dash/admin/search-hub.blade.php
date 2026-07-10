@@ -1,26 +1,25 @@
 <x-layouts.admin-dashboard title="تنظیمات جستجو" :helpModuleKey="'search'">
     @php($authkey = request()->route('authkey'))
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">تنظیمات جستجوی هوشمند</h1>
-        <a href="{{ route('dash.admin.modules', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary" title="بازگشت">
-            <span class="material-icons !text-base">arrow_forward</span>
-            بازگشت به ماژول‌ها
-        </a>
-    </div>
+    <x-admin.page-header title="تنظیمات جستجوی هوشمند">
+        <x-slot:actions>
+            <a href="{{ route('dash.admin.modules', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary" title="بازگشت">
+                <span class="material-icons !text-base">arrow_forward</span>
+                بازگشت به ماژول‌ها
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="search-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-settings">
-                <span class="material-icons text-base">tune</span>
-                <span>تنظیمات جستجو</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-guide">
-                <span class="material-icons text-base">help</span>
-                <span>راهنمای استفاده</span>
-            </button>
-        </div>
-    </div>
+    <x-admin.tab-bar id="search-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-settings">
+            <span class="material-icons text-base">tune</span>
+            <span>تنظیمات جستجو</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-guide">
+            <span class="material-icons text-base">help</span>
+            <span>راهنمای استفاده</span>
+        </button>
+    </x-admin.tab-bar>
 
     <div id="tab-settings" class="tab-content">
         <form action="{{ route('dash.admin.search.settings.save', ['authkey' => $authkey]) }}" method="POST">
@@ -103,5 +102,5 @@
         </div>
     </div>
 
-</x-layouts.admin-dashboard>
     @vite(['resources/js/admin-search-hub.js'])
+</x-layouts.admin-dashboard>

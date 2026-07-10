@@ -1,89 +1,80 @@
 <x-layouts.admin-dashboard title="ماژول تیکت" :helpModuleKey="'tickets'">
     @php($authkey = request()->route('authkey'))
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">ماژول تیکت</h1>
-    </div>
+    <x-admin.page-header title="ماژول تیکت" />
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="ticket-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-moderation">
-                <span class="material-icons text-base">fact_check</span>
-                <span>پاسخ به تیکت‌ها</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-categories">
-                <span class="material-icons text-base">category</span>
-                <span>دسته‌بندی‌ها</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-blocked">
-                <span class="material-icons text-base">block</span>
-                <span>کاربران مسدود شده</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-settings">
-                <span class="material-icons text-base">settings</span>
-                <span>تنظیمات</span>
-            </button>
-</div>
-    </div>
+    <x-admin.tab-bar id="ticket-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-moderation">
+            <span class="material-icons text-base">fact_check</span>
+            <span>پاسخ به تیکت‌ها</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-categories">
+            <span class="material-icons text-base">category</span>
+            <span>دسته‌بندی‌ها</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-blocked">
+            <span class="material-icons text-base">block</span>
+            <span>کاربران مسدود شده</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-settings">
+            <span class="material-icons text-base">settings</span>
+            <span>تنظیمات</span>
+        </button>
+    </x-admin.tab-bar>
 
     <div id="tab-moderation" class="tab-content space-y-4">
-        <form method="GET" class="admin-card grid gap-3 md:grid-cols-4">
+        <x-admin.filter-bar cols="4">
             <input type="hidden" name="tab" value="tab-moderation">
-            <div class="space-y-1">
-                <label class="text-[10px] font-bold opacity-60 px-1">مرتب‌سازی</label>
-                <select name="sort" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+            <x-admin.filter-field label="مرتب‌سازی">
+                <select name="sort" class="admin-input">
                     <option value="oldest" @selected(($sort ?? 'oldest') === 'oldest')>قدیمی‌ترین (ترتیب ثبت)</option>
                     <option value="latest" @selected(($sort ?? '') === 'latest')>جدیدترین</option>
                 </select>
-            </div>
-            <div class="space-y-1">
-                <label class="text-[10px] font-bold opacity-60 px-1">وضعیت</label>
-                <select name="status" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+            </x-admin.filter-field>
+            <x-admin.filter-field label="وضعیت">
+                <select name="status" class="admin-input">
                     <option value="all" @selected(($status ?? 'all') === 'all')>همه وضعیت‌ها</option>
                     <option value="open" @selected(($status ?? '') === 'open')>باز</option>
                     <option value="answered" @selected(($status ?? '') === 'answered')>پاسخ داده شده</option>
                     <option value="closed" @selected(($status ?? '') === 'closed')>بسته شده</option>
                     <option value="spam" @selected(($status ?? '') === 'spam')>اسپم</option>
                 </select>
-            </div>
-            <div class="md:col-span-2 flex items-end">
-                <button class="admin-btn justify-center w-full h-[38px]"><span class="material-icons">filter_alt</span>اعمال فیلتر</button>
-            </div>
-        </form>
-
-        <form id="bulk-tickets-form" method="POST" action="{{ route('dash.admin.tickets.bulk', ['authkey' => $authkey]) }}" class="admin-card mb-4">
-            @csrf
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-center gap-4">
-                    <label class="inline-flex items-center gap-2 text-xs cursor-pointer bg-slate/5 px-3 py-2 rounded-lg border border-slate/10 hover:bg-slate/10 transition-colors">
-                        <input type="checkbox" id="select-all-tickets" class="rounded border-slate/30">
-                        <span class="font-bold opacity-70">انتخاب همه</span>
-                    </label>
-                    <div class="h-8 w-px bg-slate/10"></div>
-                    <div class="flex items-center gap-2">
-                        <select name="action" class="rounded-lg border border-slate/20 bg-white p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10 focus:ring-2 focus:ring-primary/20 outline-none transition-all">
-                            <option value="answered">پاسخ داده شده</option>
-                            <option value="closed">بسته شده</option>
-                            <option value="spam">اسپم</option>
-                            <option value="delete">حذف دائمی</option>
-                        </select>
-                        <button class="admin-btn admin-btn-primary !py-2" type="submit" data-admin-confirm="این اقدام روی تیکت‌های انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟">
-                            <span class="material-icons !text-sm">done_all</span>
-                            تایید و اجرا
-                        </button>
-                    </div>
+            </x-admin.filter-field>
+            <x-admin.filter-field label="" span="2">
+                <div class="flex items-end h-full">
+                    <button class="admin-btn justify-center w-full h-[38px]"><span class="material-icons">filter_alt</span>اعمال فیلتر</button>
                 </div>
+            </x-admin.filter-field>
+        </x-admin.filter-bar>
+
+        <x-admin.bulk-bar
+            action="{{ route('dash.admin.tickets.bulk', ['authkey' => $authkey]) }}"
+            id="bulk-tickets-form"
+            label="تیکت‌ها"
+            confirm="این اقدام روی تیکت‌های انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟"
+        >
+            <x-slot:actions>
+                <select name="action" class="admin-input !text-xs">
+                    <option value="answered">پاسخ داده شده</option>
+                    <option value="closed">بسته شده</option>
+                    <option value="spam">اسپم</option>
+                    <option value="delete">حذف دائمی</option>
+                </select>
+                <button class="admin-btn admin-btn-primary !py-2" type="submit">
+                    <span class="material-icons !text-sm">done_all</span>
+                    تایید و اجرا
+                </button>
                 <div class="text-[10px] font-bold opacity-40">
                     تعداد تیکت‌ها: {{ $tickets->total() }}
                 </div>
-            </div>
-        </form>
+            </x-slot:actions>
+        </x-admin.bulk-bar>
 
         <div class="space-y-3">
             @forelse($tickets as $ticket)
                 <div class="admin-card !p-4 {{ $ticket->status === 'open' ? 'border-r-4 border-primary' : '' }}">
                     <div class="mb-2 flex items-start gap-3">
-                        <input type="checkbox" form="bulk-tickets-form" name="ticket_ids[]" value="{{ $ticket->id }}" class="ticket-item-checkbox mt-1">
+                        <input type="checkbox" form="bulk-tickets-form" name="ticket_ids[]" value="{{ $ticket->id }}" class="ticket-item-checkbox mt-1" data-bulk-item>
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center justify-between gap-2 mb-1">
                                 <p class="text-xs font-bold text-slate">
@@ -124,7 +115,7 @@
                 </div>
             @endforelse
         </div>
-        <div class="mt-4">{{ $tickets->links() }}</div>
+        <x-admin.pagination :paginator="$tickets" />
     </div>
 
     <div id="tab-categories" class="tab-content hidden space-y-4">
@@ -179,11 +170,11 @@
                     <h3 class="font-bold text-slate border-b border-slate/10 pb-2 mb-4">افزودن دسته‌بندی جدید</h3>
                     <div class="space-y-1">
                         <label class="text-xs font-bold opacity-60">نام دسته‌بندی</label>
-                        <input type="text" name="name" required class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 focus:ring-primary/20 focus:ring-2 outline-none">
+                        <input type="text" name="name" required class="admin-input">
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs font-bold opacity-60">نامک (Slug)</label>
-                        <input type="text" name="slug" required class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 focus:ring-primary/20 focus:ring-2 outline-none">
+                        <input type="text" name="slug" required class="admin-input">
                     </div>
                     <button class="admin-btn admin-btn-primary w-full justify-center">
                         <span class="material-icons">add_circle</span>
@@ -244,7 +235,7 @@
 
                     <div class="relative" id="user-search-container" data-authkey="{{ $authkey }}">
                         <label class="text-xs font-bold opacity-60">جستجوی کاربر (نام، ایمیل یا تلفن)</label>
-                        <input type="text" id="user-search-input" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 focus:ring-primary/20 focus:ring-2 outline-none" placeholder="شروع به تایپ کنید...">
+                        <input type="text" id="user-search-input" class="admin-input" placeholder="شروع به تایپ کنید...">
                         <div id="user-search-results" class="absolute left-0 right-0 top-full z-50 mt-1 max-h-60 overflow-auto rounded-lg border border-slate bg-white shadow-xl dark:bg-slate-800 hidden"></div>
                     </div>
 
@@ -299,7 +290,7 @@
 
                 <div class="space-y-2">
                     <label class="text-sm font-bold px-1">پیام هشدار هنگام غیرفعال بودن</label>
-                    <textarea name="disabled_message" rows="4" class="w-full rounded-lg border border-slate p-3 dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="پیامی که در صورت غیرفعال بودن ارسال تیکت به کاربر نمایش داده می‌شود...">{{ old('disabled_message', $settings['disabled_message'] ?? '') }}</textarea>
+                    <textarea name="disabled_message" rows="4" class="admin-input" placeholder="پیامی که در صورت غیرفعال بودن ارسال تیکت به کاربر نمایش داده می‌شود...">{{ old('disabled_message', $settings['disabled_message'] ?? '') }}</textarea>
                     <p class="text-[11px] text-slate/50">این پیام در بالای فرم تیکت (در صورت غیرفعال بودن) نمایش داده می‌شود.</p>
                 </div>
 
@@ -307,7 +298,7 @@
                     <h3 class="font-bold text-slate">تنظیمات اعلان</h3>
                     <div class="space-y-1">
                         <label class="text-sm font-bold px-1">ایمیل ادمین برای دریافت اعلان</label>
-                        <input type="email" name="admin_email" value="{{ old('admin_email', $settings['admin_email'] ?? '') }}" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 focus:ring-primary/20 focus:ring-2 outline-none" placeholder="example@domain.com">
+                        <input type="email" name="admin_email" value="{{ old('admin_email', $settings['admin_email'] ?? '') }}" class="admin-input" placeholder="example@domain.com">
                         <p class="text-[11px] text-slate/50">با ثبت این ایمیل، هنگام ثبت تیکت جدید توسط کاربران، یک اعلان به این آدرس ارسال خواهد شد.</p>
                     </div>
                 </div>

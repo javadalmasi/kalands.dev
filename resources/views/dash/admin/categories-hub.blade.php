@@ -9,44 +9,41 @@
         </style>
     @endpush
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0 text-2xl font-black">مدیریت دسته‌بندی‌ها</h1>
-        <div class="flex items-center gap-3">
+    <x-admin.page-header title="مدیریت دسته‌بندی‌ها">
+        <x-slot:actions>
             <button onclick="loadData()" class="admin-btn admin-btn-secondary flex items-center gap-2">
                 <i class="material-icons !text-lg">refresh</i>
                 <span>بروزرسانی لیست‌ها</span>
             </button>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="category-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-digikala">
-                <span class="material-icons text-base">category</span>
-                <span>دیجی‌کالا</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-basalam">
-                <span class="material-icons text-base">hub</span>
-                <span>باسلام</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-snappshop">
-                <span class="material-icons text-base">shopping_bag</span>
-                <span>اسنپ‌شاپ</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-linked">
-                <span class="material-icons text-base">link</span>
-                <span>موارد لینک شده</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-operations">
-                <span class="material-icons text-base">settings_suggest</span>
-                <span>عملیات و ایمپورت</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-settings">
-                <span class="material-icons text-base">psychology</span>
-                <span>تنظیمات هوش مصنوعی</span>
-            </button>
-        </div>
-    </div>
+    <x-admin.tab-bar id="category-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold flex items-center gap-2" data-tab-target="tab-digikala">
+            <span class="material-icons text-base">category</span>
+            <span>دیجی‌کالا</span>
+        </button>
+        <button class="admin-tab-btn flex items-center gap-2" data-tab-target="tab-basalam">
+            <span class="material-icons text-base">hub</span>
+            <span>باسلام</span>
+        </button>
+        <button class="admin-tab-btn flex items-center gap-2" data-tab-target="tab-snappshop">
+            <span class="material-icons text-base">shopping_bag</span>
+            <span>اسنپ‌شاپ</span>
+        </button>
+        <button class="admin-tab-btn flex items-center gap-2" data-tab-target="tab-linked">
+            <span class="material-icons text-base">link</span>
+            <span>موارد لینک شده</span>
+        </button>
+        <button class="admin-tab-btn flex items-center gap-2" data-tab-target="tab-operations">
+            <span class="material-icons text-base">settings_suggest</span>
+            <span>عملیات و ایمپورت</span>
+        </button>
+        <button class="admin-tab-btn flex items-center gap-2" data-tab-target="tab-settings">
+            <span class="material-icons text-base">psychology</span>
+            <span>تنظیمات هوش مصنوعی</span>
+        </button>
+    </x-admin.tab-bar>
 
     <!-- Digikala Tab -->
     <div id="tab-digikala" class="tab-content space-y-6">
@@ -219,6 +216,6 @@
 
 
     @push('scripts')
-        @vite('resources/js/admin-visitor-intelligence.js')
+        @vite('resources/js/admin-categories.js')
     @endpush
 </x-layouts.admin-dashboard>

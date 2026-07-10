@@ -1,7 +1,6 @@
 <x-layouts.admin-dashboard title="مپینگ شناسه‌های محصول">
-    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-        <h1 class="admin-page-title !mb-0">مپینگ شناسه‌های محصول (تغییر شناسه)</h1>
-    </div>
+
+    <x-admin.page-header title="مپینگ شناسه‌های محصول (تغییر شناسه)" />
 
     <div class="admin-card mb-6">
         <h2 class="mb-4 text-lg font-bold text-slate-800 dark:text-white">ایجاد/ویرایش مپینگ</h2>
@@ -9,22 +8,22 @@
             @csrf
             <div class="space-y-1">
                 <label class="text-[10px] font-bold opacity-60 px-1">شناسه قدیمی (منتشر شده)</label>
-                <input type="text" name="old_product_id" required class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="مثال: 21896165">
+                <input type="text" name="old_product_id" required class="admin-input" placeholder="مثال: 21896165">
             </div>
             <div class="space-y-1">
                 <label class="text-[10px] font-bold opacity-60 px-1">شناسه جدید (مقصد)</label>
-                <input type="text" name="new_product_id" required class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="مثال: 21942327">
+                <input type="text" name="new_product_id" required class="admin-input" placeholder="مثال: 21942327">
             </div>
             <div class="space-y-1">
                 <label class="text-[10px] font-bold opacity-60 px-1">فروشگاه</label>
-                <select name="store" required class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                <select name="store" required class="admin-input">
                     <option value="digikala">دیجی‌کالا</option>
                     <option value="basalam">باسلام</option>
                 </select>
             </div>
             <div class="space-y-1">
                 <label class="text-[10px] font-bold opacity-60 px-1">دلیل (اختیاری)</label>
-                <input type="text" name="reason" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="مثال: تغییر شناسه در وب‌سرویس 301">
+                <input type="text" name="reason" class="admin-input" placeholder="مثال: تغییر شناسه در وب‌سرویس 301">
             </div>
             <div class="flex items-end">
                 <button type="submit" class="admin-btn w-full justify-center h-[38px]">
@@ -35,28 +34,26 @@
         </form>
     </div>
 
-    <form action="{{ route('dash.admin.product_mappings', ['authkey' => $authkey]) }}" method="GET" class="admin-card mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div class="space-y-1">
-            <label class="text-[10px] font-bold opacity-60 px-1">جستجو (شناسه یا نام)</label>
-            <input type="text" name="q" value="{{ $q }}" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="جستجو...">
-        </div>
-        <div class="space-y-1">
-            <label class="text-[10px] font-bold opacity-60 px-1">فروشگاه</label>
-            <select name="store" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+    <x-admin.filter-bar :action="route('dash.admin.product_mappings', ['authkey' => $authkey])" cols="3">
+        <x-admin.filter-field label="جستجو (شناسه یا نام)">
+            <input type="text" name="q" value="{{ $q }}" class="admin-input" placeholder="جستجو...">
+        </x-admin.filter-field>
+        <x-admin.filter-field label="فروشگاه">
+            <select name="store" class="admin-input">
                 <option value="all" {{ $store === 'all' ? 'selected' : '' }}>همه</option>
                 <option value="digikala" {{ $store === 'digikala' ? 'selected' : '' }}>دیجی‌کالا</option>
                 <option value="basalam" {{ $store === 'basalam' ? 'selected' : '' }}>باسلام</option>
             </select>
-        </div>
+        </x-admin.filter-field>
         <div class="flex items-end">
             <button type="submit" class="admin-btn w-full justify-center h-[38px]">
                 <span class="material-icons !text-base">filter_alt</span>
                 فیلتر
             </button>
         </div>
-    </form>
+    </x-admin.filter-bar>
 
-    <form action="{{ route('dash.admin.product_mappings', ['authkey' => $authkey]) }}" method="GET" class="space-y-3">
+    <div class="space-y-3">
         @forelse($mappings as $mapping)
             <div class="admin-card is-surface !p-4">
                 <div class="flex flex-col md:flex-row md:items-center gap-4">
@@ -117,7 +114,8 @@
         @endforelse
 
         <div class="mt-6">
-            {{ $mappings->links('vendor.pagination.admin') }}
+            <x-admin.pagination :paginator="$mappings" />
         </div>
-    </form>
+    </div>
+
 </x-layouts.admin-dashboard>

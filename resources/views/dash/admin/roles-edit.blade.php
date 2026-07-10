@@ -1,23 +1,25 @@
 <x-layouts.admin-dashboard title="{{ isset($role) ? 'ویرایش نقش: ' . $role->label : 'ایجاد نقش جدید' }}">
     @php($authkey = request()->route('authkey'))
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">{{ isset($role) ? 'ویرایش نقش: ' . $role->label : 'ایجاد نقش جدید' }}</h1>
-        <a href="{{ route('dash.admin.roles', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary" title="بازگشت">
-            <span class="material-icons !text-base">arrow_forward</span>
-            بازگشت به نقش‌ها
-        </a>
-    </div>
+
+    <x-admin.page-header title="{{ isset($role) ? 'ویرایش نقش: ' . $role->label : 'ایجاد نقش جدید' }}">
+        <x-slot:actions>
+            <a href="{{ route('dash.admin.roles', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary" title="بازگشت">
+                <span class="material-icons !text-base">arrow_forward</span>
+                بازگشت به نقش‌ها
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     <form action="{{ isset($role) ? route('dash.admin.roles.update', ['authkey' => $authkey, 'role' => $role->id]) : route('dash.admin.roles.store', ['authkey' => $authkey]) }}" method="POST">
         @csrf
         <div class="admin-card is-surface grid gap-4 md:grid-cols-2 mb-8">
             <div class="space-y-1">
                 <label class="text-[10px] font-bold opacity-60 px-1">نام انگلیسی نقش (مثلاً: manager)</label>
-                <input name="name" value="{{ old('name', $role->name ?? '') }}" placeholder="manager" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700 admin-ltr">
+                <input name="name" value="{{ old('name', $role->name ?? '') }}" placeholder="manager" class="admin-input admin-ltr">
             </div>
             <div class="space-y-1">
                 <label class="text-[10px] font-bold opacity-60 px-1">عنوان فارسی نقش (مثلاً: مدیر ارشد)</label>
-                <input name="label" value="{{ old('label', $role->label ?? '') }}" placeholder="مدیر ارشد" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                <input name="label" value="{{ old('label', $role->label ?? '') }}" placeholder="مدیر ارشد" class="admin-input">
             </div>
         </div>
 
@@ -52,5 +54,5 @@
         </div>
     </form>
 
-</x-layouts.admin-dashboard>
     @vite(['resources/js/admin-roles-edit.js'])
+</x-layouts.admin-dashboard>

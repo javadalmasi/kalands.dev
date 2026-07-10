@@ -1,26 +1,26 @@
 <x-layouts.admin-dashboard title="هوشمندی بازدیدکنندگان" :helpModuleKey="'visitor_intelligence'">
+    @push('scripts')
+        @vite('resources/js/admin-visitor-intelligence.js')
+    @endpush
+
     @php($authkey = request()->route('authkey'))
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">هوشمندی بازدیدکنندگان</h1>
-    </div>
+    <x-admin.page-header title="هوشمندی بازدیدکنندگان" />
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="visitor-intelligence-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-detection">
-                <span class="material-icons text-base">psychology</span>
-                <span>الگوهای تشخیص</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-asn-checker">
-                <span class="material-icons text-base">lan</span>
-                <span>بررسی ASNها</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-test">
-                <span class="material-icons text-base">science</span>
-                <span>تست User-Agent</span>
-            </button>
-</div>
-    </div>
+    <x-admin.tab-bar id="visitor-intelligence-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-detection">
+            <span class="material-icons text-base">psychology</span>
+            <span>الگوهای تشخیص</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-asn-checker">
+            <span class="material-icons text-base">lan</span>
+            <span>بررسی ASNها</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-test">
+            <span class="material-icons text-base">science</span>
+            <span>تست User-Agent</span>
+        </button>
+    </x-admin.tab-bar>
 
     <div id="tab-asn-checker" class="tab-content hidden space-y-6">
         <div class="admin-card is-surface">
@@ -114,7 +114,7 @@
             <div class="space-y-4">
                 <div>
                     <label class="text-sm font-bold block mb-2">User-Agent مورد نظر</label>
-                    <textarea id="ua-test-input" class="w-full rounded-lg border border-slate p-2.5 text-sm font-mono dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" rows="3" dir="ltr" placeholder="Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"></textarea>
+                    <textarea id="ua-test-input" class="admin-input font-mono" rows="3" dir="ltr" placeholder="Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"></textarea>
                 </div>
                 <button type="button" id="btn-run-ua-test" class="admin-btn admin-btn-primary px-8 h-11">
                     <span class="material-icons">play_arrow</span>
@@ -138,22 +138,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const tabs = document.querySelectorAll('[data-tab-target]');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const target = tab.getAttribute('data-tab-target');
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-                    document.getElementById(target).classList.remove('hidden');
-
-                    tabs.forEach(t => {
-                        t.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-bold');
-                        t.classList.add('text-slate', 'font-medium');
-                    });
-                    tab.classList.add('text-primary', 'border-b-2', 'border-primary', 'font-bold');
-                    tab.classList.remove('text-slate', 'font-medium');
-                });
-            });
-
             // Finder Logic
             const finderInput = document.getElementById('visitor-finder-input');
             const finderCount = document.getElementById('finder-count');
@@ -372,13 +356,13 @@
                 <div class="space-y-6">
                     <div data-findable>
                         <label class="text-sm font-bold block mb-2">الگوی User-Agent ربات‌ها (Regex)</label>
-                        <textarea name="robots_pattern" id="robots-pattern-textarea" class="w-full rounded-lg border border-slate p-2.5 text-sm font-mono dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" rows="8" dir="ltr">{{ $config['robots_pattern'] }}</textarea>
+                        <textarea name="robots_pattern" id="robots-pattern-textarea" class="admin-input font-mono" rows="8" dir="ltr">{{ $config['robots_pattern'] }}</textarea>
                         <p class="text-[11px] text-slate/50 mt-1.5">عبارت منظم برای شناسایی User-Agent ربات‌ها. (بدون اسلش شروع و پایان)</p>
                     </div>
 
                     <div data-findable>
                         <label class="text-sm font-bold block mb-2">لیست ASN‌های معتبر (هر سطر یک ASN)</label>
-                        <textarea name="trusted_asns" id="trusted-asns-textarea" class="w-full rounded-lg border border-slate p-2.5 text-sm font-mono dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" rows="5" dir="ltr" placeholder="15169&#10;8075">{{ implode("\n", $config['trusted_asns']) }}</textarea>
+                        <textarea name="trusted_asns" id="trusted-asns-textarea" class="admin-input font-mono" rows="5" dir="ltr" placeholder="15169&#10;8075">{{ implode("\n", $config['trusted_asns']) }}</textarea>
                         <p class="text-[11px] text-slate/50 mt-1.5">شماره‌های ASN که به عنوان ربات/ترافیک ابری در نظر گرفته می‌شوند (مانند گوگل، مایکروسافت و ...)</p>
                     </div>
                 </div>
@@ -394,6 +378,3 @@
     </div>
 
 </x-layouts.admin-dashboard>
-    @push('scripts')
-        @vite('resources/js/admin-visitor-intelligence.js')
-    @endpush

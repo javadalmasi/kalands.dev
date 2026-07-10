@@ -1,29 +1,25 @@
 <x-layouts.admin-dashboard title="مدیریت صفحات خطا" :helpModuleKey="'error_pages'">
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <div>
-            <h1 class="admin-page-title !mb-0">مدیریت صفحات خطا</h1>
-            <p class="text-sm text-slate-500 mt-1">مدیریت لینک‌های کمکی و آیکون‌های نمایش داده شده در پایین صفحات خطا</p>
-        </div>
-        <div class="flex gap-2">
+    @vite(['resources/js/admin-error-pages.js', 'resources/js/admin-error-pages-hub.js'])
+
+    <x-admin.page-header title="مدیریت صفحات خطا" description="مدیریت لینک‌های کمکی و آیکون‌های نمایش داده شده در پایین صفحات خطا">
+        <x-slot:actions>
             <button onclick="document.getElementById('error-pages-form').submit()" class="admin-btn admin-btn-primary flex items-center gap-2 h-11 px-6">
                 <i class="material-icons !text-lg">save</i>
                 <span>ذخیره تمامی تغییرات</span>
             </button>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="error-pages-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-links">
-                <span class="material-icons text-base">link</span>
-                <span>لینک‌های کمکی</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-settings">
-                <span class="material-icons text-base">settings</span>
-                <span>تنظیمات ظاهری</span>
-            </button>
-</div>
-    </div>
+    <x-admin.tab-bar id="error-pages-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-links">
+            <span class="material-icons text-base">link</span>
+            <span>لینک‌های کمکی</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-settings">
+            <span class="material-icons text-base">settings</span>
+            <span>تنظیمات ظاهری</span>
+        </button>
+    </x-admin.tab-bar>
 
     <form id="error-pages-form" action="{{ route('dash.admin.error_pages.save', ['authkey' => request()->route('authkey')]) }}" method="POST">
         @csrf
@@ -130,4 +126,3 @@
     </dialog>
 
 </x-layouts.admin-dashboard>
-    @vite(['resources/js/admin-error-pages.js', 'resources/js/admin-error-pages-hub.js'])

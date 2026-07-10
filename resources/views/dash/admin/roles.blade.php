@@ -1,12 +1,14 @@
 <x-layouts.admin-dashboard title="مدیریت نقش‌ها و دسترسی‌ها">
     @php($authkey = request()->route('authkey'))
-    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-        <h1 class="admin-page-title !mb-0">مدیریت نقش‌ها و دسترسی‌ها</h1>
-        <a href="{{ route('dash.admin.roles.create', ['authkey' => $authkey]) }}" class="admin-btn">
-            <span class="material-icons">add_moderator</span>
-            ایجاد نقش جدید
-        </a>
-    </div>
+
+    <x-admin.page-header title="مدیریت نقش‌ها و دسترسی‌ها">
+        <x-slot:actions>
+            <a href="{{ route('dash.admin.roles.create', ['authkey' => $authkey]) }}" class="admin-btn">
+                <span class="material-icons">add_moderator</span>
+                ایجاد نقش جدید
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     <div class="space-y-3">
         @foreach($roles as $role)

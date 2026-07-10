@@ -1,15 +1,16 @@
 <x-layouts.admin-dashboard title="بررسی محصولات غیرفعال" helpModuleKey="product_checker">
     <div id="checker-root" class="admin-card" data-authkey="{{ $authkey }}" data-ids-url="{{ route('dash.admin.products.digikala_ids', ['authkey' => $authkey]) }}" data-check-url="{{ route('dash.admin.products.check_api', ['authkey' => $authkey]) }}">
-        <div class="mb-6 flex items-center justify-between">
-            <div>
-                <h2 class="text-xl font-bold text-slate">بررسی وضعیت وب‌سرویس محصولات</h2>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">این ابزار تمامی محصولات دیجی‌کالا را در دسته‌های 10 تایی از طریق Multi-Curl بررسی کرده و در صورت غیرفعال بودن در مبدا، آن‌ها را در سیستم نیز غیرفعال می‌کند.</p>
-            </div>
-            <a href="{{ route('dash.admin.products', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary">
-                <span class="material-icons !text-base">arrow_forward</span>
-                بازگشت به لیست
-            </a>
-        </div>
+        <x-admin.page-header
+            title="بررسی وضعیت وب‌سرویس محصولات"
+            description="این ابزار تمامی محصولات دیجی‌کالا را در دسته‌های 10 تایی از طریق Multi-Curl بررسی کرده و در صورت غیرفعال بودن در مبدا، آن‌ها را در سیستم نیز غیرفعال می‌کند."
+        >
+            <x-slot:actions>
+                <a href="{{ route('dash.admin.products', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary">
+                    <span class="material-icons !text-base">arrow_forward</span>
+                    بازگشت به لیست
+                </a>
+            </x-slot:actions>
+        </x-admin.page-header>
 
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 gap-4 mb-6 md:grid-cols-4">
@@ -73,7 +74,7 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">اندازه هر دسته</label>
                             <div class="flex gap-2">
-                                <select id="batch-size" class="admin-dialog-input flex-1 !py-2 !px-3 !text-sm" disabled>
+                                <select id="batch-size" class="admin-input flex-1 !py-2 !px-3 !text-sm" disabled>
                                     <option value="5">5</option>
                                     <option value="10" selected>10</option>
                                     <option value="15">15</option>

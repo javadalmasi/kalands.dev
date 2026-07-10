@@ -1,35 +1,33 @@
 <x-layouts.admin-dashboard title="مدیریت صف‌ها" :helpModuleKey="'queues'">
     @php($authkey = request()->route('authkey'))
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">مدیریت صف‌ها</h1>
-        <div class="flex items-center gap-3">
+
+    <x-admin.page-header title="مدیریت صف‌ها">
+        <x-slot:actions>
             <button type="submit" form="queue-settings-form" class="admin-btn admin-btn-primary px-6 shadow-lg shadow-primary/20">
                 <span class="material-icons">save</span>
                 ذخیره تمامی تنظیمات
             </button>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="queue-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-logs">
-                <span class="material-icons text-base">history</span>
-                <span>گزارش اجراها</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-config">
-                <span class="material-icons text-base">settings</span>
-                <span>تنظیمات و دستورات</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-driver">
-                <span class="material-icons text-base">storage</span>
-                <span>انتخاب درایور</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-maintenance">
-                <span class="material-icons text-base">cleaning_services</span>
-                <span>پاکسازی خودکار</span>
-            </button>
-        </div>
-    </div>
+    <x-admin.tab-bar id="queue-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-logs">
+            <span class="material-icons text-base">history</span>
+            <span>گزارش اجراها</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-config">
+            <span class="material-icons text-base">settings</span>
+            <span>تنظیمات و دستورات</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-driver">
+            <span class="material-icons text-base">storage</span>
+            <span>انتخاب درایور</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-maintenance">
+            <span class="material-icons text-base">cleaning_services</span>
+            <span>پاکسازی خودکار</span>
+        </button>
+    </x-admin.tab-bar>
 
     <form action="{{ route('dash.admin.queues.save', ['authkey' => $authkey]) }}" method="POST" id="queue-settings-form">
         @csrf
@@ -111,7 +109,7 @@
                     <div class="space-y-4">
                         <div>
                             <label class="text-sm font-medium block mb-2">حالت پردازش صف:</label>
-                            <select name="mode" class="rounded-lg border border-slate bg-slate p-2.5 w-full dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:border-primary transition-colors">
+                            <select name="mode" class="admin-input">
                                 <option value="cron" @selected(($settings['mode'] ?? 'cron') === 'cron')>Cron Job (پیشنهادی برای هاست اشتراکی)</option>
                                 <option value="artisan" @selected(($settings['mode'] ?? '') === 'artisan')>Artisan Worker (پیشنهادی برای سرور اختصاصی/مجازی)</option>
                             </select>
@@ -202,7 +200,7 @@
                 <div class="grid gap-6 md:grid-cols-2">
                     <div>
                         <label class="text-sm font-bold block mb-2">درایور فعال (QUEUE_CONNECTION)</label>
-                        <select name="driver" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                        <select name="driver" class="admin-input">
                             @foreach($drivers as $key => $label)
                                 <option value="{{ $key }}" @selected($currentDriver === $key)>{{ $label }}</option>
                             @endforeach
@@ -238,12 +236,12 @@
                     <div class="space-y-4">
                         <div class="space-y-1">
                             <label class="text-xs font-bold px-1">نگهداری لاگ‌های اجرای صف (روز):</label>
-                            <input type="number" name="queue_log_retention_days" value="{{ $settings['queue_log_retention_days'] ?? 7 }}" min="1" max="365" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <input type="number" name="queue_log_retention_days" value="{{ $settings['queue_log_retention_days'] ?? 7 }}" min="1" max="365" class="admin-input">
                             <p class="text-[10px] text-slate/50 px-1">لاگ‌های قدیمی‌تر از این مقدار به صورت خودکار حذف می‌شوند.</p>
                         </div>
                         <div class="space-y-1">
                             <label class="text-xs font-bold px-1">نگهداری لاگ‌های لاراول (روز):</label>
-                            <input type="number" name="laravel_log_retention_days" value="{{ $settings['laravel_log_retention_days'] ?? 14 }}" min="1" max="365" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <input type="number" name="laravel_log_retention_days" value="{{ $settings['laravel_log_retention_days'] ?? 14 }}" min="1" max="365" class="admin-input">
                             <p class="text-[10px] text-slate/50 px-1">فایل‌های لاگ لاراول (.log) قدیمی‌تر از این مقدار حذف می‌شوند.</p>
                         </div>
                     </div>
@@ -259,29 +257,29 @@
                     </div>
                 </div>
             </div>
-</div>
+        </div>
     </form>
 
     <form id="regenerate-token-form" action="{{ route('dash.admin.queues.token.regenerate', ['authkey' => $authkey]) }}" method="POST" class="hidden">@csrf</form>
 
+    <dialog id="regenerate-token-modal" class="admin-dialog w-[min(100vw-32px,450px)]">
+        <div class="admin-dialog-body">
+            <div class="flex items-start gap-4 p-2">
+                <div class="w-12 h-12 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                    <span class="material-icons !text-2xl">help_outline</span>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-black text-slate-800 dark:text-white mb-2">تایید عملیات</h3>
+                    <p class="text-xs leading-6 text-slate-500 dark:text-slate-400">بازتولید توکن صف باعث نامعتبر شدن دستور Cron قبلی می‌شود. ادامه می‌دهید؟</p>
+                </div>
+            </div>
+            <div class="admin-dialog-actions">
+                <button type="button" onclick="this.closest('dialog').close()" class="admin-btn admin-btn-secondary">انصراف</button>
+                <button type="button" onclick="document.getElementById('regenerate-token-form').submit()" class="admin-btn admin-btn-primary px-8">تایید</button>
+            </div>
+        </div>
+    </dialog>
 
-<dialog id="regenerate-token-modal" class="admin-dialog w-[min(100vw-32px,450px)]">
-    <div class="admin-dialog-body">
-        <div class="flex items-start gap-4 p-2">
-            <div class="w-12 h-12 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
-                <span class="material-icons !text-2xl">help_outline</span>
-            </div>
-            <div class="flex-1">
-                <h3 class="font-black text-slate-800 dark:text-white mb-2">تایید عملیات</h3>
-                <p class="text-xs leading-6 text-slate-500 dark:text-slate-400">بازتولید توکن صف باعث نامعتبر شدن دستور Cron قبلی می‌شود. ادامه می‌دهید؟</p>
-            </div>
-        </div>
-        <div class="admin-dialog-actions">
-            <button type="button" onclick="this.closest('dialog').close()" class="admin-btn admin-btn-secondary">انصراف</button>
-            <button type="button" onclick="document.getElementById('regenerate-token-form').submit()" class="admin-btn admin-btn-primary px-8">تایید</button>
-        </div>
-    </div>
-</dialog>
+    @vite(['resources/js/admin-queues-hub.js'])
 
 </x-layouts.admin-dashboard>
-    @vite(['resources/js/admin-queues-hub.js'])

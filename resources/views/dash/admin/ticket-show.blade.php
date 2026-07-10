@@ -1,12 +1,11 @@
 <x-layouts.admin-dashboard title="جزئیات تیکت">
     @php($authkey = request()->route('authkey'))
-    <h1 class="admin-page-title">{{ $ticket->subject }}</h1>
-    <p class="mb-4 text-xs text-slate">کاربر: {{ $ticket->user->name ?? '-' }} | وضعیت: {{ $ticket->status }}</p>
+    <x-admin.page-header title="{{ $ticket->subject }}" description="کاربر: {{ $ticket->user->name ?? '-' }} | وضعیت: {{ $ticket->status }}" />
 
     <div class="flex flex-wrap gap-4 mb-4">
         <form action="{{ route('dash.admin.tickets.status', ['authkey' => $authkey, 'ticket' => $ticket->id]) }}" method="POST" class="admin-card flex-1 admin-actions">
         @csrf
-        <select name="status" class="rounded bg-slate p-2 dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+        <select name="status" class="admin-input">
             <option value="open" @selected($ticket->status === 'open')>open</option>
             <option value="answered" @selected($ticket->status === 'answered')>answered</option>
             <option value="closed" @selected($ticket->status === 'closed')>closed</option>
@@ -50,7 +49,7 @@
 
     <form action="{{ route('dash.admin.tickets.reply', ['authkey' => $authkey, 'ticket' => $ticket->id]) }}" method="POST" class="admin-card space-y-2">
         @csrf
-        <textarea name="message" rows="12" data-rich-editor class="w-full rounded bg-slate p-3 dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="پاسخ ادمین"></textarea>
+        <textarea name="message" rows="12" data-rich-editor class="admin-input" placeholder="پاسخ ادمین"></textarea>
         <button class="admin-btn"><span class="material-icons">send</span>ارسال پاسخ</button>
     </form>
 </x-layouts.admin-dashboard>

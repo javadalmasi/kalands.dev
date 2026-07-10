@@ -1,80 +1,68 @@
 <x-layouts.admin-dashboard title="ماژول تماس با ما" :helpModuleKey="'contact'">
     @php($authkey = request()->route('authkey'))
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">ماژول تماس با ما</h1>
-    </div>
+    <x-admin.page-header title="ماژول تماس با ما" />
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="contact-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-messages">
-                <span class="material-icons text-base">email</span>
-                <span>پیام‌های دریافتی</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-settings">
-                <span class="material-icons text-base">settings</span>
-                <span>تنظیمات اطلاعات تماس</span>
-            </button>
-</div>
-    </div>
+    <x-admin.tab-bar id="contact-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-messages">
+            <span class="material-icons text-base">email</span>
+            <span>پیام‌های دریافتی</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-settings">
+            <span class="material-icons text-base">settings</span>
+            <span>تنظیمات اطلاعات تماس</span>
+        </button>
+    </x-admin.tab-bar>
 
     <div id="tab-messages" class="tab-content space-y-4">
-        <form method="GET" class="admin-card grid gap-3 md:grid-cols-4">
+        <x-admin.filter-bar>
             <input type="hidden" name="tab" value="tab-messages">
-            <div class="space-y-1">
-                <label class="text-[10px] font-bold opacity-60 px-1">مرتب‌سازی</label>
-                <select name="sort" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+            <x-admin.filter-field label="مرتب‌سازی">
+                <select name="sort" class="admin-input">
                     <option value="latest" @selected(($sort ?? 'latest') === 'latest')>جدیدترین</option>
                     <option value="oldest" @selected(($sort ?? '') === 'oldest')>قدیمی‌ترین</option>
                     <option value="subject" @selected(($sort ?? '') === 'subject')>موضوع</option>
                 </select>
-            </div>
-            <div class="space-y-1">
-                <label class="text-[10px] font-bold opacity-60 px-1">وضعیت مشاهده</label>
-                <select name="read" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+            </x-admin.filter-field>
+            <x-admin.filter-field label="وضعیت مشاهده">
+                <select name="read" class="admin-input">
                     <option value="all" @selected(($read ?? 'all') === 'all')>همه پیام‌ها</option>
                     <option value="unread" @selected(($read ?? '') === 'unread')>خوانده‌نشده</option>
                     <option value="read" @selected(($read ?? '') === 'read')>خوانده‌شده</option>
                 </select>
-            </div>
-            <div class="md:col-span-2 flex items-end">
-                <button class="admin-btn justify-center w-full h-[38px]"><span class="material-icons">filter_alt</span>اعمال فیلتر</button>
-            </div>
-        </form>
+            </x-admin.filter-field>
+            <x-admin.filter-field label=" " span="2">
+                <div class="flex items-end h-full">
+                    <button class="admin-btn justify-center w-full h-[38px]"><span class="material-icons">filter_alt</span>اعمال فیلتر</button>
+                </div>
+            </x-admin.filter-field>
+        </x-admin.filter-bar>
 
-        <form id="bulk-contact-form" method="POST" action="{{ route('dash.admin.contact.bulk', ['authkey' => $authkey]) }}" class="admin-card mb-4">
-            @csrf
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-center gap-4">
-                    <label class="inline-flex items-center gap-2 text-xs cursor-pointer bg-slate/5 px-3 py-2 rounded-lg border border-slate/10 hover:bg-slate/10 transition-colors">
-                        <input type="checkbox" id="select-all-messages" class="rounded border-slate/30">
-                        <span class="font-bold opacity-70">انتخاب همه</span>
-                    </label>
-                    <div class="h-8 w-px bg-slate/10"></div>
-                    <div class="flex items-center gap-2">
-                        <select name="action" class="rounded-lg border border-slate/20 bg-white p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10 focus:ring-2 focus:ring-primary/20 outline-none transition-all">
-                            <option value="read">خوانده شد</option>
-                            <option value="unread">خوانده‌نشده</option>
-                            <option value="delete">حذف دائمی</option>
-                        </select>
-                        <button class="admin-btn admin-btn-primary !py-2" type="submit" data-admin-confirm="این اقدام روی پیام‌های انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟">
-                            <span class="material-icons !text-sm">done_all</span>
-                            تایید و اجرا
-                        </button>
-                    </div>
-                </div>
-                <div class="text-[10px] font-bold opacity-40">
-                    تعداد کل پیام‌ها: {{ $messages->total() }}
-                </div>
-            </div>
-        </form>
+        <x-admin.bulk-bar
+            action="{{ route('dash.admin.contact.bulk', ['authkey' => $authkey]) }}"
+            id="bulk-contact-form"
+            label="تعداد کل پیام‌ها: {{ $messages->total() }}"
+            confirm="این اقدام روی پیام‌های انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟"
+        >
+            <x-slot:actions>
+                <select name="action" class="rounded-lg border border-slate/20 bg-white p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10 focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+                    <option value="read">خوانده شد</option>
+                    <option value="unread">خوانده‌نشده</option>
+                    <option value="delete">حذف دائمی</option>
+                </select>
+                <button class="admin-btn admin-btn-primary !py-2" type="submit" data-admin-confirm="این اقدام روی پیام‌های انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟">
+                    <span class="material-icons !text-sm">done_all</span>
+                    تایید و اجرا
+                </button>
+            </x-slot:actions>
+        </x-admin.bulk-bar>
 
         <div class="space-y-3">
             @forelse($messages as $message)
                 <div class="admin-card {{ $message->is_read ? 'opacity-80' : 'border-r-4 border-primary' }}">
                     <div class="mb-1 flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2">
-                            <input type="checkbox" form="bulk-contact-form" name="message_ids[]" value="{{ $message->id }}" class="contact-item-checkbox">
+                            <input type="checkbox" form="bulk-contact-form" name="message_ids[]" value="{{ $message->id }}" class="contact-item-checkbox" data-bulk-item>
                             <p class="font-bold">{{ $message->subject }}</p>
                         </div>
                         <span class="text-[10px] px-2 py-0.5 rounded-full {{ $message->is_read ? 'bg-slate/10 text-slate' : 'bg-primary/10 text-primary' }} font-bold">
@@ -116,7 +104,7 @@
                 </div>
             @endforelse
         </div>
-        <div class="mt-4">{{ $messages->links() }}</div>
+        <x-admin.pagination :paginator="$messages" />
     </div>
 
     <div id="tab-settings" class="tab-content hidden space-y-6">
@@ -140,31 +128,31 @@
                 <div class="grid gap-6 md:grid-cols-2">
                     <div class="space-y-1">
                         <label class="text-xs font-bold px-1">عنوان باکس تماس</label>
-                        <input name="title" value="{{ old('title', $settings['title'] ?? '') }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="مثلا: با ما در ارتباط باشید">
+                        <input name="title" value="{{ old('title', $settings['title'] ?? '') }}" class="admin-input" placeholder="مثلا: با ما در ارتباط باشید">
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs font-bold px-1">ایمیل</label>
-                        <input name="email" type="email" value="{{ old('email', $settings['email'] ?? '') }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr" placeholder="info@example.com">
+                        <input name="email" type="email" value="{{ old('email', $settings['email'] ?? '') }}" class="admin-input admin-ltr" placeholder="info@example.com">
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs font-bold px-1">تلفن</label>
-                        <input name="phone" value="{{ old('phone', $settings['phone'] ?? '') }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr" placeholder="021-12345678">
+                        <input name="phone" value="{{ old('phone', $settings['phone'] ?? '') }}" class="admin-input admin-ltr" placeholder="021-12345678">
                     </div>
                     <div class="space-y-1">
                         <label class="text-xs font-bold px-1">ساعت پاسخگویی</label>
-                        <input name="work_hours" value="{{ old('work_hours', $settings['work_hours'] ?? '') }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="شنبه تا چهارشنبه ۹ تا ۱۷">
+                        <input name="work_hours" value="{{ old('work_hours', $settings['work_hours'] ?? '') }}" class="admin-input" placeholder="شنبه تا چهارشنبه ۹ تا ۱۷">
                     </div>
                     <div class="space-y-1 md:col-span-2">
                         <label class="text-xs font-bold px-1">آدرس</label>
-                        <input name="address" value="{{ old('address', $settings['address'] ?? '') }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="تهران، خیابان ...">
+                        <input name="address" value="{{ old('address', $settings['address'] ?? '') }}" class="admin-input" placeholder="تهران، خیابان ...">
                     </div>
                     <div class="space-y-1 md:col-span-2">
                         <label class="text-xs font-bold px-1">توضیحات کوتاه</label>
-                        <textarea name="description" rows="3" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="توضیحات مختصری در مورد تماس با ما...">{{ old('description', $settings['description'] ?? '') }}</textarea>
+                        <textarea name="description" rows="3" class="admin-input" placeholder="توضیحات مختصری در مورد تماس با ما...">{{ old('description', $settings['description'] ?? '') }}</textarea>
                     </div>
                     <div class="space-y-1 md:col-span-2">
                         <label class="text-xs font-bold px-1">Iframe نقشه (گوگل یا نشان)</label>
-                        <textarea name="map_iframe" rows="4" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr" placeholder="<iframe ...></iframe>">{{ old('map_iframe', $settings['map_iframe'] ?? '') }}</textarea>
+                        <textarea name="map_iframe" rows="4" class="admin-input admin-ltr" placeholder="<iframe ...></iframe>">{{ old('map_iframe', $settings['map_iframe'] ?? '') }}</textarea>
                     </div>
                 </div>
             </div>
@@ -195,4 +183,4 @@
     </div>
 
 </x-layouts.admin-dashboard>
-    @vite(['resources/js/admin-contact-hub.js'])
+@vite(['resources/js/admin-contact-hub.js'])

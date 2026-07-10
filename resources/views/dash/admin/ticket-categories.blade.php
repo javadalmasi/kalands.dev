@@ -1,11 +1,11 @@
 <x-layouts.admin-dashboard title="دسته‌بندی تیکت">
     @php($authkey = request()->route('authkey'))
-    <h1 class="admin-page-title">دسته‌بندی تیکت</h1>
+    <x-admin.page-header title="دسته‌بندی تیکت" />
 
     <form action="{{ route('dash.admin.ticket.categories.store', ['authkey' => $authkey]) }}" method="POST" class="admin-card mb-5 grid gap-2 md:grid-cols-3">
         @csrf
-        <input name="name" placeholder="نام" class="rounded bg-slate p-2 dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
-        <input name="slug" placeholder="slug" class="rounded bg-slate p-2 dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+        <input name="name" placeholder="نام" class="admin-input">
+        <input name="slug" placeholder="slug" class="admin-input">
         <button class="admin-btn"><span class="material-icons">add</span>افزودن</button>
     </form>
 

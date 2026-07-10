@@ -1,12 +1,8 @@
 <x-layouts.admin-dashboard title="بروزرسانی GeoIP" :helpModuleKey="'geoip'">
     @php($authkey = request()->route('authkey'))
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <div>
-            <h1 class="admin-page-title !mb-0">بروزرسانی GeoIP</h1>
-            <p class="text-sm text-slate">مدیریت دیتابیس‌های مکان‌دهی IP و گزارش بروزرسانی‌ها</p>
-        </div>
-        <div class="admin-actions">
+    <x-admin.page-header title="بروزرسانی GeoIP" description="مدیریت دیتابیس‌های مکان‌دهی IP و گزارش بروزرسانی‌ها">
+        <x-slot:actions>
             <a href="{{ route('dash.admin.modules', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary">
                 <span class="material-icons">arrow_forward</span>
                 بازگشت به ماژول‌ها
@@ -18,25 +14,23 @@
                     بروزرسانی دستی
                 </button>
             </form>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="geoip-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-overview">
-                <span class="material-icons text-base">info</span>
-                <span>وضعیت فعلی</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-logs">
-                <span class="material-icons text-base">list_alt</span>
-                <span>لاگ‌ها</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-settings">
-                <span class="material-icons text-base">settings</span>
-                <span>تنظیمات</span>
-            </button>
-</div>
-    </div>
+    <x-admin.tab-bar id="geoip-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-overview">
+            <span class="material-icons text-base">info</span>
+            <span>وضعیت فعلی</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-logs">
+            <span class="material-icons text-base">list_alt</span>
+            <span>لاگ‌ها</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-settings">
+            <span class="material-icons text-base">settings</span>
+            <span>تنظیمات</span>
+        </button>
+    </x-admin.tab-bar>
 
     <div id="tab-overview" class="tab-content space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -130,7 +124,7 @@
                         </tr>
                     @endforelse
                 </tbody>
-</table>
+            </table>
         </div>
     </div>
 
@@ -141,5 +135,5 @@
         </div>
     </div>
 
-</x-layouts.admin-dashboard>
     @vite(['resources/js/admin-geoip-hub.js'])
+</x-layouts.admin-dashboard>

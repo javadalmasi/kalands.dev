@@ -9,25 +9,23 @@
     if (!in_array($driver, ['smtp', 'sendmail', 'log'])) { $driver = 'smtp'; }
 @endphp
 
-<h1 class="admin-page-title">ماژول جامع ارتباطی</h1>
+<x-admin.page-header title="ماژول جامع ارتباطی" />
 
 {{-- ──────────────────────── Tabs ──────────────────────── --}}
-<div class="admin-card mb-6 !p-0 overflow-hidden">
-    <div class="flex border-b border-slate/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="comm-tabs">
-        <button class="comm-tab px-5 py-3.5 text-sm font-bold transition-all border-b-2 border-primary text-primary flex items-center gap-2"
-                data-tab-target="tab-settings">
-            <span class="material-icons text-base">settings</span><span>تنظیمات ایمیل</span>
-        </button>
-        <button class="comm-tab px-5 py-3.5 text-sm font-medium transition-all border-b-2 border-transparent text-slate/60 hover:text-primary flex items-center gap-2"
-                data-tab-target="tab-sms">
-            <span class="material-icons text-base">sms</span><span>پیامک</span>
-        </button>
-        <button class="comm-tab px-5 py-3.5 text-sm font-medium transition-all border-b-2 border-transparent text-slate/60 hover:text-primary flex items-center gap-2"
-                data-tab-target="tab-debug">
-            <span class="material-icons text-base">bug_report</span><span>تست و دیباگ</span>
-        </button>
-    </div>
-</div>
+<x-admin.tab-bar id="comm-tabs">
+    <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold flex items-center gap-2"
+            data-tab-target="tab-settings">
+        <span class="material-icons text-base">settings</span><span>تنظیمات ایمیل</span>
+    </button>
+    <button class="admin-tab-btn flex items-center gap-2"
+            data-tab-target="tab-sms">
+        <span class="material-icons text-base">sms</span><span>پیامک</span>
+    </button>
+    <button class="admin-tab-btn flex items-center gap-2"
+            data-tab-target="tab-debug">
+        <span class="material-icons text-base">bug_report</span><span>تست و دیباگ</span>
+    </button>
+</x-admin.tab-bar>
 
 {{-- ══════════════════════════════════════════════════════
      TAB 1 : تنظیمات ایمیل
@@ -97,18 +95,18 @@
                 <div class="space-y-1.5 md:col-span-2">
                     <label class="text-xs font-bold text-slate/60 px-1">میزبان (Host)</label>
                     <input name="host" value="{{ $mailCfg['host'] ?? '' }}"
-                        class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white admin-ltr text-sm"
+                        class="admin-input admin-ltr"
                         placeholder="smtp.gmail.com">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-slate/60 px-1">پورت (Port)</label>
                     <input name="port" id="smtp-port" type="number" value="{{ $mailCfg['port'] ?? '587' }}"
-                        class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white admin-ltr text-sm">
+                        class="admin-input admin-ltr">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-slate/60 px-1">رمزنگاری (Encryption)</label>
                     <select name="encryption" id="smtp-encryption"
-                        class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white text-sm">
+                        class="admin-input">
                         <option value=""  @selected(!($mailCfg['encryption'] ?? null))>بدون رمزنگاری (port 25)</option>
                         <option value="tls" @selected(($mailCfg['encryption'] ?? '') === 'tls')>STARTTLS (port 587)</option>
                         <option value="ssl" @selected(($mailCfg['encryption'] ?? '') === 'ssl')>SSL / TLS (port 465)</option>
@@ -117,13 +115,13 @@
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-slate/60 px-1">نام کاربری (Username)</label>
                     <input name="username" value="{{ $mailCfg['username'] ?? '' }}"
-                        class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white admin-ltr text-sm">
+                        class="admin-input admin-ltr">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-slate/60 px-1">کلمه عبور (Password)</label>
                     <div class="relative">
                         <input name="password" id="smtp-password" type="password" value="{{ $mailCfg['password'] ?? '' }}"
-                            class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 ps-10 dark:bg-slate-800 dark:text-white admin-ltr text-sm">
+                            class="admin-input admin-ltr ps-10">
                         <button type="button" data-toggle-password="smtp-password"
                             class="absolute inset-y-0 start-0 px-2.5 text-slate/40 hover:text-primary transition-colors">
                             <span class="material-icons text-base">visibility</span>
@@ -158,7 +156,7 @@
             <div class="space-y-1.5">
                 <label class="text-xs font-bold text-slate/60 px-1">مسیر Sendmail (اختیاری)</label>
                 <input name="sendmail_path" value="{{ $mailCfg['sendmail_path'] ?? '' }}"
-                    class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white admin-ltr text-sm font-mono"
+                    class="admin-input admin-ltr font-mono"
                     placeholder="/usr/sbin/sendmail -bs -i">
                 <p class="text-[10px] text-slate/50 px-1 mt-1">در صورت خالی بودن از مقدار <code class="font-mono bg-slate/10 px-1 rounded">/usr/sbin/sendmail -bs -i</code> استفاده می‌شود.</p>
             </div>
@@ -188,13 +186,13 @@
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-slate/60 px-1">ایمیل فرستنده</label>
                     <input name="sender_email" value="{{ $mailCfg['sender_email'] ?? '' }}"
-                        class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white admin-ltr text-sm"
+                        class="admin-input admin-ltr"
                         placeholder="no-reply@yourdomain.com">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-xs font-bold text-slate/60 px-1">نام فرستنده</label>
                     <input name="sender_name" value="{{ $mailCfg['sender_name'] ?? '' }}"
-                        class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white text-sm"
+                        class="admin-input"
                         placeholder="فروشگاه کالندز">
                 </div>
             </div>
@@ -226,14 +224,14 @@
             <div class="space-y-1.5 md:col-span-2">
                 <label class="text-xs font-bold text-slate/60 px-1">آدرس وب‌سرویس (Endpoint)</label>
                 <input name="endpoint" value="{{ $smsCfg['endpoint'] ?? 'https://console.melipayamak.com/api/send/otp' }}"
-                    class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white admin-ltr text-sm"
+                    class="admin-input admin-ltr"
                     placeholder="https://console.melipayamak.com/api/send/otp">
             </div>
             <div class="space-y-1.5">
                 <label class="text-xs font-bold text-slate/60 px-1">توکن امنیتی (API Token)</label>
                 <div class="relative">
                     <input name="api_token" id="sms-token" type="password" value="{{ $smsCfg['api_token'] ?? '' }}"
-                        class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 ps-10 dark:bg-slate-800 dark:text-white admin-ltr text-sm">
+                        class="admin-input admin-ltr ps-10">
                     <button type="button" data-toggle-password="sms-token"
                         class="absolute inset-y-0 start-0 px-2.5 text-slate/40 hover:text-primary transition-colors">
                         <span class="material-icons text-base">visibility</span>
@@ -243,7 +241,7 @@
             <div class="space-y-1.5">
                 <label class="text-xs font-bold text-slate/60 px-1">شماره فرستنده (اختیاری)</label>
                 <input name="sender_number" value="{{ $smsCfg['sender_number'] ?? '' }}"
-                    class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white admin-ltr text-sm"
+                    class="admin-input admin-ltr"
                     placeholder="3000xxxxx">
             </div>
             <div class="admin-actions md:col-span-2">
@@ -321,13 +319,13 @@
             <div class="space-y-1.5">
                 <label class="text-xs font-bold text-slate/60 px-1">ایمیل تستی پیش‌فرض</label>
                 <input name="email" value="{{ $defaults['email'] ?? '' }}"
-                    class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white admin-ltr text-sm"
+                    class="admin-input admin-ltr"
                     placeholder="test@example.com">
             </div>
             <div class="space-y-1.5">
                 <label class="text-xs font-bold text-slate/60 px-1">شماره تماس تستی پیش‌فرض</label>
                 <input name="phone" value="{{ $defaults['phone'] ?? '' }}"
-                    class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white admin-ltr text-sm"
+                    class="admin-input admin-ltr"
                     placeholder="09120000000">
             </div>
             <div class="admin-actions md:col-span-2">
@@ -352,7 +350,7 @@
                 <div>
                     <label class="text-[11px] font-bold text-slate/60 mb-1.5 block px-1">ایمیل مقصد:</label>
                     <input id="test-email-target" value="{{ $defaults['email'] ?? '' }}"
-                        class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white admin-ltr text-sm"
+                        class="admin-input admin-ltr"
                         placeholder="recipient@example.com">
                 </div>
                 <button type="button" id="email-test-btn"
@@ -373,13 +371,13 @@
                 <div>
                     <label class="text-[11px] font-bold text-slate/60 mb-1.5 block px-1">شماره مقصد:</label>
                     <input id="test-sms-target" value="{{ $defaults['phone'] ?? '' }}"
-                        class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white admin-ltr text-sm"
+                        class="admin-input admin-ltr"
                         placeholder="09120000000">
                 </div>
                 <div>
                     <label class="text-[11px] font-bold text-slate/60 mb-1.5 block px-1">متن پیام / کد OTP:</label>
                     <textarea id="test-sms-message" rows="2"
-                        class="w-full rounded-lg border border-slate/20 dark:border-white/10 p-2.5 dark:bg-slate-800 dark:text-white admin-ltr text-sm">Kalands SMS Test - 12345</textarea>
+                        class="admin-input admin-ltr">Kalands SMS Test - 12345</textarea>
                 </div>
                 <button type="button" id="sms-test-btn"
                     data-url="{{ route('dash.admin.sms.config.test', ['authkey' => $authkey]) }}"

@@ -1,39 +1,38 @@
 <x-layouts.admin-dashboard title="مدیریت Object Cache" :helpModuleKey="'object_cache'">
     @php($authkey = request()->route('authkey'))
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">مدیریت Object Cache</h1>
-        <div class="flex items-center gap-2 text-xs">
-            <span class="px-3 py-1.5 rounded-lg bg-slate/5 border border-slate/10 font-bold">
-                درایور فعلی: {{ $drivers[$currentDriver] ?? $currentDriver }}
-            </span>
-        </div>
-    </div>
+    <x-admin.page-header title="مدیریت Object Cache">
+        <x-slot:actions>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="px-3 py-1.5 rounded-lg bg-slate/5 border border-slate/10 font-bold">
+                    درایور فعلی: {{ $drivers[$currentDriver] ?? $currentDriver }}
+                </span>
+            </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="object-cache-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-config">
-                <span class="material-icons text-base">settings</span>
-                <span>تنظیمات</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-test">
-                <span class="material-icons text-base">network_check</span>
-                <span>تست اتصال</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-status">
-                <span class="material-icons text-base">fact_check</span>
-                <span>وضعیت درایورها</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-purge">
-                <span class="material-icons text-base">cleaning_services</span>
-                <span>پاکسازی کش</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-items">
-                <span class="material-icons text-base">inventory_2</span>
-                <span>مشاهده آیتم‌ها</span>
-            </button>
-</div>
-    </div>
+    <x-admin.tab-bar id="object-cache-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-config">
+            <span class="material-icons text-base">settings</span>
+            <span>تنظیمات</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-test">
+            <span class="material-icons text-base">network_check</span>
+            <span>تست اتصال</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-status">
+            <span class="material-icons text-base">fact_check</span>
+            <span>وضعیت درایورها</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-purge">
+            <span class="material-icons text-base">cleaning_services</span>
+            <span>پاکسازی کش</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-items">
+            <span class="material-icons text-base">inventory_2</span>
+            <span>مشاهده آیتم‌ها</span>
+        </button>
+    </x-admin.tab-bar>
 
     <div id="tab-config" class="tab-content space-y-6">
         <form action="{{ route('dash.admin.object-cache.settings.save', ['authkey' => $authkey]) }}" method="POST" class="space-y-6">
@@ -54,7 +53,7 @@
                 <div class="grid gap-6 md:grid-cols-2">
                     <div>
                         <label class="text-sm font-bold block mb-2">درایور Object Cache</label>
-                        <select name="driver" id="cache-driver-select" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                        <select name="driver" id="cache-driver-select" class="admin-input">
                             @foreach($drivers as $driverKey => $driverLabel)
                                 <option value="{{ $driverKey }}" @selected($selectedDriver === $driverKey)>{{ $driverLabel }}</option>
                             @endforeach
@@ -64,7 +63,7 @@
 
                     <div>
                         <label class="text-sm font-bold block mb-2">پیشوند (Prefix)</label>
-                        <input type="text" name="prefix" value="{{ $settings['prefix'] ?? $currentPrefix }}" class="w-full rounded-lg border border-slate p-2.5 text-sm ltr text-left font-mono dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="{{ $currentPrefix }}">
+                        <input type="text" name="prefix" value="{{ $settings['prefix'] ?? $currentPrefix }}" class="admin-input ltr text-left font-mono" placeholder="{{ $currentPrefix }}">
                         <p class="text-[11px] text-slate/50 mt-1.5">پیشوند فعلی: <code class="bg-slate/10 px-1 rounded">{{ $currentPrefix }}</code></p>
                     </div>
                 </div>
@@ -78,30 +77,30 @@
                         <div class="grid gap-4 md:grid-cols-3">
                             <div>
                                 <label class="text-xs font-bold block mb-1.5">نحوه اتصال</label>
-                                <select name="redis_scheme" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                                <select name="redis_scheme" class="admin-input">
                                     <option value="tcp" @selected(($redisConfig['scheme'] ?? 'tcp') === 'tcp')>TCP (پورت)</option>
                                     <option value="unix" @selected(($redisConfig['scheme'] ?? '') === 'unix')>Unix Socket</option>
                                 </select>
                             </div>
                             <div id="redis-host-field">
                                 <label class="text-xs font-bold block mb-1.5">هاست (Host)</label>
-                                <input type="text" name="redis_host" value="{{ $redisConfig['host'] ?? '127.0.0.1' }}" class="w-full rounded-lg border border-slate p-2.5 text-sm ltr font-mono dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="127.0.0.1">
+                                <input type="text" name="redis_host" value="{{ $redisConfig['host'] ?? '127.0.0.1' }}" class="admin-input ltr font-mono" placeholder="127.0.0.1">
                             </div>
                             <div id="redis-port-field">
                                 <label class="text-xs font-bold block mb-1.5">پورت (Port)</label>
-                                <input type="text" name="redis_port" value="{{ $redisConfig['port'] ?? '6379' }}" class="w-full rounded-lg border border-slate p-2.5 text-sm ltr font-mono dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="6379">
+                                <input type="text" name="redis_port" value="{{ $redisConfig['port'] ?? '6379' }}" class="admin-input ltr font-mono" placeholder="6379">
                             </div>
                             <div id="redis-socket-field" class="hidden">
                                 <label class="text-xs font-bold block mb-1.5">مسیر Socket</label>
-                                <input type="text" name="redis_socket" value="{{ $redisConfig['socket'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 text-sm ltr font-mono dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="/var/run/redis/redis.sock">
+                                <input type="text" name="redis_socket" value="{{ $redisConfig['socket'] ?? '' }}" class="admin-input ltr font-mono" placeholder="/var/run/redis/redis.sock">
                             </div>
                             <div>
                                 <label class="text-xs font-bold block mb-1.5">رمز عبور (اختیاری)</label>
-                                <input type="password" name="redis_password" value="{{ $redisConfig['password'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 text-sm ltr font-mono dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="مقداردهی نشده">
+                                <input type="password" name="redis_password" value="{{ $redisConfig['password'] ?? '' }}" class="admin-input ltr font-mono" placeholder="مقداردهی نشده">
                             </div>
                             <div>
                                 <label class="text-xs font-bold block mb-1.5">دیتابیس</label>
-                                <input type="text" name="redis_database" value="{{ $redisConfig['database'] ?? '1' }}" class="w-full rounded-lg border border-slate p-2.5 text-sm ltr font-mono dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="1">
+                                <input type="text" name="redis_database" value="{{ $redisConfig['database'] ?? '1' }}" class="admin-input ltr font-mono" placeholder="1">
                             </div>
                         </div>
                     </div>
@@ -116,15 +115,15 @@
                         <div class="grid gap-4 md:grid-cols-3">
                             <div>
                                 <label class="text-xs font-bold block mb-1.5">هاست (Host)</label>
-                                <input type="text" name="memcached_host" value="{{ $memcachedConfig['host'] ?? '127.0.0.1' }}" class="w-full rounded-lg border border-slate p-2.5 text-sm ltr font-mono dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="127.0.0.1">
+                                <input type="text" name="memcached_host" value="{{ $memcachedConfig['host'] ?? '127.0.0.1' }}" class="admin-input ltr font-mono" placeholder="127.0.0.1">
                             </div>
                             <div>
                                 <label class="text-xs font-bold block mb-1.5">پورت (Port)</label>
-                                <input type="text" name="memcached_port" value="{{ $memcachedConfig['port'] ?? '11211' }}" class="w-full rounded-lg border border-slate p-2.5 text-sm ltr font-mono dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="11211">
+                                <input type="text" name="memcached_port" value="{{ $memcachedConfig['port'] ?? '11211' }}" class="admin-input ltr font-mono" placeholder="11211">
                             </div>
                             <div>
                                 <label class="text-xs font-bold block mb-1.5">مسیر Socket (جایگزین)</label>
-                                <input type="text" name="memcached_socket" value="{{ $memcachedConfig['socket'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 text-sm ltr font-mono dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="/var/run/memcached/memcached.sock">
+                                <input type="text" name="memcached_socket" value="{{ $memcachedConfig['socket'] ?? '' }}" class="admin-input ltr font-mono" placeholder="/var/run/memcached/memcached.sock">
                                 <p class="text-[10px] text-slate/50 mt-1">در صورت مقداردهی، Socket جایگزین Host/Port می‌شود</p>
                             </div>
                         </div>
@@ -340,7 +339,7 @@
                     <div class="flex items-center gap-2">
                         <div class="relative flex-1">
                             <span class="material-icons absolute right-3 top-1/2 -translate-y-1/2 text-slate/40 text-base">search</span>
-                            <input type="text" name="search" value="{{ $search }}" class="w-full rounded-lg border border-slate p-2.5 pr-10 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="جستجوی کلید کش...">
+                            <input type="text" name="search" value="{{ $search }}" class="admin-input pr-10" placeholder="جستجوی کلید کش...">
                         </div>
                         <button class="admin-btn h-[42px] px-6">
                             <span class="material-icons">search</span>

@@ -1,31 +1,28 @@
 <x-layouts.admin-dashboard title="دستورات Artisan" :helpModuleKey="'artisan_commands'">
     @php($authkey = request()->route('authkey'))
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">دستورات Artisan</h1>
-        <div class="flex items-center gap-2 text-xs">
-            <span class="px-3 py-1.5 rounded-lg bg-slate/5 border border-slate/10 font-bold">
+    <x-admin.page-header title="دستورات Artisan">
+        <x-slot:actions>
+            <span class="px-3 py-1.5 rounded-lg bg-slate/5 border border-slate/10 font-bold text-xs">
                 <span class="material-icons text-base align-middle ml-1">terminal</span>
                 {{ count($commands) }} دستور قابل اجرا
             </span>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="artisan-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-commands">
-                <span class="material-icons text-base">terminal</span>
-                <span>دستورات</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-logs">
-                <span class="material-icons text-base">history</span>
-                <span>آخرین اجراها</span>
-                @if($recentLogs->isNotEmpty())
-                    <span class="bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-[10px]">{{ $recentLogs->count() }}</span>
-                @endif
-            </button>
-</div>
-    </div>
+    <x-admin.tab-bar id="artisan-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-commands">
+            <span class="material-icons text-base">terminal</span>
+            <span>دستورات</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-logs">
+            <span class="material-icons text-base">history</span>
+            <span>آخرین اجراها</span>
+            @if($recentLogs->isNotEmpty())
+                <span class="bg-primary/10 text-primary px-1.5 py-0.5 rounded-full text-[10px]">{{ $recentLogs->count() }}</span>
+            @endif
+        </button>
+    </x-admin.tab-bar>
 
     <div id="tab-commands" class="tab-content space-y-6">
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

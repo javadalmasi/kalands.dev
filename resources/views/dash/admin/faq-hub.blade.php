@@ -2,31 +2,27 @@
     @php($authkey = request()->route('authkey'))
     @vite('resources/js/admin-faq-hub.js')
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">ماژول سوالات متداول</h1>
-    </div>
+    <x-admin.page-header title="ماژول سوالات متداول" />
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="faq-tabs">
-            <button type="button" class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="faq-tab-create">
-                <span class="material-icons text-base">add_circle_outline</span>
-                <span>افزودن آیتم</span>
-            </button>
-            <button type="button" class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="faq-tab-manage">
-                <span class="material-icons text-base">view_list</span>
-                <span>مدیریت آیتم‌ها</span>
-            </button>
-        </div>
-    </div>
+    <x-admin.tab-bar id="faq-tabs">
+        <button type="button" class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="faq-tab-create">
+            <span class="material-icons text-base">add_circle_outline</span>
+            <span>افزودن آیتم</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-tab-target="faq-tab-manage">
+            <span class="material-icons text-base">view_list</span>
+            <span>مدیریت آیتم‌ها</span>
+        </button>
+    </x-admin.tab-bar>
 
     <div id="faq-tab-create" class="tab-content admin-card p-4">
             <form action="{{ route('dash.admin.faq.store', ['authkey' => $authkey]) }}" method="POST" class="space-y-3">
                 @csrf
                 <h2 class="font-bold">افزودن سوال جدید</h2>
-                <input name="title" value="{{ old('title') }}" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="عنوان سوال">
-                <textarea name="description" rows="6" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10" data-rich-editor>{{ old('description') }}</textarea>
+                <input name="title" value="{{ old('title') }}" class="admin-input" placeholder="عنوان سوال">
+                <textarea name="description" rows="6" class="admin-input" data-rich-editor>{{ old('description') }}</textarea>
                 <div class="grid gap-3 md:grid-cols-2">
-                    <input type="number" value="{{ $nextSortOrder }}" class="w-full rounded-lg border border-slate p-2 text-sm opacity-80 dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="ترتیب نمایش" readonly>
+                    <input type="number" value="{{ $nextSortOrder }}" class="admin-input opacity-80" placeholder="ترتیب نمایش" readonly>
                     <label class="flex items-center justify-between text-sm">
                         <span>فعال باشد</span>
                         <span class="admin-switch !w-9 !h-5">
@@ -41,15 +37,14 @@
 
     <div id="faq-tab-manage" class="tab-content hidden space-y-3">
             <div class="admin-card space-y-3">
-                <form method="GET" class="grid gap-3 md:grid-cols-3">
-                    <div class="space-y-1 md:col-span-2">
-                        <label class="text-[10px] font-bold opacity-60 px-1">جستجو</label>
-                        <input name="q" value="{{ $q }}" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="عنوان یا متن سوال">
-                    </div>
-                    <div class="flex items-end">
+                <x-admin.filter-bar method="GET" :cols="3">
+                    <x-admin.filter-field label="جستجو" :span="2">
+                        <input name="q" value="{{ $q }}" class="admin-input" placeholder="عنوان یا متن سوال">
+                    </x-admin.filter-field>
+                    <x-admin.filter-field label="">
                         <button class="admin-btn w-full justify-center"><span class="material-icons">search</span>اعمال فیلتر</button>
-                    </div>
-                </form>
+                    </x-admin.filter-field>
+                </x-admin.filter-bar>
 
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
@@ -58,7 +53,7 @@
                             <span class="font-bold opacity-70">انتخاب همه</span>
                         </label>
                         <div class="flex items-center gap-2">
-                            <select id="faq-bulk-action" class="rounded-lg border border-slate/20 bg-white p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <select id="faq-bulk-action" class="admin-input text-xs">
                                 <option value="activate">فعال‌سازی</option>
                                 <option value="deactivate">غیرفعال‌سازی</option>
                                 <option value="delete">حذف</option>
@@ -70,7 +65,7 @@
                         <button type="button" id="faq-save-order" class="admin-btn admin-btn-primary !py-2"><span class="material-icons !text-sm">save</span>ثبت تغییرات</button>
                     </div>
                 </div>
-                <input type="text" id="faq-local-search" class="mt-3 w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10" placeholder="جستجوی سریع بین آیتم‌های همین صفحه...">
+                <input type="text" id="faq-local-search" class="admin-input mt-3" placeholder="جستجوی سریع بین آیتم‌های همین صفحه...">
             </div>
 
             <form id="faq-bulk-form" action="{{ route('dash.admin.faq.bulk', ['authkey' => $authkey]) }}" method="POST" class="hidden">
@@ -105,10 +100,10 @@
                         <div class="hidden pt-3 faq-expand-body">
                             <form action="{{ route('dash.admin.faq.update', ['authkey' => $authkey, 'faq' => $faq->id]) }}" method="POST" class="space-y-3">
                                 @csrf
-                                <input name="title" value="{{ $faq->title }}" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
-                                <textarea name="description" rows="6" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10" data-rich-editor>{{ $faq->description }}</textarea>
+                                <input name="title" value="{{ $faq->title }}" class="admin-input">
+                                <textarea name="description" rows="6" class="admin-input" data-rich-editor>{{ $faq->description }}</textarea>
                                 <div class="grid gap-3 md:grid-cols-2">
-                                    <input type="number" min="0" name="sort_order" value="{{ $faq->sort_order }}" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                    <input type="number" min="0" name="sort_order" value="{{ $faq->sort_order }}" class="admin-input">
                                     <label class="flex items-center justify-between text-sm">
                                         <span>فعال باشد</span>
                                         <span class="admin-switch !w-9 !h-5">
@@ -128,7 +123,7 @@
                 @endforelse
             </div>
 
-            <div class="mt-4">{{ $faqs->links() }}</div>
+            <x-admin.pagination :paginator="$faqs" />
         </div>
     </div>
 

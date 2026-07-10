@@ -1,39 +1,40 @@
 <x-layouts.admin-dashboard title="افزودن کاربر جدید">
     @php($authkey = request()->route('authkey'))
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">افزودن کاربر جدید</h1>
-        <a href="{{ route('dash.admin.users', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary" title="بازگشت">
-            <span class="material-icons !text-base">arrow_forward</span>
-            بازگشت به کاربران
-        </a>
-    </div>
+    <x-admin.page-header title="افزودن کاربر جدید">
+        <x-slot:actions>
+            <a href="{{ route('dash.admin.users', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary" title="بازگشت">
+                <span class="material-icons !text-base">arrow_forward</span>
+                بازگشت به کاربران
+            </a>
+        </x-slot:actions>
+    </x-admin.page-header>
 
     <form action="{{ route('dash.admin.users.store', ['authkey' => $authkey]) }}" method="POST" class="admin-card is-surface space-y-6">
         @csrf
         <div class="grid gap-4 md:grid-cols-2">
             <div class="space-y-1">
                 <label class="text-[10px] font-bold opacity-60 px-1">نام</label>
-                <input name="first_name" value="{{ old('first_name') }}" placeholder="مثلاً: علی" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                <input name="first_name" value="{{ old('first_name') }}" placeholder="مثلاً: علی" class="admin-input">
             </div>
             <div class="space-y-1">
                 <label class="text-[10px] font-bold opacity-60 px-1">نام خانوادگی</label>
-                <input name="last_name" value="{{ old('last_name') }}" placeholder="مثلاً: محمدی" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                <input name="last_name" value="{{ old('last_name') }}" placeholder="مثلاً: محمدی" class="admin-input">
             </div>
             <div class="space-y-1">
                 <label class="text-[10px] font-bold opacity-60 px-1">آدرس ایمیل</label>
-                <input name="email" value="{{ old('email') }}" placeholder="email@example.com" class="w-full rounded-lg border border-slate p-2.5 text-sm admin-ltr dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                <input name="email" value="{{ old('email') }}" placeholder="email@example.com" class="admin-input admin-ltr">
             </div>
             <div class="space-y-1">
                 <label class="text-[10px] font-bold opacity-60 px-1">شماره موبایل</label>
-                <input name="phone" value="{{ old('phone') }}" placeholder="09123456789" class="w-full rounded-lg border border-slate p-2.5 text-sm admin-ltr dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                <input name="phone" value="{{ old('phone') }}" placeholder="09123456789" class="admin-input admin-ltr">
             </div>
             <div class="space-y-1">
                 <label class="text-[10px] font-bold opacity-60 px-1">رمز عبور</label>
-                <input type="password" name="password" placeholder="••••••••" class="w-full rounded-lg border border-slate p-2.5 text-sm admin-ltr dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                <input type="password" name="password" placeholder="••••••••" class="admin-input admin-ltr">
             </div>
             <div class="space-y-1">
                 <label class="text-[10px] font-bold opacity-60 px-1">وضعیت حساب</label>
-                <select name="is_active" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                <select name="is_active" class="admin-input">
                     <option value="1" @selected(old('is_active', '1') == '1')>فعال</option>
                     <option value="0" @selected(old('is_active') == '0')>غیرفعال</option>
                 </select>

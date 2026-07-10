@@ -1,44 +1,52 @@
 <x-layouts.admin-dashboard title="مدیریت نظرات">
     @php($authkey = request()->route('authkey'))
-    <h1 class="admin-page-title">نظرات</h1>
-    <form method="GET" class="admin-card mb-4 grid gap-3 md:grid-cols-3">
-        <select name="sort" class="rounded p-2 dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
-            <option value="latest" @selected(($sort ?? 'latest') === 'latest')>جدیدترین</option>
-            <option value="oldest" @selected(($sort ?? '') === 'oldest')>قدیمی‌ترین</option>
-            <option value="status" @selected(($sort ?? '') === 'status')>بر اساس وضعیت</option>
-        </select>
-        <select name="status" class="rounded p-2 dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
-            <option value="all" @selected(($status ?? 'all') === 'all')>همه وضعیت‌ها</option>
-            <option value="pending" @selected(($status ?? '') === 'pending')>در انتظار</option>
-            <option value="approved" @selected(($status ?? '') === 'approved')>تایید</option>
-            <option value="rejected" @selected(($status ?? '') === 'rejected')>رد</option>
-            <option value="spam" @selected(($status ?? '') === 'spam')>اسپم</option>
-        </select>
-        <button class="admin-btn justify-center"><span class="material-icons">filter_alt</span>اعمال فیلتر</button>
-    </form>
+    @vite(['resources/js/admin-comments.js'])
 
-    <form id="bulk-comments-form" method="POST" action="{{ route('dash.admin.comments.bulk', ['authkey' => $authkey]) }}" class="admin-card mb-4 space-y-3">
-        @csrf
-        <div class="admin-actions">
-            <label class="inline-flex items-center gap-2 text-xs">
-                <input type="checkbox" id="select-all-comments">
-                انتخاب همه
-            </label>
-            <select name="action" class="rounded p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+    <x-admin.page-header title="نظرات" />
+
+    <x-admin.filter-bar cols="3">
+        <x-admin.filter-field label="مرتب‌سازی">
+            <select name="sort" class="admin-input">
+                <option value="latest" @selected(($sort ?? 'latest') === 'latest')>جدیدترین</option>
+                <option value="oldest" @selected(($sort ?? '') === 'oldest')>قدیمی‌ترین</option>
+                <option value="status" @selected(($sort ?? '') === 'status')>بر اساس وضعیت</option>
+            </select>
+        </x-admin.filter-field>
+        <x-admin.filter-field label="وضعیت">
+            <select name="status" class="admin-input">
+                <option value="all" @selected(($status ?? 'all') === 'all')>همه وضعیت‌ها</option>
+                <option value="pending" @selected(($status ?? '') === 'pending')>در انتظار</option>
+                <option value="approved" @selected(($status ?? '') === 'approved')>تایید</option>
+                <option value="rejected" @selected(($status ?? '') === 'rejected')>رد</option>
+                <option value="spam" @selected(($status ?? '') === 'spam')>اسپم</option>
+            </select>
+        </x-admin.filter-field>
+        <x-admin.filter-field label=" ">
+            <button class="admin-btn justify-center w-full"><span class="material-icons">filter_alt</span>اعمال فیلتر</button>
+        </x-admin.filter-field>
+    </x-admin.filter-bar>
+
+    <x-admin.bulk-bar
+        action="{{ route('dash.admin.comments.bulk', ['authkey' => $authkey]) }}"
+        id="bulk-comments-form"
+        label="اجرای گروهی"
+        confirm="این اقدام روی نظرات انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟"
+    >
+        <x-slot:actions>
+            <select name="action" class="admin-input text-xs">
                 <option value="approved">تایید</option>
                 <option value="rejected">رد</option>
                 <option value="spam">اسپم</option>
                 <option value="delete">حذف</option>
             </select>
-            <button class="admin-btn" type="submit" data-admin-confirm="این اقدام روی نظرات انتخاب‌شده انجام می‌شود. ادامه می‌دهید؟"><span class="material-icons">done_all</span>اجرای گروهی</button>
-        </div>
+        </x-slot:actions>
+    </x-admin.bulk-bar>
 
-    </form>
     <div class="space-y-3">
         @foreach($comments as $comment)
             <div class="admin-card !p-3">
                 <div class="mb-1 flex items-start gap-2">
-                    <input type="checkbox" form="bulk-comments-form" name="comment_ids[]" value="{{ $comment->id }}" class="comment-item-checkbox mt-1">
+                    <input type="checkbox" data-bulk-item form="bulk-comments-form" name="comment_ids[]" value="{{ $comment->id }}" class="comment-item-checkbox mt-1">
                     <p class="text-sm">{{ $comment->content }}</p>
                 </div>
                 <p class="mt-1 text-xs text-slate">وضعیت: {{ $comment->status }} | {{ $comment->created_at }}</p>
@@ -51,7 +59,7 @@
             </div>
         @endforeach
     </div>
-    <div class="mt-4">{{ $comments->links() }}</div>
+
+    <x-admin.pagination :paginator="$comments" />
 
 </x-layouts.admin-dashboard>
-    @vite(['resources/js/admin-comments.js'])

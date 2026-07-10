@@ -1,28 +1,25 @@
 <x-layouts.admin-dashboard title="مدیریت کش" :helpModuleKey="'cache_management'">
     @php($authkey = request()->route('authkey'))
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">مدیریت کش</h1>
-        <div class="flex items-center gap-2">
+    <x-admin.page-header title="مدیریت کش">
+        <x-slot:actions>
             <a href="{{ route('dash.admin.cache-management.htaccess.backup', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary h-10 px-4 text-xs">
                 <span class="material-icons text-sm">download</span>
                 دانلود آخرین بکاپ .htaccess
             </a>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="cache-management-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-webservices">
-                <span class="material-icons text-base">bolt</span>
-                <span>وب‌سرویس‌ها</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-optimization">
-                <span class="material-icons text-base">settings_suggest</span>
-                <span>بهینه‌سازی وب‌سرور</span>
-            </button>
-</div>
-    </div>
+    <x-admin.tab-bar id="cache-management-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-webservices">
+            <span class="material-icons text-base">bolt</span>
+            <span>وب‌سرویس‌ها</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-optimization">
+            <span class="material-icons text-base">settings_suggest</span>
+            <span>بهینه‌سازی وب‌سرور</span>
+        </button>
+    </x-admin.tab-bar>
 
     <div id="tab-webservices" class="tab-content space-y-6">
         <form action="{{ route('dash.admin.cache-management.settings.save', ['authkey' => $authkey]) }}" method="POST" class="space-y-6">
@@ -44,12 +41,12 @@
                 <div class="grid gap-6 md:grid-cols-3">
                     <div>
                         <label class="text-sm font-bold block mb-2">زمان TTL (ثانیه)</label>
-                        <input type="number" name="autocomplete_ttl" value="{{ $settings['autocomplete_ttl'] ?? 31536000 }}" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="31536000">
+                        <input type="number" name="autocomplete_ttl" value="{{ $settings['autocomplete_ttl'] ?? 31536000 }}" class="admin-input" placeholder="31536000">
                     </div>
 
                     <div>
                         <label class="text-sm font-bold block mb-2">نوع کش (Cache-Control)</label>
-                        <select name="autocomplete_cache_type" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                        <select name="autocomplete_cache_type" class="admin-input">
                             <option value="public" @selected(($settings['autocomplete_cache_type'] ?? 'public') === 'public')>Public</option>
                             <option value="private" @selected(($settings['autocomplete_cache_type'] ?? 'public') === 'private')>Private</option>
                         </select>
@@ -85,11 +82,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="autocomplete_custom_cc_ttl" value="{{ $settings['autocomplete_custom_cc_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="autocomplete_custom_cc_ttl" value="{{ $settings['autocomplete_custom_cc_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="autocomplete_custom_cc_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="autocomplete_custom_cc_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['autocomplete_custom_cc_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['autocomplete_custom_cc_type'] ?? '') === 'private')>Private</option>
@@ -102,11 +99,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="autocomplete_custom_lsc_ttl" value="{{ $settings['autocomplete_custom_lsc_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="autocomplete_custom_lsc_ttl" value="{{ $settings['autocomplete_custom_lsc_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="autocomplete_custom_lsc_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="autocomplete_custom_lsc_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['autocomplete_custom_lsc_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['autocomplete_custom_lsc_type'] ?? '') === 'private')>Private</option>
@@ -119,11 +116,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="autocomplete_custom_cdn_ttl" value="{{ $settings['autocomplete_custom_cdn_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="autocomplete_custom_cdn_ttl" value="{{ $settings['autocomplete_custom_cdn_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="autocomplete_custom_cdn_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="autocomplete_custom_cdn_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['autocomplete_custom_cdn_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['autocomplete_custom_cdn_type'] ?? '') === 'private')>Private</option>
@@ -136,11 +133,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="autocomplete_custom_cf_ttl" value="{{ $settings['autocomplete_custom_cf_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="autocomplete_custom_cf_ttl" value="{{ $settings['autocomplete_custom_cf_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="autocomplete_custom_cf_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="autocomplete_custom_cf_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['autocomplete_custom_cf_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['autocomplete_custom_cf_type'] ?? '') === 'private')>Private</option>
@@ -168,12 +165,12 @@
                 <div class="grid gap-6 md:grid-cols-3">
                     <div>
                         <label class="text-sm font-bold block mb-2">زمان TTL (ثانیه)</label>
-                        <input type="number" name="affiliate_ttl" value="{{ $settings['affiliate_ttl'] ?? 31536000 }}" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="31536000">
+                        <input type="number" name="affiliate_ttl" value="{{ $settings['affiliate_ttl'] ?? 31536000 }}" class="admin-input" placeholder="31536000">
                     </div>
 
                     <div>
                         <label class="text-sm font-bold block mb-2">نوع کش (Cache-Control)</label>
-                        <select name="affiliate_cache_type" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                        <select name="affiliate_cache_type" class="admin-input">
                             <option value="public" @selected(($settings['affiliate_cache_type'] ?? 'public') === 'public')>Public</option>
                             <option value="private" @selected(($settings['affiliate_cache_type'] ?? 'public') === 'private')>Private</option>
                         </select>
@@ -209,11 +206,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="affiliate_custom_cc_ttl" value="{{ $settings['affiliate_custom_cc_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="affiliate_custom_cc_ttl" value="{{ $settings['affiliate_custom_cc_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="affiliate_custom_cc_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="affiliate_custom_cc_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['affiliate_custom_cc_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['affiliate_custom_cc_type'] ?? '') === 'private')>Private</option>
@@ -226,11 +223,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="affiliate_custom_lsc_ttl" value="{{ $settings['affiliate_custom_lsc_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="affiliate_custom_lsc_ttl" value="{{ $settings['affiliate_custom_lsc_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="affiliate_custom_lsc_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="affiliate_custom_lsc_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['affiliate_custom_lsc_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['affiliate_custom_lsc_type'] ?? '') === 'private')>Private</option>
@@ -243,11 +240,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="affiliate_custom_cdn_ttl" value="{{ $settings['affiliate_custom_cdn_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="affiliate_custom_cdn_ttl" value="{{ $settings['affiliate_custom_cdn_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="affiliate_custom_cdn_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="affiliate_custom_cdn_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['affiliate_custom_cdn_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['affiliate_custom_cdn_type'] ?? '') === 'private')>Private</option>
@@ -260,11 +257,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="affiliate_custom_cf_ttl" value="{{ $settings['affiliate_custom_cf_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="affiliate_custom_cf_ttl" value="{{ $settings['affiliate_custom_cf_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="affiliate_custom_cf_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="affiliate_custom_cf_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['affiliate_custom_cf_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['affiliate_custom_cf_type'] ?? '') === 'private')>Private</option>
@@ -292,12 +289,12 @@
                 <div class="grid gap-6 md:grid-cols-3">
                     <div>
                         <label class="text-sm font-bold block mb-2">زمان TTL (ثانیه)</label>
-                        <input type="number" name="product_ttl" value="{{ $settings['product_ttl'] ?? 86400 }}" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="86400">
+                        <input type="number" name="product_ttl" value="{{ $settings['product_ttl'] ?? 86400 }}" class="admin-input" placeholder="86400">
                     </div>
 
                     <div>
                         <label class="text-sm font-bold block mb-2">نوع کش (Cache-Control)</label>
-                        <select name="product_cache_type" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                        <select name="product_cache_type" class="admin-input">
                             <option value="public" @selected(($settings['product_cache_type'] ?? 'public') === 'public')>Public</option>
                             <option value="private" @selected(($settings['product_cache_type'] ?? 'public') === 'private')>Private</option>
                         </select>
@@ -333,11 +330,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="product_custom_cc_ttl" value="{{ $settings['product_custom_cc_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="product_custom_cc_ttl" value="{{ $settings['product_custom_cc_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="product_custom_cc_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="product_custom_cc_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['product_custom_cc_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['product_custom_cc_type'] ?? '') === 'private')>Private</option>
@@ -350,11 +347,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="product_custom_lsc_ttl" value="{{ $settings['product_custom_lsc_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="product_custom_lsc_ttl" value="{{ $settings['product_custom_lsc_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="product_custom_lsc_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="product_custom_lsc_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['product_custom_lsc_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['product_custom_lsc_type'] ?? '') === 'private')>Private</option>
@@ -367,11 +364,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="product_custom_cdn_ttl" value="{{ $settings['product_custom_cdn_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="product_custom_cdn_ttl" value="{{ $settings['product_custom_cdn_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="product_custom_cdn_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="product_custom_cdn_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['product_custom_cdn_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['product_custom_cdn_type'] ?? '') === 'private')>Private</option>
@@ -384,11 +381,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="product_custom_cf_ttl" value="{{ $settings['product_custom_cf_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="product_custom_cf_ttl" value="{{ $settings['product_custom_cf_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="product_custom_cf_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="product_custom_cf_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['product_custom_cf_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['product_custom_cf_type'] ?? '') === 'private')>Private</option>
@@ -416,12 +413,12 @@
                 <div class="grid gap-6 md:grid-cols-3">
                     <div>
                         <label class="text-sm font-bold block mb-2">زمان TTL (ثانیه)</label>
-                        <input type="number" name="visitor_info_ttl" value="{{ $settings['visitor_info_ttl'] ?? 3600 }}" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700" placeholder="3600">
+                        <input type="number" name="visitor_info_ttl" value="{{ $settings['visitor_info_ttl'] ?? 3600 }}" class="admin-input" placeholder="3600">
                     </div>
 
                     <div>
                         <label class="text-sm font-bold block mb-2">نوع کش (Cache-Control)</label>
-                        <select name="visitor_info_cache_type" class="w-full rounded-lg border border-slate p-2.5 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                        <select name="visitor_info_cache_type" class="admin-input">
                             <option value="private" @selected(($settings['visitor_info_cache_type'] ?? 'private') === 'private')>Private</option>
                             <option value="public" @selected(($settings['visitor_info_cache_type'] ?? 'private') === 'public')>Public</option>
                         </select>
@@ -457,11 +454,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="visitor_info_custom_cc_ttl" value="{{ $settings['visitor_info_custom_cc_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="visitor_info_custom_cc_ttl" value="{{ $settings['visitor_info_custom_cc_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="visitor_info_custom_cc_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="visitor_info_custom_cc_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['visitor_info_custom_cc_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['visitor_info_custom_cc_type'] ?? '') === 'private')>Private</option>
@@ -474,11 +471,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="visitor_info_custom_lsc_ttl" value="{{ $settings['visitor_info_custom_lsc_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="visitor_info_custom_lsc_ttl" value="{{ $settings['visitor_info_custom_lsc_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="visitor_info_custom_lsc_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="visitor_info_custom_lsc_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['visitor_info_custom_lsc_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['visitor_info_custom_lsc_type'] ?? '') === 'private')>Private</option>
@@ -491,11 +488,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="visitor_info_custom_cdn_ttl" value="{{ $settings['visitor_info_custom_cdn_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="visitor_info_custom_cdn_ttl" value="{{ $settings['visitor_info_custom_cdn_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="visitor_info_custom_cdn_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="visitor_info_custom_cdn_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['visitor_info_custom_cdn_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['visitor_info_custom_cdn_type'] ?? '') === 'private')>Private</option>
@@ -508,11 +505,11 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">زمان TTL (ثانیه)</label>
-                                <input type="number" name="visitor_info_custom_cf_ttl" value="{{ $settings['visitor_info_custom_cf_ttl'] ?? '' }}" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="number" name="visitor_info_custom_cf_ttl" value="{{ $settings['visitor_info_custom_cf_ttl'] ?? '' }}" class="admin-input">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold block mb-1 opacity-70">نوع کش</label>
-                                <select name="visitor_info_custom_cf_type" class="w-full rounded border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <select name="visitor_info_custom_cf_type" class="admin-input">
                                     <option value="">پیش‌فرض</option>
                                     <option value="public" @selected(($settings['visitor_info_custom_cf_type'] ?? '') === 'public')>Public</option>
                                     <option value="private" @selected(($settings['visitor_info_custom_cf_type'] ?? '') === 'private')>Private</option>
@@ -596,7 +593,7 @@
 
                     <div class="p-4 rounded-xl border border-slate/10 bg-slate/5">
                         <label class="text-sm font-bold block mb-2">LSPHP Workers</label>
-                        <input type="number" name="workers" value="{{ $litespeedConfig['workers'] ?? 100 }}" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10" min="1" max="1000">
+                        <input type="number" name="workers" value="{{ $litespeedConfig['workers'] ?? 100 }}" class="admin-input" min="1" max="1000">
                         <p class="text-[10px] text-slate/50 mt-1.5">تعداد ورکر‌های PHP (پیش‌فرض: ۱۰۰)</p>
                     </div>
 
@@ -614,7 +611,7 @@
 
                     <div class="p-4 rounded-xl border border-slate/10 bg-slate/5">
                         <label class="text-sm font-bold block mb-2">SpdyEnabled (HTTP2/HTTP3)</label>
-                        <select name="spdy" class="w-full rounded-lg border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                        <select name="spdy" class="admin-input">
                             <option value="off" @selected($litespeedConfig['spdy'] === 'off')>غیرفعال (Off)</option>
                             <option value="http2" @selected($litespeedConfig['spdy'] === 'http2')>HTTP/2 Only</option>
                             <option value="http3" @selected($litespeedConfig['spdy'] === 'http3')>HTTP/3 Only</option>

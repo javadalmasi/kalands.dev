@@ -2,40 +2,37 @@
     <?php $authkey = request()->route('authkey'); ?>
     <?php $engines = ['bing', 'yandex']; ?>
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">مدیریت ایندکس‌سازی (IndexNow)</h1>
-        <div class="flex items-center gap-3">
+    <x-admin.page-header title="مدیریت ایندکس‌سازی (IndexNow)">
+        <x-slot:actions>
             <button type="submit" form="indexnow-settings-form" class="admin-btn admin-btn-primary px-6 shadow-lg shadow-primary/20">
                 <span class="material-icons">save</span>
                 ذخیره تمامی تنظیمات
             </button>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-admin.page-header>
 
-    <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="indexnow-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-overview">
-                <span class="material-icons text-base">dashboard</span>
-                <span>وضعیت و آمار</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-settings">
-                <span class="material-icons text-base">settings</span>
-                <span>تنظیمات</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-bing">
-                <span class="material-icons text-base">travel_explore</span>
-                <span>تنظیمات بینگ</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-yandex">
-                <span class="material-icons text-base">language</span>
-                <span>تنظیمات یاندکس</span>
-            </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-logs">
-                <span class="material-icons text-base">history</span>
-                <span>گزارش اجراها</span>
-            </button>
-</div>
-    </div>
+    <x-admin.tab-bar id="indexnow-tabs">
+        <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-overview">
+            <span class="material-icons text-base">dashboard</span>
+            <span>وضعیت و آمار</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-settings">
+            <span class="material-icons text-base">settings</span>
+            <span>تنظیمات</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-bing">
+            <span class="material-icons text-base">travel_explore</span>
+            <span>تنظیمات بینگ</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-yandex">
+            <span class="material-icons text-base">language</span>
+            <span>تنظیمات یاندکس</span>
+        </button>
+        <button class="admin-tab-btn" data-tab-target="tab-logs">
+            <span class="material-icons text-base">history</span>
+            <span>گزارش اجراها</span>
+        </button>
+    </x-admin.tab-bar>
 
     <form action="{{ route('dash.admin.indexnow.settings.save', ['authkey' => $authkey]) }}" method="POST" id="indexnow-settings-form">
         @csrf
