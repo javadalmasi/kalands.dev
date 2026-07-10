@@ -74,75 +74,70 @@ document.addEventListener('DOMContentLoaded', () => {
         activateTab(tabsWrap, initialId);
     });
 
-    // ── Bulk Bar (floating bottom action bar) ──────────────────────────────
+    // ── Bulk Bar ──────────────────────────────────────────────────────────
     document.querySelectorAll('[data-bulk-bar]').forEach((bar) => {
-        const barId = bar.dataset.bulkBar;
-        const selectAllEl = bar.querySelector(`[data-select-all="${barId}"]`);
-        const numEl      = bar.querySelector(`[data-bulk-num="${barId}"]`);
-        const clearBtn   = bar.querySelector(`[data-bulk-clear="${barId}"]`);
+        const barId      = bar.id;
+        const selectAll  = bar.querySelector('[data-select-all]');
+        const numEl      = bar.querySelector('[data-bulk-num]');
+        const clearBtn   = bar.querySelector('[data-bulk-clear]');
         const confirmMsg = bar.dataset.confirm || null;
 
-        const getItems    = () => [...document.querySelectorAll(`[data-bulk-item][form="${barId}"]`)];
+        // Use HTMLFormElement.elements — finds ALL controls associated with this form,
+        // including those with form="barId" attribute outside the form tag.
+        const getItems = () => {
+            const form = document.getElementById(barId);
+            if (!form) return [];
+            return [...form.elements].filter(
+                (el) => el.type === 'checkbox' && el.hasAttribute('data-bulk-item')
+            );
+        };
         const getSelected = () => getItems().filter((c) => c.checked);
 
         const update = () => {
-            const items    = getItems();
-            const selected = getSelected();
-            const count    = selected.length;
+            const items  = getItems();
+            const count  = getSelected().length;
+            const total  = items.length;
 
-            // Show/hide the bar
             bar.classList.toggle('is-visible', count > 0);
-            // Pad page bottom so content isn't hidden under bar
-            document.body.style.paddingBottom = count > 0 ? '60px' : '';
+            document.body.style.paddingBottom = count > 0 ? '56px' : '';
 
-            // Update count display
-            if (numEl) {
-                numEl.textContent = new Intl.NumberFormat('fa-IR').format(count);
-            }
+            if (numEl) numEl.textContent = new Intl.NumberFormat('fa-IR').format(count);
 
-            // Update select-all state
-            if (selectAllEl) {
-                selectAllEl.checked       = items.length > 0 && count === items.length;
-                selectAllEl.indeterminate = count > 0 && count < items.length;
+            if (selectAll) {
+                selectAll.checked       = total > 0 && count === total;
+                selectAll.indeterminate = count > 0 && count < total;
             }
         };
 
-        // Item checkboxes
-        document.addEventListener('change', (e) => {
-            const cb = e.target;
-
-            // A bulk item checkbox changed
-            if (Object.prototype.hasOwnProperty.call(cb.dataset, 'bulkItem')
-                && cb.getAttribute('form') === barId) {
-                update();
-                return;
-            }
-
-            // The select-all checkbox changed
-            if (selectAllEl && cb === selectAllEl) {
-                getItems().forEach((item) => { item.checked = selectAllEl.checked; });
-                update();
-            }
-        });
-
-        // Clear button
-        if (clearBtn) {
-            clearBtn.addEventListener('click', () => {
-                getItems().forEach((item) => { item.checked = false; });
-                if (selectAllEl) { selectAllEl.checked = false; selectAllEl.indeterminate = false; }
+        // Select-all toggle
+        if (selectAll) {
+            selectAll.addEventListener('change', () => {
+                getItems().forEach((el) => { el.checked = selectAll.checked; });
                 update();
             });
         }
 
-        // Form submit guard
+        // Item checkboxes — listen on the document
+        document.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox' && e.target.hasAttribute('data-bulk-item')) {
+                const f = e.target.getAttribute('form');
+                if (f === barId || (!f && e.target.closest(`#${barId}`))) update();
+            }
+        });
+
+        // Clear
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                getItems().forEach((el) => { el.checked = false; });
+                if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
+                update();
+            });
+        }
+
+        // Submit guard
         bar.addEventListener('submit', (e) => {
-            if (getSelected().length === 0) {
-                e.preventDefault();
-                return;
-            }
-            if (confirmMsg && !window.confirm(confirmMsg)) {
-                e.preventDefault();
-            }
+            if (!getSelected().length) { e.preventDefault(); return; }
+            if (confirmMsg && !window.confirm(confirmMsg)) e.preventDefault();
         });
     });
 });
