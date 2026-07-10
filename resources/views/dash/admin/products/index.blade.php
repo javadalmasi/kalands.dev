@@ -38,13 +38,13 @@
         confirm="آیا از انجام این عملیات روی محصولات انتخاب شده مطمئن هستید؟"
     >
         <x-slot:actions>
-            <select name="action" class="admin-input !w-auto !h-8 !text-xs !min-h-0">
+            <select name="action" class="admin-input">
                 <option value="">عملیات گروهی...</option>
                 <option value="activate">فعالسازی</option>
                 <option value="deactivate">غیرفعالسازی</option>
                 <option value="delete">حذف قطعی</option>
             </select>
-            <button type="submit" class="admin-btn admin-btn-primary !h-8 !text-xs">
+            <button type="submit" class="admin-btn admin-btn-primary">
                 <span class="material-icons !text-sm">done_all</span>
                 اجرا
             </button>

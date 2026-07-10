@@ -1,29 +1,21 @@
 @props([
     'action',
     'id'      => 'bulk-bar',
-    'label'   => 'مورد انتخاب شده',
+    'label'   => 'مورد',
     'confirm' => null,
 ])
 {{--
-  Floating bulk-action bar — slides up from bottom when items are selected.
-
-  Usage in blade:
-    <x-admin.bulk-bar action="{{ route('...bulk') }}" id="bulk-users" confirm="این اقدام روی موارد انتخاب‌شده اجرا می‌شود. ادامه می‌دهید؟">
+  Usage:
+    <x-admin.bulk-bar action="{{ route('...bulk') }}" id="bulk-users" label="کاربر"
+        confirm="این اقدام روی موارد انتخاب‌شده اجرا می‌شود. ادامه می‌دهید؟">
         <x-slot:actions>
-            <select name="action" class="admin-input !w-auto !min-h-0 !h-8 !text-xs">
-                <option>عملیات...</option>
-                <option value="delete">حذف</option>
-            </select>
-            <button type="submit" class="admin-btn admin-btn-primary !h-8 !text-xs">
-                <span class="material-icons !text-sm">done_all</span>
-                اجرا
-            </button>
+            <select name="action" class="admin-input">...</select>
+            <button type="submit" class="admin-btn admin-btn-primary">اجرا</button>
         </x-slot:actions>
     </x-admin.bulk-bar>
 
-  On each item's checkbox:
-    <input type="checkbox" name="ids[]" value="{{ $item->id }}"
-           data-bulk-item form="{{ $id }}" class="rounded">
+  Each item checkbox needs:
+    <input type="checkbox" name="ids[]" value="{{ $id }}" data-bulk-item form="{{ $formId }}" class="rounded">
 --}}
 <form
     id="{{ $id }}"
@@ -34,44 +26,33 @@
     @if($confirm) data-confirm="{{ $confirm }}" @endif
 >
     @csrf
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3 sm:gap-4">
+    <div class="admin-bulk-inner">
 
-        {{-- Select all --}}
-        <label class="flex items-center gap-2 cursor-pointer shrink-0 select-none">
-            <input
-                type="checkbox"
-                data-select-all="{{ $id }}"
-                class="w-4 h-4 rounded border-white/30 bg-white/10 text-primary focus:ring-primary/40 focus:ring-1 cursor-pointer"
-            >
-            <span class="text-sm font-medium hidden sm:inline" style="color: rgba(255,255,255,0.75)">همه</span>
+        {{-- select-all --}}
+        <label class="admin-bulk-select">
+            <input type="checkbox" data-select-all="{{ $id }}">
+            <span>انتخاب همه</span>
         </label>
 
-        <div class="w-px h-5 shrink-0" style="background: rgba(255,255,255,0.12)"></div>
+        <span class="admin-bulk-sep"></span>
 
-        {{-- Count --}}
-        <div class="flex items-center gap-1.5 shrink-0">
-            <span class="text-sm font-bold tabular-nums" style="color: rgba(255,255,255,0.95)" data-bulk-num="{{ $id }}">۰</span>
-            <span class="text-sm" style="color: rgba(255,255,255,0.65)">{{ $label }}</span>
+        {{-- count --}}
+        <div class="admin-bulk-count">
+            <span data-bulk-num="{{ $id }}" class="admin-bulk-count-num">۰</span>
+            <span class="admin-bulk-count-label">{{ $label }} انتخاب شده</span>
         </div>
 
-        <div class="flex-1"></div>
-
-        {{-- Actions slot --}}
+        {{-- actions (flex-1 via margin-right: auto in .admin-bulk-actions) --}}
         @if(isset($actions))
-        <div class="flex items-center gap-2">
+        <div class="admin-bulk-actions">
             {{ $actions }}
         </div>
         @endif
 
-        {{-- Clear selection --}}
-        <button
-            type="button"
-            data-bulk-clear="{{ $id }}"
-            class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0"
-            style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.55)"
-            title="لغو انتخاب"
-        >
-            <span class="material-icons !text-sm">close</span>
+        {{-- clear --}}
+        <button type="button" class="admin-bulk-clear" data-bulk-clear="{{ $id }}" title="لغو انتخاب">
+            <span class="material-icons">close</span>
         </button>
+
     </div>
 </form>

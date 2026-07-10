@@ -35,19 +35,19 @@
         label="کاربر"
         confirm="این اقدام روی کاربران انتخاب‌شده اجرا می‌شود. ادامه می‌دهید؟">
         <x-slot:actions>
-            <select name="action" id="bulk-action-select" class="admin-input !w-auto !h-8 !text-xs !min-h-0">
+            <select name="action" id="bulk-action-select" class="admin-input">
                 <option value="">عملیات گروهی...</option>
                 <option value="activate">فعال‌سازی</option>
                 <option value="deactivate">غیرفعال‌سازی</option>
                 <option value="assign_role">تخصیص نقش</option>
                 <option value="delete">حذف</option>
             </select>
-            <select name="role_id" id="bulk-role-select" class="hidden admin-input !w-auto !h-8 !text-xs !min-h-0">
+            <select name="role_id" id="bulk-role-select" class="hidden admin-input">
                 @foreach(\App\Models\Role::all() as $role)
                     <option value="{{ $role->id }}">{{ $role->label }}</option>
                 @endforeach
             </select>
-            <button type="submit" class="admin-btn admin-btn-primary !h-8 !text-xs">
+            <button type="submit" class="admin-btn admin-btn-primary">
                 <span class="material-icons !text-sm">done_all</span>
                 اجرا
             </button>
