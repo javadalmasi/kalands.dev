@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.toggle('border-primary', active);
             btn.classList.toggle('text-primary', active);
             btn.classList.toggle('font-medium', !active);
+            btn.classList.toggle('text-slate-500', !active);
             btn.classList.toggle('text-slate', !active);
         });
 

@@ -65,38 +65,37 @@
     @vite(['resources/css/help-offcanvas.css', 'resources/js/admin-datepicker.js', 'resources/js/admin-file-manager.js', 'resources/js/admin-rich-editor-global.js', 'resources/js/admin-search.js'])
 
     <div id="admin-shell" class="admin-shell">
-        <aside id="admin-sidebar" class="admin-sidebar fixed inset-y-0 right-0 z-40 translate-x-full flex flex-col p-4 transition-transform duration-300">
-            <div class="mb-8 p-3 rounded-xl bg-primary/10 border border-primary/20">
-                <div class="flex items-center gap-3">
-                    <div class="h-10 w-10 rounded-lg bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30">
-                        <span class="material-icons">dashboard_customize</span>
+        <aside id="admin-sidebar" class="admin-sidebar fixed inset-y-0 right-0 z-40 translate-x-full flex flex-col py-4 px-3 transition-transform duration-300">
+            {{-- Brand --}}
+            <div class="mb-6 px-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="h-8 w-8 rounded-lg flex items-center justify-center shrink-0" style="background: var(--adm-accent-bg); border: 1px solid var(--adm-accent-border)">
+                        <span class="material-icons !text-lg" style="color: var(--admin-primary)">dashboard_customize</span>
                     </div>
                     <div>
-                        <p class="text-sm font-bold text-slate leading-none">پنل مدیریت</p>
-                        <p class="text-[10px] text-primary font-bold mt-1">Kalands Admin</p>
+                        <p class="text-sm font-semibold leading-none" style="color: var(--adm-fg)">پنل مدیریت</p>
+                        <p class="text-[10px] mt-0.5 font-mono" style="color: var(--admin-primary)">Kalands</p>
                     </div>
                 </div>
             </div>
 
-            <nav class="space-y-2 text-sm">
+            <nav class="flex-1 space-y-0.5 text-sm">
                 @foreach($navGroups as $index => $group)
                     @if(isset($group['route']))
                         @php($groupActive = request()->routeIs($group['active']) && (!isset($group['params']['moduleKey']) || request()->route('moduleKey') === $group['params']['moduleKey']))
                         @php($routeParams = array_merge(['authkey' => $authkey], $group['params'] ?? []))
                         <a href="{{ route($group['route'], $routeParams) }}" class="admin-nav-link w-full {{ $groupActive ? 'active' : '' }}">
-                            <span class="flex items-center gap-2">
-                                <span class="material-icons admin-nav-icon">{{ $group['icon'] }}</span>
-                                <span class="admin-nav-text">{{ $group['label'] }}</span>
-                            </span>
+                            <span class="material-icons admin-nav-icon">{{ $group['icon'] }}</span>
+                            <span>{{ $group['label'] }}</span>
                         </a>
                     @else
                         @php($groupActive = collect($group['children'])->contains(fn ($child) => request()->routeIs($child['active'])))
                         <button type="button" class="admin-nav-link w-full justify-between {{ $groupActive ? 'active' : '' }}" data-admin-group-toggle="{{ $index }}">
-                            <span class="flex items-center gap-2">
+                            <span class="flex items-center gap-2.5">
                                 <span class="material-icons admin-nav-icon">{{ $group['icon'] }}</span>
-                                <span class="admin-nav-text">{{ $group['label'] }}</span>
+                                <span>{{ $group['label'] }}</span>
                             </span>
-                            <span class="material-icons admin-nav-text !text-base">expand_more</span>
+                            <span class="material-icons !text-[14px] opacity-50">expand_more</span>
                         </button>
                         <div class="admin-subnav {{ $groupActive ? 'open' : '' }}" data-admin-group-panel="{{ $index }}">
                             @foreach($group['children'] as $child)
@@ -110,92 +109,88 @@
                 @endforeach
             </nav>
 
+            {{-- User footer --}}
+            <div class="mt-4 pt-4" style="border-top: 1px solid var(--adm-divider)">
+                <div class="flex items-center gap-2.5 px-2">
+                    <div class="h-7 w-7 rounded-full flex items-center justify-center shrink-0" style="background: var(--adm-accent-bg)">
+                        <span class="material-icons !text-sm" style="color: var(--admin-primary)">person</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs font-semibold truncate" style="color: var(--adm-fg)">{{ $admin?->full_name ?? $admin?->username ?? 'Admin' }}</p>
+                        <p class="text-[10px] truncate" style="color: var(--adm-fg-2)">{{ $admin?->roles->pluck('label')->implode('، ') ?: 'ادمین' }}</p>
+                    </div>
+                </div>
+            </div>
         </aside>
 
         <div class="admin-main min-w-0">
-            <header class="admin-topbar sticky top-0 z-30 flex items-center justify-between gap-4 px-4 py-3 lg:px-6 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
+            <header class="admin-topbar sticky top-0 z-30 flex items-center justify-between gap-4 px-4 py-2.5 lg:px-6">
                 <div class="flex items-center gap-3 min-w-0">
-                    <button type="button" id="admin-sidebar-toggle" class="admin-toggle inline-flex lg:hidden hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="mobile menu">
-                        <span class="material-icons text-slate dark:text-slate-300">menu</span>
+                    <button type="button" id="admin-sidebar-toggle" class="admin-toggle inline-flex lg:hidden" aria-label="mobile menu">
+                        <span class="material-icons !text-lg">menu</span>
                     </button>
-
-                    <div class="hidden lg:block dark:border-slate-700 pl-4">
-                        <h1 class="text-base font-bold text-slate dark:text-slate-100 lg:text-lg">{{ $title }}</h1>
-                    </div>
+                    <h1 class="hidden lg:block text-sm font-semibold" style="color: var(--adm-fg)">{{ $title }}</h1>
                 </div>
 
-                <div class="hidden sm:flex flex-1 justify-center px-2 lg:px-4">
-                    <div class="relative w-full max-w-[520px]">
-                        <div id="admin-header-search-trigger" class="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-primary/50 dark:hover:border-primary/30 transition-colors">
-                            <span class="material-icons text-slate-400 dark:text-slate-500 !text-lg">search</span>
-                            <span class="text-xs text-slate-600 dark:text-slate-400 flex-1">جستجو در سیستم...</span>
-                            <span class="text-[10px] px-2 py-1 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-mono">Ctrl K</span>
+                <div class="hidden sm:flex flex-1 justify-center px-4">
+                    <div class="relative w-full max-w-[460px]">
+                        <div id="admin-header-search-trigger" class="flex items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer transition-colors" style="background: var(--adm-search-bg); border: 1px solid var(--adm-search-border)">
+                            <span class="material-icons !text-base" style="color: var(--adm-fg-2)">search</span>
+                            <span class="text-xs flex-1" style="color: var(--adm-search-hint)">جستجو در سیستم...</span>
+                            <span class="text-[10px] px-1.5 py-0.5 rounded font-mono" style="background: var(--adm-search-key); color: var(--adm-search-key-fg)">Ctrl K</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 shrink-0">
-                    <button type="button" id="admin-notifications-toggle" class="admin-toggle inline-flex relative hover:bg-slate-100 dark:hover:bg-slate-800" title="اعلان‌ها">
-                        <span class="material-icons text-slate dark:text-slate-300">notifications</span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button type="button" id="admin-notifications-toggle" class="admin-toggle inline-flex relative" title="اعلان‌ها">
+                        <span class="material-icons !text-lg">notifications</span>
                         @if(($adminNotificationCount ?? 0) > 0)
-                            <span class="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white outline outline-2 outline-white dark:outline-slate-900">
+                            <span class="absolute top-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
                                 {{ $adminNotificationCount > 99 ? '99+' : $adminNotificationCount }}
                             </span>
                         @endif
                     </button>
 
-                    <button type="button" id="admin-theme-toggle" class="admin-toggle inline-flex hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="toggle theme" title="لایت/دارک">
-                        <span class="material-icons text-slate dark:text-slate-300">brightness_7</span>
+                    <button type="button" id="admin-theme-toggle" class="admin-toggle inline-flex" aria-label="toggle theme" title="لایت/دارک">
+                        <span class="material-icons !text-lg">brightness_7</span>
                     </button>
 
-                    <!-- Help Button (filled by modules) -->
                     @isset($helpModuleKey)
                         <x-admin.help-offcanvas :moduleKey="$helpModuleKey" />
                     @endisset
 
-                    <div class="hidden sm:block border-l border-slate-200 dark:border-slate-700 pl-2"></div>
+                    <div class="w-px h-5 mx-1" style="background: var(--adm-divider)"></div>
 
                     <div class="relative group">
-                        <button type="button" class="flex items-center gap-3 pl-4 hover:opacity-80 transition-opacity">
-                            <div class="text-right">
-                                <p class="text-sm font-bold text-slate">{{ $admin?->full_name ?? $admin?->username ?? 'Admin' }}</p>
-                                <p class="admin-user-meta text-[10px] text-slate/60">{{ $admin?->roles->pluck('label')->implode('، ') }}</p>
+                        <button type="button" class="admin-topbar-user-btn flex items-center gap-2 px-2 py-1 rounded-md transition-colors">
+                            <div class="h-7 w-7 rounded-full flex items-center justify-center shrink-0" style="background: var(--adm-accent-bg); border: 1px solid var(--adm-accent-border)">
+                                <span class="material-icons !text-base" style="color: var(--admin-primary)">person</span>
                             </div>
-                            <div class="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center border border-primary/20">
-                                <span class="material-icons !text-xl">account_circle</span>
+                            <div class="hidden md:block text-right">
+                                <p class="text-xs font-semibold leading-none" style="color: var(--adm-fg)">{{ $admin?->full_name ?? $admin?->username ?? 'Admin' }}</p>
                             </div>
                         </button>
 
-                        <div class="absolute left-0 top-full mt-2 w-72 translate-y-2 opacity-0 invisible group-hover:translate-y-0 group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                            <div class="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl rounded-2xl overflow-hidden text-right" dir="rtl">
-                                <div class="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                                    <div class="flex items-center gap-3">
-                                        <div class="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 border-2 border-white dark:border-slate-800 shadow-sm">
-                                            <span class="material-icons !text-2xl">person</span>
-                                        </div>
-                                        <div class="min-w-0">
-                                            <p class="text-sm font-black text-slate truncate">{{ $admin?->full_name ?? $admin?->username ?? 'ادمین سیستم' }}</p>
-                                            <p class="text-[10px] text-slate-500 mt-0.5 font-bold truncate opacity-80">{{ $admin?->roles->pluck('label')->implode('، ') ?: 'دسترسی محدود' }}</p>
-                                        </div>
-                                    </div>
+                        <div class="absolute left-0 top-full mt-1.5 w-64 translate-y-1 opacity-0 invisible group-hover:translate-y-0 group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
+                            <div class="admin-dropdown rounded-lg overflow-hidden text-right" dir="rtl">
+                                <div class="p-3.5" style="border-bottom: 1px solid var(--adm-border)">
+                                    <p class="text-sm font-semibold" style="color: var(--adm-fg)">{{ $admin?->full_name ?? $admin?->username ?? 'ادمین' }}</p>
+                                    <p class="text-[11px] mt-0.5" style="color: var(--adm-fg-2)">{{ $admin?->roles->pluck('label')->implode('، ') ?: 'دسترسی محدود' }}</p>
                                 </div>
-                                <div class="p-2 space-y-1">
+                                <div class="p-1.5 space-y-0.5">
                                     @if($admin)
-                                    <a href="{{ route('dash.admin.admins', ['authkey' => $authkey]) }}" class="flex items-center gap-3 px-3 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-primary/5 hover:text-primary rounded-xl transition-all group/item">
-                                        <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover/item:bg-primary group-hover/item:text-white transition-colors text-slate-500 dark:text-slate-400">
-                                            <span class="material-icons !text-lg">settings</span>
-                                        </div>
-                                        <span>تنظیمات حساب کاربری</span>
+                                    <a href="{{ route('dash.admin.admins', ['authkey' => $authkey]) }}" class="admin-dropdown-item flex items-center gap-2.5 px-3 py-2 text-xs rounded-md transition-colors">
+                                        <span class="material-icons !text-base" style="color: var(--adm-fg-2)">settings</span>
+                                        <span style="color: var(--adm-fg-2)">تنظیمات حساب</span>
                                     </a>
                                     @endif
-                                    <div class="h-px bg-slate-100 dark:bg-slate-800 mx-2"></div>
+                                    <div class="h-px mx-1.5 my-1" style="background: var(--adm-border)"></div>
                                     <form action="{{ route('auth.logout') }}" method="POST" class="m-0">
                                         @csrf
-                                        <button type="submit" class="w-full flex items-center gap-3 px-3 py-3 text-xs font-bold text-danger hover:bg-danger/5 rounded-xl transition-all group/logout text-right">
-                                            <div class="w-8 h-8 rounded-lg bg-danger/10 flex items-center justify-center group-hover/logout:bg-danger group-hover/logout:text-white transition-colors text-danger">
-                                                <span class="material-icons !text-lg">logout</span>
-                                            </div>
-                                            <span>خروج از پنل مدیریت</span>
+                                        <button type="submit" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs rounded-md transition-colors text-right text-red-400 hover:bg-red-500/10">
+                                            <span class="material-icons !text-base">logout</span>
+                                            <span>خروج از پنل</span>
                                         </button>
                                     </form>
                                 </div>

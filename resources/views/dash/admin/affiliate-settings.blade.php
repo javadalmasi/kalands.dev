@@ -3,43 +3,39 @@
 
     <style>
         .persian-date-input {
-            border-radius: 0.5rem;
-            border-color: #cbd5e1;
-            padding: 0.5rem;
+            background: var(--adm-input-bg);
+            border: 1px solid var(--adm-input-border);
+            border-radius: 6px;
+            color: var(--adm-fg);
+            padding: 0.4rem 0.75rem;
             width: 100%;
             direction: rtl;
             font-family: inherit;
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
+            outline: none;
         }
-        .dark .persian-date-input {
-            background-color: #1e293b;
-            border-color: #334155;
-            color: #f1f5f9;
+        .persian-date-input::placeholder { color: var(--adm-fg-3); }
+        .persian-date-input:focus {
+            border-color: rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08);
         }
-        .dark .persian-date-input::placeholder {
-            color: #94a3b8;
-        }
-        .affiliate-datepicker-popup {
-            animation: fadeIn 0.15s ease;
-        }
+        .affiliate-datepicker-popup { animation: fadeIn 0.15s ease; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-4px); }
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
 
-    <div class="flex items-center justify-between gap-4 mb-6">
-        <h1 class="admin-page-title !mb-0">مدیریت سیستم افیلیت</h1>
-    </div>
+    <x-admin.page-header title="مدیریت سیستم افیلیت" description="مدیریت لینک‌های افیلیت، تنظیمات اتصال و آمار کلیک" />
 
     <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="home-tabs">
-            <button class="px-6 py-4 text-sm font-bold transition-colors border-b-2 border-primary text-primary flex items-center gap-2" data-tab-target="tab-dashboard">
-                <span class="material-icons text-base">dashboard</span>
+        <div class="flex overflow-x-auto whitespace-nowrap admin-tab-bar" id="home-tabs">
+            <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-dashboard">
+                <span class="material-icons !text-[17px]">dashboard</span>
                 <span>داشبورد</span>
             </button>
-            <button class="px-6 py-4 text-sm font-medium transition-colors text-slate hover:text-primary flex items-center gap-2" data-tab-target="tab-settings">
-                <span class="material-icons text-base">settings</span>
+            <button class="admin-tab-btn text-slate-500 font-medium" data-tab-target="tab-settings">
+                <span class="material-icons !text-[17px]">settings</span>
                 <span>تنظیمات</span>
             </button>
         </div>
@@ -48,124 +44,70 @@
     <div id="tab-settings" class="tab-content space-y-6">
         <form action="{{ route('dash.admin.affiliate.settings.save', ['authkey' => $authkey]) }}" method="POST" class="admin-card space-y-4">
             @csrf
-            <div class="flex items-center gap-3 mb-2">
-                <div class="rounded-full bg-primary/10 p-2 text-primary"><span class="material-icons">shopping_cart</span></div>
-                <h2 class="font-bold text-slate">تنظیمات اتصال به افیلیت باسلام</h2>
+            <div class="flex items-center gap-3 pb-3 mb-1" style="border-bottom: 1px solid var(--adm-border)">
+                <div class="rounded-lg p-2" style="background: var(--adm-accent-bg)">
+                    <span class="material-icons !text-[17px]" style="color: var(--admin-primary)">shopping_cart</span>
+                </div>
+                <h2 class="font-semibold text-sm" style="color: var(--adm-fg)">تنظیمات اتصال به افیلیت باسلام</h2>
             </div>
             <div class="grid gap-4 md:grid-cols-2">
-                <div class="space-y-1">
-                    <label class="text-xs font-bold px-1">Merchant ID</label>
-                    <input name="merchant_id" value="{{ $settings['merchant_id'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr" placeholder="48817">
+                <div>
+                    <label class="block text-xs font-medium mb-1.5" style="color: var(--adm-fg-2)">Merchant ID</label>
+                    <input name="merchant_id" value="{{ $settings['merchant_id'] ?? '' }}" class="admin-input admin-ltr" placeholder="48817">
                 </div>
-                <div class="space-y-1">
-                    <label class="text-xs font-bold px-1">Access Token</label>
-                    <input name="access_token" value="{{ $settings['access_token'] ?? '' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr" placeholder="eyJ0eXAiOiJKV1QiLCJhbG...">
+                <div>
+                    <label class="block text-xs font-medium mb-1.5" style="color: var(--adm-fg-2)">Access Token</label>
+                    <input name="access_token" value="{{ $settings['access_token'] ?? '' }}" class="admin-input admin-ltr" placeholder="eyJ0eXAiOiJKV1QiLCJhbG...">
                 </div>
-                <div class="space-y-1 md:col-span-2">
-                    <label class="text-xs font-bold px-1">URL Prefix</label>
-                    <input name="url_prefix" value="{{ $settings['url_prefix'] ?? 'https://a.bslm.ir/api/v1/tracking/click/' }}" class="w-full rounded-lg border border-slate p-2.5 dark:bg-slate-800 dark:text-white dark:border-white/10 admin-ltr" placeholder="https://a.bslm.ir/api/v1/tracking/click/">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-medium mb-1.5" style="color: var(--adm-fg-2)">URL Prefix</label>
+                    <input name="url_prefix" value="{{ $settings['url_prefix'] ?? 'https://a.bslm.ir/api/v1/tracking/click/' }}" class="admin-input admin-ltr" placeholder="https://a.bslm.ir/api/v1/tracking/click/">
                 </div>
             </div>
-            <div class="pt-2">
-                <button class="admin-btn admin-btn-primary"><span class="material-icons">save</span>ذخیره تنظیمات باسلام</button>
+            <div class="pt-1">
+                <button class="admin-btn admin-btn-primary"><span class="material-icons">save</span>ذخیره تنظیمات</button>
             </div>
         </form>
 
-        <div class="grid gap-6 md:grid-cols-2">
-            <div class="admin-card space-y-4">
-                <div class="flex items-center gap-3 border-b border-slate/10 pb-3">
-                    <span class="material-icons text-primary">settings_backup_restore</span>
-                    <h3 class="font-bold text-sm">پشتیبان‌گیری و بازگردانی تنظیمات</h3>
-                </div>
-                <div class="space-y-3">
-                    <div class="p-3 bg-slate/5 rounded-lg">
-                        <p class="text-[10px] text-slate/70 mb-3 leading-5">خروجی گرفتن از تنظیمات اتصال باسلام (Merchant ID، Token، Prefix)</p>
-                        <a href="{{ route('dash.admin.affiliate.export', ['authkey' => $authkey, 'type' => 'basalam']) }}" class="admin-btn admin-btn-secondary w-full justify-center">
-                            <span class="material-icons text-sm">file_download</span>دانلود فایل تنظیمات
-                        </a>
-                    </div>
-                    <form action="{{ route('dash.admin.affiliate.import', ['authkey' => $authkey, 'type' => 'basalam']) }}" method="POST" enctype="multipart/form-data" class="p-3 border border-dashed border-slate/20 rounded-lg space-y-3">
+        <div class="grid gap-4 md:grid-cols-2">
+            <x-admin.action-card title="پشتیبان‌گیری تنظیمات" description="خروجی از تنظیمات اتصال باسلام (Merchant ID، Token، Prefix)" icon="settings_backup_restore" variant="info">
+                <x-slot:body>
+                    <a href="{{ route('dash.admin.affiliate.export', ['authkey' => $authkey, 'type' => 'basalam']) }}" class="admin-btn admin-btn-secondary w-full justify-center">
+                        <span class="material-icons">file_download</span>دانلود تنظیمات
+                    </a>
+                    <form action="{{ route('dash.admin.affiliate.import', ['authkey' => $authkey, 'type' => 'basalam']) }}" method="POST" enctype="multipart/form-data" class="space-y-2 mt-2">
                         @csrf
-                        <label class="text-[10px] font-bold opacity-60">بازگردانی تنظیمات:</label>
-                        <input type="file" name="file" required class="w-full text-xs text-slate opacity-70">
+                        <input type="file" name="file" required class="w-full text-xs" style="color: #6b7280">
                         <button type="submit" class="admin-btn admin-btn-primary w-full justify-center">
-                            <span class="material-icons text-sm">file_upload</span>ایمپورت تنظیمات
+                            <span class="material-icons">file_upload</span>ایمپورت تنظیمات
                         </button>
                     </form>
-                </div>
-            </div>
+                </x-slot:body>
+            </x-admin.action-card>
 
-            <div class="admin-card space-y-4">
-                <div class="flex items-center gap-3 border-b border-slate/10 pb-3">
-                    <span class="material-icons text-primary">cloud_sync</span>
-                    <h3 class="font-bold text-sm">پشتیبان‌گیری و بازگردانی داده‌ها</h3>
-                </div>
-                <div class="space-y-3">
-                    <div class="p-3 bg-slate/5 rounded-lg">
-                        <p class="text-[10px] text-slate/70 mb-3 leading-5">خروجی گرفتن از تمامی لینک‌ها و آمار کلیک روزانه.</p>
-                        <a href="{{ route('dash.admin.affiliate.links.export', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary w-full justify-center">
-                            <span class="material-icons text-sm">file_download</span>دانلود بکاپ داده‌ها (JSON)
-                        </a>
-                    </div>
-                    <form action="{{ route('dash.admin.affiliate.links.import', ['authkey' => $authkey]) }}" method="POST" enctype="multipart/form-data" class="p-3 border border-dashed border-slate/20 rounded-lg space-y-3">
+            <x-admin.action-card title="پشتیبان‌گیری داده‌ها" description="خروجی از تمامی لینک‌ها و آمار کلیک روزانه" icon="cloud_sync" variant="success">
+                <x-slot:body>
+                    <a href="{{ route('dash.admin.affiliate.links.export', ['authkey' => $authkey]) }}" class="admin-btn admin-btn-secondary w-full justify-center">
+                        <span class="material-icons">file_download</span>دانلود بکاپ (JSON)
+                    </a>
+                    <form action="{{ route('dash.admin.affiliate.links.import', ['authkey' => $authkey]) }}" method="POST" enctype="multipart/form-data" class="space-y-2 mt-2">
                         @csrf
-                        <label class="text-[10px] font-bold opacity-60">وارد کردن دسته‌ای داده‌ها:</label>
-                        <input type="file" name="file" required class="w-full text-xs text-slate opacity-70">
+                        <input type="file" name="file" required class="w-full text-xs" style="color: #6b7280">
                         <button type="submit" class="admin-btn admin-btn-primary w-full justify-center">
-                            <span class="material-icons text-sm">file_upload</span>ایمپورت داده‌ها
+                            <span class="material-icons">file_upload</span>ایمپورت داده‌ها
                         </button>
                     </form>
-                </div>
-            </div>
+                </x-slot:body>
+            </x-admin.action-card>
         </div>
     </div>
 
     <div id="tab-dashboard" class="tab-content hidden space-y-6">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="admin-card !p-5 relative overflow-hidden group">
-                <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent"></div>
-                <div class="relative">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-[10px] font-bold opacity-60 uppercase tracking-wider">کل لینک‌ها</span>
-                        <span class="rounded-lg bg-primary/10 p-2 text-primary"><span class="material-icons text-lg">link</span></span>
-                    </div>
-                    <p class="text-2xl font-black text-slate">{{ number_format($links->total()) }}</p>
-                    <p class="text-[10px] opacity-50 mt-1">تعداد کل لینک‌های ثبت شده</p>
-                </div>
-            </div>
-            <div class="admin-card !p-5 relative overflow-hidden group">
-                <div class="absolute inset-0 bg-gradient-to-br from-success/5 to-transparent"></div>
-                <div class="relative">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-[10px] font-bold opacity-60 uppercase tracking-wider">لینک‌های فعال</span>
-                        <span class="rounded-lg bg-success/10 p-2 text-success"><span class="material-icons text-lg">check_circle</span></span>
-                    </div>
-                    <p class="text-2xl font-black text-slate">{{ number_format($links->where('status', 'active')->count()) }}</p>
-                    <p class="text-[10px] opacity-50 mt-1">در حال کار</p>
-                </div>
-            </div>
-            <div class="admin-card !p-5 relative overflow-hidden group">
-                <div class="absolute inset-0 bg-gradient-to-br from-warning/5 to-transparent"></div>
-                <div class="relative">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-[10px] font-bold opacity-60 uppercase tracking-wider">مجموع کلیک‌ها</span>
-                        <span class="rounded-lg bg-warning/10 p-2 text-warning"><span class="material-icons text-lg">touch_app</span></span>
-                    </div>
-                    <p class="text-2xl font-black text-slate">{{ number_format($links->sum(fn($l) => $l->click_count ?? 0)) }}</p>
-                    <p class="text-[10px] opacity-50 mt-1">کلیک از ابتدای ثبت</p>
-                </div>
-            </div>
-            <div class="admin-card !p-5 relative overflow-hidden group">
-                <div class="absolute inset-0 bg-gradient-to-br from-danger/5 to-transparent"></div>
-                <div class="relative">
-                    <div class="flex items-center justify-between mb-3">
-                        <span class="text-[10px] font-bold opacity-60 uppercase tracking-wider">خطاها</span>
-                        <span class="rounded-lg bg-danger/10 p-2 text-danger"><span class="material-icons text-lg">error_outline</span></span>
-                    </div>
-                    <p class="text-2xl font-black text-slate">{{ number_format($links->where('status', 'error')->count()) }}</p>
-                    <p class="text-[10px] opacity-50 mt-1">لینک‌های با مشکل</p>
-                </div>
-            </div>
+            <x-admin.stat-card title="کل لینک‌ها" :value="number_format($links->total())" icon="link" color="primary" />
+            <x-admin.stat-card title="لینک‌های فعال" :value="number_format($links->where('status', 'active')->count())" icon="check_circle" color="success" />
+            <x-admin.stat-card title="مجموع کلیک‌ها" :value="number_format($links->sum(fn($l) => $l->click_count ?? 0))" icon="touch_app" color="warning" />
+            <x-admin.stat-card title="خطاها" :value="number_format($links->where('status', 'error')->count())" icon="error_outline" color="danger" />
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -178,19 +120,19 @@
                     <form action="{{ route('dash.admin.affiliate.settings', ['authkey' => $authkey]) }}" method="GET" class="flex items-center gap-2">
                         <input type="hidden" name="tab" value="tab-dashboard">
                         <div class="shamsi-datepicker-popup">
-                            <input type="text" name="start_date" value="{{ $startDate }}" placeholder="از تاریخ" class="persian-date-input rounded-lg border border-slate p-2 text-xs dark:bg-slate-800 w-[110px]">
+                            <input type="text" name="start_date" value="{{ $startDate }}" placeholder="از تاریخ" class="admin-input admin-ltr !w-[110px] !min-h-[32px] text-xs">
                         </div>
-                        <span class="text-slate/30">—</span>
+                        <span style="color: rgba(255,255,255,0.2)">—</span>
                         <div class="shamsi-datepicker-popup">
-                            <input type="text" name="end_date" value="{{ $endDate }}" placeholder="تا تاریخ" class="persian-date-input rounded-lg border border-slate p-2 text-xs dark:bg-slate-800 w-[110px]">
+                            <input type="text" name="end_date" value="{{ $endDate }}" placeholder="تا تاریخ" class="admin-input admin-ltr !w-[110px] !min-h-[32px] text-xs">
                         </div>
-                        <select name="group_by" class="rounded-lg border border-slate p-2 text-xs dark:bg-slate-800 dark:text-white">
+                        <select name="group_by" class="admin-input !w-auto !min-h-[32px] text-xs">
                             <option value="day" @selected($groupBy === 'day')>روزانه</option>
                             <option value="week" @selected($groupBy === 'week')>هفتگی</option>
                             <option value="month" @selected($groupBy === 'month')>ماهانه</option>
                         </select>
-                        <button type="submit" class="rounded-lg bg-primary/10 p-2 text-primary hover:bg-primary/20 transition-colors">
-                            <span class="material-icons text-sm">filter_alt</span>
+                        <button type="submit" class="admin-toggle inline-flex" style="width:32px;height:32px" title="اعمال فیلتر">
+                            <span class="material-icons !text-base" style="color:#10b981">filter_alt</span>
                         </button>
                     </form>
                 </div>
@@ -287,13 +229,13 @@
         <div class="admin-card">
             <form action="{{ route('dash.admin.affiliate.settings', ['authkey' => $authkey]) }}" method="GET" class="flex flex-wrap items-center gap-3 mb-4">
                 <input type="hidden" name="tab" value="tab-dashboard">
-                <input type="text" name="q" value="{{ $q }}" placeholder="جستجو شناسه یا اسلاگ..." class="rounded border border-slate p-2 dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
-                <select name="store" class="rounded border border-slate p-2 dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                <input type="text" name="q" value="{{ $q }}" placeholder="جستجو شناسه یا اسلاگ..." class="admin-input">
+                <select name="store" class="admin-input">
                     <option value="all" @selected(($store ?? 'all') === 'all')>همه فروشگاه‌ها</option>
                     <option value="basalam" @selected(($store ?? '') === 'basalam')>باسلام</option>
                     <option value="digikala" @selected(($store ?? '') === 'digikala')>دیجی‌کالا</option>
                 </select>
-                <select name="sort" class="rounded border border-slate p-2 dark:bg-slate-800 dark:text-white dark:border-white/10 dark:focus:bg-slate-700">
+                <select name="sort" class="admin-input">
                     <option value="latest" @selected(($sort ?? 'latest') === 'latest')>جدیدترین</option>
                     <option value="clicks" @selected(($sort ?? '') === 'clicks')>بیشترین کلیک</option>
                     <option value="product_asc" @selected(($sort ?? '') === 'product_asc')>شناسه (صعودی)</option>

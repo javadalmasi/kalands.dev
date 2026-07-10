@@ -1,29 +1,29 @@
 <x-layouts.admin-dashboard title="آنالیزور" :helpModuleKey="'analytics'">
-    <div>
-        <h1 class="admin-page-title !mb-1">آنالیزور</h1>
-        <p class="text-sm text-slate/60">گزارش حرفه‌ای بازدیدها، اهداف، دستگاه‌ها، کشورها و رفتار کاربران</p>
-    </div>
+    <x-admin.page-header
+        title="آنالیزور"
+        description="گزارش حرفه‌ای بازدیدها، اهداف، دستگاه‌ها، کشورها و رفتار کاربران"
+    />
 
     <div class="admin-card mb-6 !p-0 overflow-hidden">
-        <div class="flex border-slate dark:border-white/10 overflow-x-auto whitespace-nowrap bg-slate/5" id="analytics-tabs">
-            <button class="px-5 py-3.5 text-sm font-bold transition-colors border-b-2 border-success text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-overview">
-                <span class="material-icons text-lg">dashboard</span>
+        <div class="flex overflow-x-auto whitespace-nowrap admin-tab-bar" id="analytics-tabs">
+            <button class="admin-tab-btn border-b-2 border-primary text-primary font-bold" data-tab-target="tab-overview">
+                <span class="material-icons !text-[17px]">dashboard</span>
                 <span class="hidden sm:inline">داشبورد</span>
             </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-live">
-                <span class="material-icons text-lg">sensors</span>
+            <button class="admin-tab-btn text-slate-500 font-medium" data-tab-target="tab-live">
+                <span class="material-icons !text-[17px]">sensors</span>
                 <span class="hidden sm:inline">زنده</span>
             </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-analytics">
-                <span class="material-icons text-lg">bar_chart</span>
+            <button class="admin-tab-btn text-slate-500 font-medium" data-tab-target="tab-analytics">
+                <span class="material-icons !text-[17px]">bar_chart</span>
                 <span class="hidden sm:inline">آنالیز</span>
             </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-goals">
-                <span class="material-icons text-lg">emoji_events</span>
+            <button class="admin-tab-btn text-slate-500 font-medium" data-tab-target="tab-goals">
+                <span class="material-icons !text-[17px]">emoji_events</span>
                 <span class="hidden sm:inline">اهداف</span>
             </button>
-            <button class="px-5 py-3.5 text-sm font-medium transition-colors text-slate hover:text-success flex items-center gap-1.5 shrink-0" data-tab-target="tab-management">
-                <span class="material-icons text-lg">admin_panel_settings</span>
+            <button class="admin-tab-btn text-slate-500 font-medium" data-tab-target="tab-management">
+                <span class="material-icons !text-[17px]">admin_panel_settings</span>
                 <span class="hidden sm:inline">مدیریت</span>
             </button>
         </div>
@@ -46,28 +46,28 @@
                 <div class="px-4 pb-4" id="analytics-filter-panel">
                     <div class="grid gap-3 md:grid-cols-3 xl:grid-cols-5" id="analytics-filter-primary">
                         <div class="space-y-1" data-filter-field="from">
-                            <label class="text-xs font-bold text-slate">از تاریخ</label>
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">از تاریخ</label>
                             <div data-shamsi-datepicker="from">
-                                <input type="text" name="from" placeholder="۱۴۰۳/۰۱/۰۱" autocomplete="off" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="text" name="from" placeholder="۱۴۰۳/۰۱/۰۱" autocomplete="off" class="admin-input admin-ltr">
                             </div>
                         </div>
                         <div class="space-y-1" data-filter-field="to">
-                            <label class="text-xs font-bold text-slate">تا تاریخ</label>
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">تا تاریخ</label>
                             <div data-shamsi-datepicker="to">
-                                <input type="text" name="to" placeholder="۱۴۰۳/۰۱/۰۱" autocomplete="off" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                                <input type="text" name="to" placeholder="۱۴۰۳/۰۱/۰۱" autocomplete="off" class="admin-input admin-ltr">
                             </div>
                         </div>
                         <div class="space-y-1" data-filter-field="period">
-                            <label class="text-xs font-bold text-slate">بازه تحلیلی</label>
-                            <select name="period" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">بازه تحلیلی</label>
+                            <select name="period" class="admin-input">
                                 <option value="day">روزانه</option>
                                 <option value="week">هفتگی</option>
                                 <option value="month">ماهانه</option>
                             </select>
                         </div>
                         <div class="space-y-1" data-filter-field="country">
-                            <label class="text-xs font-bold text-slate">کشور</label>
-                            <select name="country" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">کشور</label>
+                            <select name="country" class="admin-input">
                                 <option value="">همه</option>
                                 <option value="IR">🇮🇷 ایران</option>
                                 <option value="US">🇺🇸 آمریکا</option>
@@ -97,8 +97,8 @@
                             </select>
                         </div>
                         <div class="space-y-1" data-filter-field="device_type">
-                            <label class="text-xs font-bold text-slate">نوع دستگاه</label>
-                            <select name="device_type" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">نوع دستگاه</label>
+                            <select name="device_type" class="admin-input">
                                 <option value="">همه</option>
                                 <option value="desktop">دسکتاپ</option>
                                 <option value="mobile">موبایل</option>
@@ -106,8 +106,8 @@
                             </select>
                         </div>
                         <div class="space-y-1" data-filter-field="activity">
-                            <label class="text-xs font-bold text-slate">نوع رویداد</label>
-                            <select name="activity" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">نوع رویداد</label>
+                            <select name="activity" class="admin-input">
                                 <option value="">همه</option>
                                 <option value="pageview">بازدید صفحه</option>
                                 <option value="goal">تحقق هدف</option>
@@ -115,32 +115,32 @@
                             </select>
                         </div>
                         <div class="space-y-1" data-filter-field="source">
-                            <label class="text-xs font-bold text-slate">سورس / Referrer</label>
-                            <input type="text" name="source" placeholder="google / direct / instagram" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">سورس / Referrer</label>
+                            <input type="text" name="source" placeholder="google / direct / instagram" class="admin-input admin-ltr">
                         </div>
                         <div class="space-y-1" data-filter-field="campaign">
-                            <label class="text-xs font-bold text-slate">کمپین / UTM</label>
-                            <input type="text" name="campaign" placeholder="spring_sale / cpc" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">کمپین / UTM</label>
+                            <input type="text" name="campaign" placeholder="spring_sale / cpc" class="admin-input admin-ltr">
                         </div>
                         <div class="space-y-1" data-filter-field="path">
-                            <label class="text-xs font-bold text-slate">مسیر / URL</label>
-                            <input type="text" name="path" placeholder="/product /result /seller" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">مسیر / URL</label>
+                            <input type="text" name="path" placeholder="/product /result /seller" class="admin-input admin-ltr">
                         </div>
                         <div class="space-y-1" data-filter-field="goal_key">
-                            <label class="text-xs font-bold text-slate">Goal Key</label>
-                            <input type="text" name="goal_key" placeholder="tr_dk / tr_bs / ..." class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">Goal Key</label>
+                            <input type="text" name="goal_key" placeholder="tr_dk / tr_bs / ..." class="admin-input admin-ltr">
                         </div>
                         <div class="space-y-1" data-filter-field="browser">
-                            <label class="text-xs font-bold text-slate">مرورگر</label>
-                            <input type="text" name="browser" placeholder="Chrome / Safari / Firefox" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">مرورگر</label>
+                            <input type="text" name="browser" placeholder="Chrome / Safari / Firefox" class="admin-input admin-ltr">
                         </div>
                         <div class="space-y-1" data-filter-field="platform">
-                            <label class="text-xs font-bold text-slate">سیستم‌عامل</label>
-                            <input type="text" name="platform" placeholder="Windows / Android / iOS" class="admin-ltr w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">سیستم‌عامل</label>
+                            <input type="text" name="platform" placeholder="Windows / Android / iOS" class="admin-input admin-ltr">
                         </div>
                         <div class="space-y-1" data-filter-field="session_status">
-                            <label class="text-xs font-bold text-slate">وضعیت جلسه</label>
-                            <select name="session_status" class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">وضعیت جلسه</label>
+                            <select name="session_status" class="admin-input">
                                 <option value="">همه</option>
                                 <option value="new">اولین جلسه</option>
                                 <option value="returning">بازگشتی</option>
@@ -149,8 +149,8 @@
                             </select>
                         </div>
                         <div class="space-y-1" data-filter-field="search">
-                            <label class="text-xs font-bold text-slate">جستجوی آزاد</label>
-                            <input type="search" name="search" placeholder="مسیر، عنوان، شهر، مرورگر..." class="w-full rounded border border-slate p-2 text-sm dark:bg-slate-800 dark:text-white dark:border-white/10">
+                            <label class="text-xs font-medium mb-1.5" style="color: #9ca3af">جستجوی آزاد</label>
+                            <input type="search" name="search" placeholder="مسیر، عنوان، شهر، مرورگر..." class="admin-input">
                         </div>
                     </div>
                     <div class="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-slate/10">
