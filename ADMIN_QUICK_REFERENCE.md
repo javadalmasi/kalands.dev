@@ -5,7 +5,7 @@
 ### Check All Modules
 ```php
 $registry = app(\App\Services\ModuleRegistry::class);
-$all = $registry->all();           // Returns all 23 modules
+$all = $registry->all();           // Returns all 24 modules
 $grouped = $registry->grouped();   // Grouped by category
 ```
 

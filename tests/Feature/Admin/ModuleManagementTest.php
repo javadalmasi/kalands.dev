@@ -12,6 +12,7 @@ class ModuleManagementTest extends TestCase
     use RefreshDatabase;
 
     protected $admin;
+
     protected $authKey = 'secret-key';
 
     protected function setUp(): void
@@ -35,13 +36,22 @@ class ModuleManagementTest extends TestCase
         $response->assertViewHas('modules');
     }
 
-    public function test_admin_can_access_specific_module_settings()
+    public function test_admin_can_access_email_settings_module()
     {
         $response = $this->actingAs($this->admin, 'admin')
-            ->get("/dash/admin/{$this->authKey}/modules/communication_hub");
+            ->get("/dash/admin/{$this->authKey}/modules/email_settings");
 
         $response->assertStatus(200);
-        $response->assertViewIs('dash.admin.communication');
+        $response->assertViewIs('dash.admin.email-settings');
+    }
+
+    public function test_admin_can_access_sms_settings_module()
+    {
+        $response = $this->actingAs($this->admin, 'admin')
+            ->get("/dash/admin/{$this->authKey}/modules/sms_settings");
+
+        $response->assertStatus(200);
+        $response->assertViewIs('dash.admin.sms-settings');
     }
 
     public function test_admin_cannot_access_non_existent_module()

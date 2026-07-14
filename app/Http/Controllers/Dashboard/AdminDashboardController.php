@@ -783,13 +783,8 @@ class AdminDashboardController extends Controller
         $modules = collect($moduleRegistry->all())->values()->toArray();
 
         $settings = [
-            'communication_hub' => [
-                'smtp_general' => $settingsRepository->get('smtp.general', []),
-                'smtp_transactional' => $settingsRepository->get('smtp.transactional', []),
-                'sms' => $settingsRepository->get('sms.melipayamak', []),
-                'test_defaults' => $settingsRepository->get('communication.test_defaults', ['email' => '', 'phone' => '']),
-                'split_email' => (bool) ($settingsRepository->get('communication.settings', [])['split_email'] ?? false),
-            ],
+            'email_settings' => $settingsRepository->get('mail.config', []),
+            'sms_settings' => $settingsRepository->get('sms.melipayamak', []),
             'contact' => $settingsRepository->get('contact.page_info', []),
             'affiliate' => $settingsRepository->get('affiliate.basalam', []),
             'file_manager' => $settingsRepository->get('file_manager.storage', [
@@ -837,13 +832,8 @@ class AdminDashboardController extends Controller
         }
 
         $settings = [
-            'communication_hub' => [
-                'smtp_general' => $settingsRepository->get('smtp.general', []),
-                'smtp_transactional' => $settingsRepository->get('smtp.transactional', []),
-                'sms' => $settingsRepository->get('sms.melipayamak', []),
-                'test_defaults' => $settingsRepository->get('communication.test_defaults', ['email' => '', 'phone' => '']),
-                'split_email' => (bool) ($settingsRepository->get('communication.settings', [])['split_email'] ?? false),
-            ],
+            'email_settings' => $settingsRepository->get('mail.config', []),
+            'sms_settings' => $settingsRepository->get('sms.melipayamak', []),
             'contact' => $settingsRepository->get('contact.page_info', []),
             'affiliate' => $settingsRepository->get('affiliate.basalam', []),
             'file_manager' => $settingsRepository->get('file_manager.storage', [
@@ -874,19 +864,26 @@ class AdminDashboardController extends Controller
             ]);
         }
 
-        if ($moduleKey === 'communication_hub') {
-            // Prefer new unified key; fall back to old smtp.general for existing installs.
+        if ($moduleKey === 'email_settings') {
             $mailCfg = $settingsRepository->get('mail.config');
             if (empty($mailCfg) || empty($mailCfg['mailer'])) {
                 $mailCfg = $settingsRepository->get('smtp.general', []);
             }
+            $queueSettings = $settingsRepository->get('queue.settings', []);
 
-            return view('dash.admin.communication', [
-                'settings' => [
-                    'mail_config' => $mailCfg,
-                    'sms' => $settingsRepository->get('sms.melipayamak', []),
-                    'test_defaults' => $settingsRepository->get('communication.test_defaults', ['email' => '', 'phone' => '']),
-                ],
+            return view('dash.admin.email-settings', [
+                'mailCfg' => $mailCfg,
+                'queueConnection' => env('QUEUE_CONNECTION', $queueSettings['driver'] ?? 'sync'),
+                'authkey' => $authkey,
+            ]);
+        }
+
+        if ($moduleKey === 'sms_settings') {
+            $queueSettings = $settingsRepository->get('queue.settings', []);
+
+            return view('dash.admin.sms-settings', [
+                'smsCfg' => $settingsRepository->get('sms.melipayamak', []),
+                'queueConnection' => env('QUEUE_CONNECTION', $queueSettings['driver'] ?? 'sync'),
                 'authkey' => $authkey,
             ]);
         }
@@ -1248,17 +1245,6 @@ class AdminDashboardController extends Controller
         }
 
         return back()->with('message', 'تنظیمات بنرها و دسته‌بندی‌ها ذخیره شد.');
-    }
-
-    public function saveCommunicationDefaults(Request $request, SettingsRepository $settingsRepository): RedirectResponse
-    {
-        $data = $request->validate([
-            'email' => ['nullable', 'email'],
-            'phone' => ['nullable', 'regex:/^09[0-9]{9}$/'],
-        ]);
-        $settingsRepository->set('communication.test_defaults', $data);
-
-        return back()->with('message', 'مقادیر پیش‌فرض تست ذخیره شد.');
     }
 
     public function saveMailConfig(Request $request, SettingsRepository $settingsRepository, ActivityLogger $activityLogger): RedirectResponse

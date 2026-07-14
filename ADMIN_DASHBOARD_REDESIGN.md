@@ -134,7 +134,7 @@ Created 23 JSON files (one per module) with standardized schema:
 ```
 
 **All 23 Modules Have Help**:
-- communication_hub, contact, affiliate
+- email_settings, sms_settings, contact, affiliate
 - file_manager, home_items_management, email_templates
 - queues, comments, tickets, faq
 - analytics, geoip, robots, search
@@ -176,7 +176,7 @@ Created 23 JSON files (one per module) with standardized schema:
 ### Before
 ```
 AdminDashboardController (4,261 lines)
-├── modules() - hardcoded 23 modules (240 lines)
+├── modules() - hardcoded 24 modules (240 lines)
 ├── moduleSettings() - hardcoded module routing
 ├── Help content scattered in blade views
 └── No way to add modules without editing controller
@@ -284,7 +284,7 @@ $help = $registry->helpManifest('analytics');
 
 ## Testing Checklist
 
-✅ Module manifest loads all 23 modules  
+✅ Module manifest loads all 24 modules  
 ✅ Dashboard home displays all stat cards  
 ✅ Service status cards show real-time data  
 ✅ ModuleRegistry returns correct module data  

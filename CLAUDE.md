@@ -20,13 +20,13 @@
 
 ### 1. Module Help System (Unified)
 
-**Status:** ✅ Complete (23 modules)
+**Status:** ✅ Complete (24 modules)
 
 **Key Files:**
 - `resources/views/components/admin/help-offcanvas.blade.php` - Reusable help sidebar
 - `resources/css/help-offcanvas.css` - Light/dark mode styling
 - `resources/js/admin/help-offcanvas.js` - Open/close logic
-- `resources/modules/help/*.md` - Markdown help content (23 files)
+- `resources/modules/help/*.md` - Markdown help content (24 files)
 - `app/Services/ModuleRegistry.php` - Central module registry
 - `app/Services/MarkdownConverter.php` - Markdown → HTML conversion
 
@@ -41,7 +41,7 @@
 
 ### 2. Module Registry System
 
-**Config:** `config/modules.php` (23 module definitions)
+**Config:** `config/modules.php` (24 module definitions)
 
 **Service:** `app/Services/ModuleRegistry.php`
 - `all()` - Get all modules grouped by permission status
@@ -199,7 +199,7 @@ app/
 │   └── MarkdownConverter.php
 
 config/
-└── modules.php (23 module definitions)
+└── modules.php (24 module definitions)
 
 resources/
 ├── css/
@@ -213,8 +213,9 @@ resources/
 ├── modules/
 │   └── help/
 │       ├── analytics.md
-│       ├── communication_hub.md
-│       ├── ... (23 markdown files total)
+│       ├── email_settings.md
+│       ├── sms_settings.md
+│       ├── ... (24 markdown files total)
 │       └── visitor_intelligence.md
 └── views/
     ├── components/
@@ -225,7 +226,8 @@ resources/
     └── dash/
         └── admin/
             ├── *-hub.blade.php (18 files)
-            ├── communication.blade.php
+            ├── email-settings.blade.php
+            ├── sms-settings.blade.php
             ├── email-templates.blade.php
             ├── home-items.blade.php
             ├── affiliate-settings.blade.php
@@ -266,17 +268,17 @@ A: Follow skill: `migrate-module-to-help-system.md` - exact step-by-step
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Module Registry | ✅ Complete | 23 modules configured |
+| Module Registry | ✅ Complete | 24 modules configured |
 | Help Offcanvas | ✅ Complete | Light + dark mode |
-| Markdown Files | ✅ Complete | All 23 help files |
+| Markdown Files | ✅ Complete | All 24 help files |
 | Admin Dashboard | ✅ Complete | Help button in topbar |
-| Blade Layouts | ✅ Complete | All 23 modules migrated |
+| Blade Layouts | ✅ Complete | All 24 modules migrated |
 
 **Next Steps:** Monitor for new modules; use skill for migration.
 
 ---
 
-**Last Updated:** 2026-07-05
+**Last Updated:** 2026-07-14
 **Created By:** Claude Code
 **For Questions:** Refer to documentation files above
 

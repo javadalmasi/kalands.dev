@@ -151,7 +151,7 @@ Route::prefix('dash/admin/{authkey}')
         Route::get('/', [AdminDashboardController::class, 'index'])->name('index')->middleware('permission:dashboard.view');
         Route::get('/modules', [AdminDashboardController::class, 'modules'])->name('modules')->middleware('permission:dashboard.view');
         Route::get('/modules/{moduleKey}', [AdminDashboardController::class, 'moduleSettings'])
-            ->whereIn('moduleKey', ['communication_hub', 'contact', 'affiliate', 'file_manager', 'home_items_management', 'email_templates', 'queues', 'comments', 'tickets', 'faq', 'geoip', 'robots', 'search', 'megamenu', 'error_pages', 'cache_management', 'object_cache', 'artisan_commands', 'visitor_intelligence', 'categories', 'sitemap', 'indexnow'])
+            ->whereIn('moduleKey', ['email_settings', 'sms_settings', 'contact', 'affiliate', 'file_manager', 'home_items_management', 'email_templates', 'queues', 'comments', 'tickets', 'faq', 'geoip', 'robots', 'search', 'megamenu', 'error_pages', 'cache_management', 'object_cache', 'artisan_commands', 'visitor_intelligence', 'categories', 'sitemap', 'indexnow'])
             ->name('modules.show');
         Route::post('/modules/home-slider', [AdminDashboardController::class, 'saveHomeSliderSettings'])->name('modules.home-slider.save')->middleware('permission:home_items.edit');
         Route::post('/modules/home-banners-categories', [AdminDashboardController::class, 'saveHomeBannerCategorySettings'])->name('modules.home-banners-categories.save')->middleware('permission:home_items.edit');
@@ -188,12 +188,13 @@ Route::prefix('dash/admin/{authkey}')
         Route::post('/queues', [AdminDashboardController::class, 'saveQueueSettings'])->name('queues.save')->middleware('permission:queues.full');
         Route::post('/queues/regenerate-token', [AdminDashboardController::class, 'regenerateQueueToken'])->name('queues.token.regenerate')->middleware('permission:queues.full');
 
-        // ── Communication Hub ──────────────────────────────────────────────────────
+        // ── Email Settings ─────────────────────────────────────────────────────────
         Route::post('/mail-config', [AdminDashboardController::class, 'saveMailConfig'])->name('mail.config.save')->middleware('permission:communication.edit');
         Route::post('/mail-config/test', [AdminDashboardController::class, 'sendMailTest'])->name('mail.config.test')->middleware('permission:communication.full');
+
+        // ── SMS Settings ───────────────────────────────────────────────────────────
         Route::post('/sms-config', [AdminDashboardController::class, 'saveSmsConfig'])->name('sms.config.save')->middleware('permission:communication.edit');
         Route::post('/sms-config/test', [AdminDashboardController::class, 'sendSmsTest'])->name('sms.config.test')->middleware('permission:communication.full');
-        Route::post('/communication/defaults', [AdminDashboardController::class, 'saveCommunicationDefaults'])->name('communication.defaults.save')->middleware('permission:communication.edit');
         Route::get('/email-templates', [AdminDashboardController::class, 'emailTemplates'])->name('email.templates')->middleware('permission:email_templates.view');
         Route::post('/email-templates/layout', [AdminDashboardController::class, 'saveEmailTemplateLayout'])->name('email.templates.layout.save')->middleware('permission:email_templates.edit');
         Route::post('/email-templates/{key}', [AdminDashboardController::class, 'saveEmailTemplate'])->name('email.templates.save')->middleware('permission:email_templates.edit');

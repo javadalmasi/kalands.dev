@@ -1,11 +1,19 @@
 <?php
 
 return [
-    'communication_hub' => [
-        'key' => 'communication_hub',
-        'label' => 'ماژول جامع ارتباطی',
-        'description' => 'مدیریت یکپارچه ایمیل (عمومی/تراکنشی) و پیامک (SMS)',
-        'icon' => 'hub',
+    'email_settings' => [
+        'key' => 'email_settings',
+        'label' => 'تنظیمات ایمیل',
+        'description' => 'پیکربندی SMTP، Sendmail و اطلاعات فرستنده برای ارسال ایمیل از طریق صف',
+        'icon' => 'email',
+        'permission' => 'communication.view',
+        'category' => 'communication',
+    ],
+    'sms_settings' => [
+        'key' => 'sms_settings',
+        'label' => 'تنظیمات پیامک',
+        'description' => 'پیکربندی پنل ملی‌پیامک (MeliPayamak) برای ارسال OTP و اعلان‌ها از طریق صف',
+        'icon' => 'sms',
         'permission' => 'communication.view',
         'category' => 'communication',
     ],
@@ -175,14 +183,6 @@ return [
         'description' => 'ارسال خودکار محصولات به بینگ و یاندکس با برنامه‌ریزی ساعتی و کنترل نرخ',
         'icon' => 'publish',
         'permission' => 'indexnow.view',
-        'category' => 'technical',
-    ],
-    'product_checker' => [
-        'key' => 'product_checker',
-        'label' => 'بررسی محصولات',
-        'description' => 'بررسی وضعیت وب‌سرویس محصولات دیجی‌کالا و به‌روز‌رسانی خودکار',
-        'icon' => 'check_circle',
-        'permission' => 'products.check',
         'category' => 'technical',
     ],
 ];

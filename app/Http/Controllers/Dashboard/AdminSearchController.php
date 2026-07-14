@@ -179,7 +179,8 @@ class AdminSearchController extends Controller
     private function getModulesList(): array
     {
         return [
-            ['key' => 'communication_hub', 'label' => 'ماژول جامع ارتباطی', 'description' => 'مدیریت یکپارچه ایمیل و پیامک', 'icon' => 'settings_input_component'],
+            ['key' => 'email_settings', 'label' => 'تنظیمات ایمیل', 'description' => 'پیکربندی SMTP، Sendmail و اطلاعات فرستنده', 'icon' => 'email'],
+            ['key' => 'sms_settings', 'label' => 'تنظیمات پیامک', 'description' => 'پیکربندی پنل ملی‌پیامک برای ارسال OTP و اعلان‌ها', 'icon' => 'sms'],
             ['key' => 'contact', 'label' => 'ماژول تماس با ما', 'description' => 'مدیریت پیام‌های دریافتی و تنظیمات اطلاعات تماس', 'icon' => 'contact_support'],
             ['key' => 'affiliate', 'label' => 'سیستم افیلیت', 'description' => 'تنظیمات لینک‌سازی و رهگیری افیلیت', 'icon' => 'link'],
             ['key' => 'file_manager', 'label' => 'مدیریت فایل‌ها', 'description' => 'مدیریت فایل‌ها در صفحه اختصاصی فایل منیجر', 'icon' => 'folder'],
