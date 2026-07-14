@@ -577,10 +577,7 @@
     background: #f3f4f6;
     color: #111827;
 }
-/* Override theme.css global .text-slate (which is slate-700) */
-.admin-shell.admin-light .text-slate {
-    color: #374151 !important;
-}
+
 /* General text in light mode */
 .admin-shell.admin-light p,
 .admin-shell.admin-light span,
