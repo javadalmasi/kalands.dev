@@ -146,12 +146,3 @@
 </div>
 
 @vite(['resources/js/error-pages.js'])
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.trackErrorToAnalytics) {
-            window.trackErrorToAnalytics("{{ $code ?? 'unknown' }}", window.location.href);
-        }
-    });
-</script>
-@endpush

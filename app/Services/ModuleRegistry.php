@@ -23,7 +23,7 @@ class ModuleRegistry
 
         foreach ($modules as $module) {
             $category = $module['category'] ?? 'other';
-            if (!isset($grouped[$category])) {
+            if (! isset($grouped[$category])) {
                 $grouped[$category] = [];
             }
             $grouped[$category][] = $module;
@@ -55,26 +55,26 @@ class ModuleRegistry
 
     private function convertJsonToMarkdown(array $data, string $moduleKey): string
     {
-        $markdown = "# " . ($data['help']['title'] ?? 'راهنمای ماژول') . "\n\n";
+        $markdown = '# '.($data['help']['title'] ?? 'راهنمای ماژول')."\n\n";
 
         foreach ($data['help']['sections'] ?? [] as $section) {
             if (isset($section['heading'])) {
-                $markdown .= "## " . $section['heading'] . "\n\n";
+                $markdown .= '## '.$section['heading']."\n\n";
             }
 
             if ($section['type'] === 'text') {
-                $markdown .= $section['content'] . "\n\n";
+                $markdown .= $section['content']."\n\n";
             } elseif ($section['type'] === 'code') {
-                $markdown .= "```\n" . $section['content'] . "\n```\n\n";
+                $markdown .= "```\n".$section['content']."\n```\n\n";
             } elseif ($section['type'] === 'tip') {
-                $markdown .= "> **💡 نکته:** " . $section['content'] . "\n\n";
+                $markdown .= '> **💡 نکته:** '.$section['content']."\n\n";
             } elseif ($section['type'] === 'warning') {
-                $markdown .= "> **⚠️ هشدار:** " . $section['content'] . "\n\n";
+                $markdown .= '> **⚠️ هشدار:** '.$section['content']."\n\n";
             } elseif ($section['type'] === 'table' && isset($section['data'])) {
-                $markdown .= "| " . implode(" | ", $section['data']['headers']) . " |\n";
-                $markdown .= "|" . str_repeat(" --- |", count($section['data']['headers'])) . "\n";
+                $markdown .= '| '.implode(' | ', $section['data']['headers'])." |\n";
+                $markdown .= '|'.str_repeat(' --- |', count($section['data']['headers']))."\n";
                 foreach ($section['data']['rows'] as $row) {
-                    $markdown .= "| " . implode(" | ", $row) . " |\n";
+                    $markdown .= '| '.implode(' | ', $row)." |\n";
                 }
                 $markdown .= "\n";
             }
@@ -90,7 +90,6 @@ class ModuleRegistry
             'content' => 'مدیریت محتوا',
             'data' => 'داده‌ها و فایل‌ها',
             'technical' => 'فنی و بهینه‌سازی',
-            'analytics' => 'تحلیل و آمار',
         ];
     }
 
@@ -101,7 +100,6 @@ class ModuleRegistry
             'content' => 'inventory_2',
             'data' => 'folder_open',
             'technical' => 'settings',
-            'analytics' => 'analytics',
         ];
     }
 }

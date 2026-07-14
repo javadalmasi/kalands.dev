@@ -11,14 +11,6 @@
             'active' => 'dash.admin.index',
         ],
         [
-            'label' => 'آنالیزور',
-            'icon' => 'analytics',
-            'route' => 'dash.admin.modules.show',
-            'params' => ['moduleKey' => 'analytics'],
-            'active' => 'dash.admin.modules.show',
-            'permission' => 'analytics.view',
-        ],
-        [
             'label' => 'کاربران',
             'icon' => 'group',
             'children' => [

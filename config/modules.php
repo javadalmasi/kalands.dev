@@ -81,14 +81,6 @@ return [
         'permission' => 'faq.view',
         'category' => 'content',
     ],
-    'analytics' => [
-        'key' => 'analytics',
-        'label' => 'آنالیزور',
-        'description' => 'آمار بازدید، کاربران زنده، اهداف، محتوا و محصولات پربازدید',
-        'icon' => 'analytics',
-        'permission' => 'analytics.view',
-        'category' => 'analytics',
-    ],
     'geoip' => [
         'key' => 'geoip',
         'label' => 'بروزرسانی GeoIP',

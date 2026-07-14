@@ -9,7 +9,6 @@ use App\Repositories\SettingsRepository;
 use App\Services\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 
 class AdminSearchController extends Controller
 {
@@ -34,9 +33,9 @@ class AdminSearchController extends Controller
         // 1. Modules
         if (($filter === 'all' || $filter === 'modules') && ($settings['modules'] ?? true)) {
             $modules = $this->getModulesList();
-            $matchedModules = collect($modules)->filter(function($m) use ($q) {
+            $matchedModules = collect($modules)->filter(function ($m) use ($q) {
                 return mb_stripos($m['label'], $q) !== false || mb_stripos($m['description'], $q) !== false;
-            })->map(function($m) {
+            })->map(function ($m) {
                 return [
                     'type' => 'module',
                     'title' => $m['label'],
@@ -46,10 +45,10 @@ class AdminSearchController extends Controller
                 ];
             })->values()->toArray();
 
-            if (!empty($matchedModules)) {
+            if (! empty($matchedModules)) {
                 $results['modules'] = [
                     'label' => 'ماژول‌ها',
-                    'items' => $matchedModules
+                    'items' => $matchedModules,
                 ];
             }
         }
@@ -57,7 +56,7 @@ class AdminSearchController extends Controller
         // 2. Users
         if (($filter === 'all' || $filter === 'users') && ($settings['users'] ?? true)) {
             $users = User::query()
-                ->where(function($query) use ($q) {
+                ->where(function ($query) use ($q) {
                     $query->where('first_name', 'like', "%{$q}%")
                         ->orWhere('last_name', 'like', "%{$q}%")
                         ->orWhere('email', 'like', "%{$q}%")
@@ -65,7 +64,7 @@ class AdminSearchController extends Controller
                 })
                 ->limit(10)
                 ->get()
-                ->map(function($u) {
+                ->map(function ($u) {
                     return [
                         'type' => 'user',
                         'title' => $u->name,
@@ -75,10 +74,10 @@ class AdminSearchController extends Controller
                     ];
                 })->toArray();
 
-            if (!empty($users)) {
+            if (! empty($users)) {
                 $results['users'] = [
                     'label' => 'کاربران',
-                    'items' => $users
+                    'items' => $users,
                 ];
             }
         }
@@ -90,20 +89,20 @@ class AdminSearchController extends Controller
                 ->orWhere('id', 'like', "%{$q}%")
                 ->limit(10)
                 ->get()
-                ->map(function($p) {
+                ->map(function ($p) {
                     return [
                         'type' => 'product',
                         'title' => $p->title,
-                        'description' => "شناسه: {$p->id} | فروشگاه: " . ($p->store === 'digikala' ? 'دیجی‌کالا' : 'باسلام'),
+                        'description' => "شناسه: {$p->id} | فروشگاه: ".($p->store === 'digikala' ? 'دیجی‌کالا' : 'باسلام'),
                         'icon' => 'inventory_2',
                         'url' => route('dash.admin.products', ['authkey' => request()->route('authkey'), 'q' => $p->id]),
                     ];
                 })->toArray();
 
-            if (!empty($products)) {
+            if (! empty($products)) {
                 $results['products'] = [
                     'label' => 'محصولات',
-                    'items' => $products
+                    'items' => $products,
                 ];
             }
         }
@@ -120,9 +119,9 @@ class AdminSearchController extends Controller
                 ['label' => 'تنظیمات صف', 'description' => 'مدیریت تسک‌های پس‌زمینه', 'icon' => 'queue', 'route' => 'dash.admin.queues'],
             ];
 
-            $matchedSections = collect($sections)->filter(function($s) use ($q) {
+            $matchedSections = collect($sections)->filter(function ($s) use ($q) {
                 return mb_stripos($s['label'], $q) !== false || mb_stripos($s['description'], $q) !== false;
-            })->map(function($s) {
+            })->map(function ($s) {
                 return [
                     'type' => 'section',
                     'title' => $s['label'],
@@ -132,10 +131,10 @@ class AdminSearchController extends Controller
                 ];
             })->values()->toArray();
 
-            if (!empty($matchedSections)) {
+            if (! empty($matchedSections)) {
                 $results['sections'] = [
                     'label' => 'بخش‌های سایت',
-                    'items' => $matchedSections
+                    'items' => $matchedSections,
                 ];
             }
         }
@@ -190,7 +189,6 @@ class AdminSearchController extends Controller
             ['key' => 'comments', 'label' => 'ماژول نظرات', 'description' => 'مدیریت نظرات، گزارش‌گیری و تنظیمات ارسال نظر', 'icon' => 'forum'],
             ['key' => 'tickets', 'label' => 'ماژول تیکت', 'description' => 'مدیریت تیکت‌ها، دسته‌بندی‌ها و تنظیمات ارسال تیکت', 'icon' => 'confirmation_number'],
             ['key' => 'faq', 'label' => 'ماژول سوالات متداول', 'description' => 'مدیریت سوالات متداول سایت و نمایش در صفحه FAQ', 'icon' => 'quiz'],
-            ['key' => 'analytics', 'label' => 'آنالیزور', 'description' => 'آمار بازدید، کاربران زنده، اهداف و محصولات پربازدید', 'icon' => 'analytics'],
             ['key' => 'geoip', 'label' => 'بروزرسانی GeoIP', 'description' => 'مدیریت دیتابیس‌های مکان‌دهی IP و گزارش بروزرسانی‌ها', 'icon' => 'public'],
             ['key' => 'robots', 'label' => 'فایل Robots.txt', 'description' => 'ویرایش و تست فایل robots.txt برای مدیریت دسترسی ربات‌ها', 'icon' => 'settings'],
             ['key' => 'object_cache', 'label' => 'مدیریت Object Cache', 'description' => 'تنظیمات درایور، پیشوند، تست اتصال، پاکسازی و مرور آیتم‌های کش لاراول', 'icon' => 'memory'],

@@ -9,8 +9,6 @@ use App\Models\Admin;
 use App\Models\AffiliateDailyStat;
 use App\Models\AffiliateLink;
 use App\Models\AiUsageLog;
-use App\Models\AnalyticsEvent;
-use App\Models\AnalyticsLiveVisitor;
 use App\Models\ArtisanExecutionLog;
 use App\Models\Category;
 use App\Models\CategoryMapping;
@@ -36,7 +34,6 @@ use App\Services\CategoryVectorService;
 use App\Services\Communication\ChannelSettingsResolver;
 use App\Services\EmailTemplateService;
 use App\Services\GeoIPService;
-use App\Services\InternalAnalyticsService;
 use App\Services\ModuleRegistry;
 use App\Services\Sitemap\SitemapGenerationService;
 use App\Services\Slider\HomeCategoryBannerStorage;
@@ -195,7 +192,6 @@ class AdminDashboardController extends Controller
             'cache' => $this->getCacheStatus($settingsRepository),
             'geoip' => $this->getGeoIPStatus($settingsRepository),
             'object_cache' => $this->getObjectCacheStatus(),
-            'analytics' => $this->getAnalyticsStatus(),
             'sitemap' => $this->getSitemapStatus(),
         ];
 
@@ -276,22 +272,6 @@ class AdminDashboardController extends Controller
             'metric' => $driver,
             'metricLabel' => 'Driver',
             'details' => $connected ? '✓ Connected' : '✗ Disconnected',
-        ];
-    }
-
-    private function getAnalyticsStatus(): array
-    {
-        $lastEvent = AnalyticsEvent::latest()->first();
-        $todayCount = AnalyticsEvent::whereDate('created_at', today())->count();
-        $liveCount = AnalyticsLiveVisitor::count();
-
-        return [
-            'name' => 'Analytics',
-            'icon' => 'analytics',
-            'status' => 'ok',
-            'metric' => (string) $liveCount,
-            'metricLabel' => 'Live Visitors',
-            'details' => "Today: $todayCount events | ".($lastEvent ? 'Last: '.$lastEvent->created_at->diffForHumans() : 'No data'),
         ];
     }
 
@@ -941,10 +921,6 @@ class AdminDashboardController extends Controller
 
         if ($moduleKey === 'faq') {
             return $this->faqHub($request);
-        }
-
-        if ($moduleKey === 'analytics') {
-            return $this->analyticsHub(app(InternalAnalyticsService::class));
         }
 
         if ($moduleKey === 'geoip') {
@@ -2512,14 +2488,6 @@ class AdminDashboardController extends Controller
         ]);
 
         return back()->with('message', 'مپینگ شناسه محصول حذف شد.');
-    }
-
-    public function analyticsHub(InternalAnalyticsService $analytics)
-    {
-        $settings = $analytics->settings();
-        $authkey = request()->route('authkey');
-
-        return view('dash.admin.analytics-hub', compact('settings', 'authkey'));
     }
 
     public function geoipHub(Request $request, SettingsRepository $settingsRepository)

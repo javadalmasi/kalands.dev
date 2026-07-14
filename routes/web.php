@@ -17,7 +17,6 @@ use App\Http\Controllers\Dashboard\IndexNowController;
 use App\Http\Controllers\Dashboard\UserTicketController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\InternalAnalyticsController;
 use App\Http\Controllers\LikeController;
 use App\Http\Controllers\LivewireAssetController;
 use App\Http\Controllers\ProductController;
@@ -33,7 +32,6 @@ Route::get('/api/info', [VisitorInfoController::class, 'index'])->name('visitor.
 Route::get('/api/assets/js', [LivewireAssetController::class, 'serveJs'])->name('livewire.asset');
 Route::get('/api/services/autocomplete/', [AutocompleteController::class, 'search'])->name('autocomplete.search');
 Route::get('/api/queue/process', [QueueProcessController::class, 'process'])->name('api.queue.process');
-Route::match(['get', 'post'], '/api/analytics/collect', [InternalAnalyticsController::class, 'collect'])->name('analytics.collect');
 Route::get('/go/{slug}', [AffiliateRedirectController::class, 'redirect'])->name('affiliate.go');
 Route::get('/api/bslm/{productId}', [AffiliateRedirectController::class, 'fetchAndRedirect'])->name('affiliate.redirect');
 
@@ -153,7 +151,7 @@ Route::prefix('dash/admin/{authkey}')
         Route::get('/', [AdminDashboardController::class, 'index'])->name('index')->middleware('permission:dashboard.view');
         Route::get('/modules', [AdminDashboardController::class, 'modules'])->name('modules')->middleware('permission:dashboard.view');
         Route::get('/modules/{moduleKey}', [AdminDashboardController::class, 'moduleSettings'])
-            ->whereIn('moduleKey', ['communication_hub', 'contact', 'affiliate', 'file_manager', 'home_items_management', 'email_templates', 'queues', 'comments', 'tickets', 'faq', 'analytics', 'geoip', 'robots', 'search', 'megamenu', 'error_pages', 'cache_management', 'object_cache', 'artisan_commands', 'visitor_intelligence', 'categories', 'sitemap', 'indexnow'])
+            ->whereIn('moduleKey', ['communication_hub', 'contact', 'affiliate', 'file_manager', 'home_items_management', 'email_templates', 'queues', 'comments', 'tickets', 'faq', 'geoip', 'robots', 'search', 'megamenu', 'error_pages', 'cache_management', 'object_cache', 'artisan_commands', 'visitor_intelligence', 'categories', 'sitemap', 'indexnow'])
             ->name('modules.show');
         Route::post('/modules/home-slider', [AdminDashboardController::class, 'saveHomeSliderSettings'])->name('modules.home-slider.save')->middleware('permission:home_items.edit');
         Route::post('/modules/home-banners-categories', [AdminDashboardController::class, 'saveHomeBannerCategorySettings'])->name('modules.home-banners-categories.save')->middleware('permission:home_items.edit');
@@ -242,18 +240,6 @@ Route::prefix('dash/admin/{authkey}')
         Route::post('/affiliate/links/{link}/toggle', [AdminDashboardController::class, 'toggleAffiliateLinkStatus'])->name('affiliate.links.toggle')->middleware('permission:affiliate.edit');
         Route::get('/affiliate/links-export', [AdminDashboardController::class, 'exportAffiliateLinks'])->name('affiliate.links.export')->middleware('permission:affiliate.full');
         Route::post('/affiliate/links-import', [AdminDashboardController::class, 'importAffiliateLinks'])->name('affiliate.links.import')->middleware('permission:affiliate.full');
-
-        Route::get('/analytics/dashboard', [InternalAnalyticsController::class, 'dashboard'])->name('analytics_dashboard')->middleware('permission:analytics.view');
-        Route::get('/analytics/report', [InternalAnalyticsController::class, 'report'])->name('analytics_report')->middleware('permission:analytics.view');
-        Route::get('/analytics/user-details/{userId}', [InternalAnalyticsController::class, 'userActivity'])->name('analytics_user_details')->middleware('permission:analytics.view');
-        Route::get('/analytics/user-journey', [InternalAnalyticsController::class, 'userJourney'])->name('analytics_user_journey')->middleware('permission:analytics.view');
-        Route::post('/analytics/alerts/save', [InternalAnalyticsController::class, 'saveAlert'])->name('analytics_alerts_save')->middleware('permission:analytics.full');
-        Route::post('/analytics/alerts/delete/{id}', [InternalAnalyticsController::class, 'deleteAlert'])->name('analytics_alerts_delete')->middleware('permission:analytics.full');
-        Route::get('/analytics/csv-export', [InternalAnalyticsController::class, 'csvExport'])->name('analytics_csv_export')->middleware('permission:analytics.view');
-        Route::get('/analytics/export', [InternalAnalyticsController::class, 'export'])->name('analytics_export')->middleware('permission:analytics.full');
-        Route::post('/analytics/import', [InternalAnalyticsController::class, 'import'])->name('analytics_import')->middleware('permission:analytics.full');
-        Route::post('/analytics/prune', [InternalAnalyticsController::class, 'prune'])->name('analytics_prune')->middleware('permission:analytics.full');
-        Route::post('/analytics/settings', [InternalAnalyticsController::class, 'saveSettings'])->name('analytics_settings_save')->middleware('permission:analytics.full');
 
         Route::post('/modules/geoip/update', [AdminDashboardController::class, 'updateGeoIp'])->name('geoip.update')->middleware('permission:geoip.full');
 

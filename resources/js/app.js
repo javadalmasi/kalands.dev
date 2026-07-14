@@ -75,18 +75,5 @@ document.addEventListener('keydown', (event) => {
 // Register Swiper modules
 Swiper.use([Navigation, Pagination, Autoplay, Thumbs, EffectFade, EffectCube, EffectCoverflow, EffectFlip, EffectCards, Keyboard, Mousewheel]);
 
-document.addEventListener('click', function(e) {
-    const target = e.target.closest('[data-analytics-goal]');
-    if (!target) return;
-
-    const goalAlias = target.getAttribute('data-analytics-goal');
-    if (!goalAlias || !window.internalAnalytics) return;
-
-    window.internalAnalytics.trackGoal(goalAlias, {
-        product_id: target.getAttribute('data-product-id') || null,
-        search_term: target.getAttribute('data-search-term') || null
-    });
-});
-
 import './mount'
 import './theme'

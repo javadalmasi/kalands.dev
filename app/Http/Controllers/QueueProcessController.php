@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\AggregateAnalyticsEventsJob;
 use App\Models\QueueExecutionLog;
 use App\Repositories\SettingsRepository;
 use App\Services\GeoIPService;
@@ -46,9 +45,6 @@ class QueueProcessController extends Controller
         ];
 
         try {
-            // 1. Dispatch periodic analytics aggregation before draining the queue.
-            AggregateAnalyticsEventsJob::dispatch();
-
             $refreshedCounts = $sitemapGenerationService->refreshCountsIfDue(10);
             if ($refreshedCounts) {
                 $meta['tasks'][] = 'بروزرسانی شمار محصولات سایت‌مپ (هر ۱۰ دقیقه) انجام شد.';
@@ -63,7 +59,7 @@ class QueueProcessController extends Controller
                 $meta['tasks'][] = 'شروع خودکار IndexNow برای ساعت جاری در صف قرار گرفت.';
             }
 
-            // 2. Process Queue Jobs
+            // 1. Process Queue Jobs
             $initialJobsCount = DB::table('jobs')->count();
             $sitemapQueue = (string) config('queue.sitemap_queue', 'default');
             $queueOrder = implode(',', array_values(array_unique([$sitemapQueue, 'default'])));
