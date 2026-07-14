@@ -2,731 +2,546 @@
 
 namespace App\Services\Sitemap;
 
-use App\Jobs\Sitemap\ProcessSitemapChunkJob;
+use App\Jobs\Sitemap\SitemapBuildJob;
 use App\Models\Product;
-use App\Models\SitemapGroup;
 use App\Models\SitemapRunLog;
+use App\Models\SitemapShard;
 use App\Repositories\SettingsRepository;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 
+/**
+ * Dynamic, Yoast-style sitemap generator.
+ *
+ * No files are written to disk. A build only computes lightweight shard
+ * metadata (keyset boundaries) into the `sitemap_shards` table; the XML for the
+ * index and each product sub-sitemap is rendered on demand from those
+ * boundaries and cached. Every shard read is an indexed
+ * `id BETWEEN first AND last` range scan — never a slow OFFSET — so it scales to
+ * millions of products.
+ *
+ * Rebuilds are generation-based: a new generation is planned alongside the live
+ * one, then the active-generation pointer flips atomically with zero downtime,
+ * and old generations are pruned.
+ */
 class SitemapGenerationService
 {
-    private const string MODE_AUTO = 'auto';
+    private const RUNNING_KEY = 'sitemap:running';
 
-    private const string MODE_OFF = 'off';
-    
-    private const int URLS_PER_GROUP = 50000;
+    private const STOP_KEY = 'sitemap:stop';
+
+    private const GENERATION_KEY = 'sitemap.active_generation';
+
+    private const COUNTS_KEY = 'sitemap.cached_counts';
+
+    private const CACHE_TAG = 'sitemap.xml';
 
     public function __construct(
-        private SettingsRepository $settings,
+        private readonly SettingsRepository $settings,
     ) {}
-    
-    public function getPeriodicRebuildEnabled(): bool
+
+    /*
+    |--------------------------------------------------------------------------
+    | Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    public function urlsPerShard(): int
     {
-        return (bool) $this->settings->get('sitemap.periodic_rebuild_enabled', false);
+        return max(1, (int) config('sitemap.urls_per_shard', 10_000));
     }
-    
-    public function setPeriodicRebuildEnabled(bool $enabled): void
+
+    /**
+     * How many products a single build pass scans before re-dispatching. Keeps
+     * each pass comfortably under the queue timeout on huge catalogs.
+     */
+    public function productsPerPass(): int
     {
-        $this->settings->set('sitemap.periodic_rebuild_enabled', $enabled);
+        return max($this->urlsPerShard(), (int) config('sitemap.products_per_pass', 100_000));
     }
-    
-    public function getPeriodicRebuildDays(): int
+
+    public function cacheTtl(): int
     {
-        return max(30, min(90, (int) $this->settings->get('sitemap.periodic_rebuild_days', 75)));
+        return max(60, (int) config('sitemap.cache_ttl', 21_600));
     }
-    
-    public function setPeriodicRebuildDays(int $days): void
+
+    public function queue(): string
     {
-        $this->settings->set('sitemap.periodic_rebuild_days', max(30, min(90, $days)));
+        return (string) config('sitemap.queue', 'default');
     }
-    
-    public function getLastFullRebuildAt(): ?Carbon
+
+    /**
+     * The module's dedicated cache store. Defaults to `file` so a Redis
+     * FLUSHALL never wipes the rendered sitemap.
+     */
+    private function cache(): Repository
     {
-        $timestamp = $this->settings->get('sitemap.last_full_rebuild_at');
-        return $timestamp ? Carbon::parse($timestamp) : null;
+        return Cache::store(config('sitemap.cache_store', 'file'));
     }
-    
-    public function setLastFullRebuildAt(?Carbon $date): void
-    {
-        $this->settings->set('sitemap.last_full_rebuild_at', $date?->toIso8601String());
-    }
-    
-    public function shouldDoFullRebuild(): bool
-    {
-        if (!$this->getPeriodicRebuildEnabled()) {
-            return false;
-        }
-        
-        $lastRebuild = $this->getLastFullRebuildAt();
-        if (!$lastRebuild) {
-            return true;
-        }
-        
-        $daysSinceRebuild = $lastRebuild->diffInDays(now());
-        return $daysSinceRebuild >= $this->getPeriodicRebuildDays();
-    }
-    
-    public function getCurrentVersion(): string
-    {
-        return $this->settings->get('sitemap.current_version', 'v1');
-    }
-    
-    public function setCurrentVersion(string $version): void
-    {
-        $this->settings->set('sitemap.current_version', $version);
-    }
-    
-    public function generateNewVersion(): string
-    {
-        return 'v' . now()->format('YmdHis');
-    }
-    
-    public function getIncompleteGroup(?string $version = null): ?SitemapGroup
-    {
-        $version ??= $this->getCurrentVersion();
-        
-        return SitemapGroup::query()
-            ->where('version', $version)
-            ->where('is_active', true)
-            ->where('is_complete', false)
-            ->orderBy('group_index', 'desc')
-            ->first();
-    }
-    
-    public function getNextGroupIndex(?string $version = null): int
-    {
-        $version ??= $this->getCurrentVersion();
-        
-        $maxIndex = SitemapGroup::query()
-            ->where('version', $version)
-            ->max('group_index');
-            
-        return $maxIndex !== null ? $maxIndex + 1 : 0;
-    }
-    
-    public function createNewGroup(string $version, int $groupIndex): SitemapGroup
-    {
-        $filename = "sitemap-{$version}-g{$groupIndex}.xml.gz";
-        
-        return SitemapGroup::create([
-            'version' => $version,
-            'group_index' => $groupIndex,
-            'filename' => $filename,
-            'url_count' => 0,
-            'is_complete' => false,
-            'is_active' => true,
-            'created_at' => now(),
-        ]);
-    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Mode (auto / off)
+    |--------------------------------------------------------------------------
+    */
 
     public function getMode(): string
     {
-        $mode = (string) $this->settings->get('sitemap.mode', '');
-        if (in_array($mode, [self::MODE_AUTO, self::MODE_OFF], true)) {
-            return $mode;
-        }
-
-        $executionEnabled = (bool) $this->settings->get('sitemap.execution_enabled', true);
-
-        if (! $executionEnabled) {
-            return self::MODE_OFF;
-        }
-
-        return self::MODE_AUTO;
+        return $this->settings->get('sitemap.mode', 'auto') === 'off' ? 'off' : 'auto';
     }
 
     public function setMode(string $mode): void
     {
-        if (! in_array($mode, [self::MODE_AUTO, self::MODE_OFF], true)) {
-            $mode = self::MODE_AUTO;
-        }
-
-        $this->settings->set('sitemap.mode', $mode);
-        $this->settings->set('sitemap.execution_enabled', $mode !== self::MODE_OFF);
-        $this->settings->set('sitemap.auto_enabled', $mode === self::MODE_AUTO);
+        $this->settings->set('sitemap.mode', $mode === 'off' ? 'off' : 'auto');
     }
 
     public function isAutoEnabled(): bool
     {
-        return $this->getMode() === self::MODE_AUTO;
+        return $this->getMode() === 'auto';
     }
 
-    public function isExecutionEnabled(): bool
+    /*
+    |--------------------------------------------------------------------------
+    | Rebuild scheduling
+    |--------------------------------------------------------------------------
+    */
+
+    public function rebuildIntervalHours(): int
     {
-        return $this->getMode() !== self::MODE_OFF;
+        return max(1, (int) $this->settings->get('sitemap.rebuild_interval_hours', config('sitemap.rebuild_interval_hours', 24)));
     }
 
-    public function setExecutionEnabled(bool $enabled): void
+    public function setRebuildIntervalHours(int $hours): void
     {
-        $this->setMode($enabled ? self::MODE_AUTO : self::MODE_OFF);
+        $this->settings->set('sitemap.rebuild_interval_hours', max(1, min(720, $hours)));
     }
 
-    public function setAutoEnabled(bool $enabled): void
+    public function lastBuildAt(): ?Carbon
     {
-        $this->setMode($enabled ? self::MODE_AUTO : self::MODE_OFF);
+        $value = $this->settings->get('sitemap.last_build_at');
+
+        return $value ? Carbon::parse($value) : null;
     }
 
-    public function getHourlyRates(): array
+    public function setLastBuildAt(Carbon $when): void
     {
-        $default = array_fill(0, 24, 2);
-        for ($h = 1; $h <= 6; $h++) {
-            $default[$h] = 8;
-        }
-
-        $rates = $this->settings->get('sitemap.hourly_rates', $default);
-        if (! is_array($rates) || count($rates) !== 24) {
-            return $default;
-        }
-
-        return array_values(array_map(
-            fn ($rate) => max(0, min(10, (int) $rate)),
-            $rates,
-        ));
+        $this->settings->set('sitemap.last_build_at', $when->toIso8601String());
     }
 
-    public function setHourlyRates(array $rates): void
+    public function isRebuildDue(): bool
     {
-        $normalized = [];
-        for ($h = 0; $h < 24; $h++) {
-            $normalized[$h] = max(0, min(10, (int) ($rates[$h] ?? 0)));
-        }
+        $last = $this->lastBuildAt();
 
-        $this->settings->set('sitemap.hourly_rates', $normalized);
+        return $last === null || $last->diffInHours(now()) >= $this->rebuildIntervalHours();
     }
 
-    public function getMaxBatchesPerHour(): int
+    /*
+    |--------------------------------------------------------------------------
+    | Active generation pointer
+    |--------------------------------------------------------------------------
+    */
+
+    public function activeGeneration(): int
     {
-        return max(1, min(3600, (int) $this->settings->get('sitemap.max_batches_per_hour', 60)));
+        return (int) $this->settings->get(self::GENERATION_KEY, 0);
     }
 
-    public function setMaxBatchesPerHour(int $value): void
+    private function setActiveGeneration(int $generation): void
     {
-        $this->settings->set('sitemap.max_batches_per_hour', max(1, min(3600, $value)));
+        $this->settings->set(self::GENERATION_KEY, $generation);
     }
 
-    public function getCurrentRate(?int $hour = null): int
+    /**
+     * Publish a freshly-planned generation: flip the pointer, drop the render
+     * cache, prune superseded generations.
+     */
+    public function activateGeneration(int $generation): void
     {
-        $hour ??= (int) now()->format('G');
+        $this->setActiveGeneration($generation);
+        $this->flushCache();
+        $this->setLastBuildAt(now());
 
-        return $this->getHourlyRates()[$hour] ?? 0;
+        SitemapShard::query()->where('generation', '!=', $generation)->delete();
     }
 
-    public function getBatchesForHour(?int $hour = null): int
+    /*
+    |--------------------------------------------------------------------------
+    | Run lock & stop signal
+    |--------------------------------------------------------------------------
+    */
+
+    public function isRunning(): bool
     {
-        $rate = $this->getCurrentRate($hour);
-        if ($rate <= 0) {
-            return 0;
-        }
-
-        return max(1, (int) floor($this->getMaxBatchesPerHour() * ($rate / 10)));
+        return (bool) $this->cache()->get(self::RUNNING_KEY);
     }
 
-    public function getDelaySecondsForNextBatch(?int $hour = null): int
+    public function markRunning(): void
     {
-        $batches = $this->getBatchesForHour($hour);
-        if ($batches <= 0) {
-            return 3600;
-        }
-
-        return max(1, (int) ceil(3600 / $batches));
+        $this->cache()->put(self::RUNNING_KEY, now()->toIso8601String(), now()->addDay());
     }
 
-    public function shouldStartAutomatically(): bool
+    public function clearRunning(): void
     {
-        if ($this->getMode() !== self::MODE_AUTO || Cache::get('sitemap:running') || $this->getCurrentRate() <= 0) {
-            return false;
-        }
-
-        $this->bootstrapExistingGroups();
-
-        $counts = $this->getCachedCounts();
-
-        if ($counts['active_products'] > 0 && $this->shouldDoFullRebuild()) {
-            return true;
-        }
-
-        return $counts['pending_products'] >= $this->pendingProductsNeededForNextGroup();
+        $this->cache()->forget(self::RUNNING_KEY);
     }
 
-    public function start(bool $force = false): ?SitemapRunLog
+    public function requestStop(): void
     {
-        if (Cache::get('sitemap:running') || $this->getMode() === self::MODE_OFF) {
-            return null;
-        }
-
-        $this->bootstrapExistingGroups();
-
-        $separateStores = (bool) $this->settings->get('sitemap.separate_stores', false);
-        
-        $rebuildType = 'incremental';
-        $version = $this->getCurrentVersion();
-        
-        if ($force || $this->shouldDoFullRebuild()) {
-            $rebuildType = 'full';
-            $version = $this->generateNewVersion();
-        }
-
-        if ($rebuildType === 'incremental' && $this->pendingProductsCount() < $this->pendingProductsNeededForNextGroup($version)) {
-            return null;
-        }
-        
-        $runId = now()->format('Ymd_His');
-
-        $run = SitemapRunLog::query()->create([
-            'run_id' => $runId,
-            'version' => $version,
-            'status' => 'running',
-            'force_mode' => $force,
-            'rebuild_type' => $rebuildType,
-            'started_at' => now(),
-            'total_products' => ($rebuildType === 'full') ? $this->activeProductsCount() : $this->pendingProductsCount(),
-            'meta' => [
-                'trigger' => 'queue_auto_continuous',
-                'batch_size' => ProcessSitemapChunkJob::CHUNK_SIZE,
-                'urls_per_group' => ProcessSitemapChunkJob::URLS_PER_GROUP,
-            ],
-        ]);
-
-        Cache::put('sitemap:running', now()->toIso8601String(), 86400);
-
-        ProcessSitemapChunkJob::dispatch(
-            $runId,
-            $version,
-            lastId: null,
-            force: ($rebuildType === 'full'),
-            store: $separateStores ? 'dk' : '',
-            separateStores: $separateStores,
-            chunkIndex: 0,
-        );
-
-        return $run;
+        $this->cache()->put(self::STOP_KEY, true, now()->addDay());
     }
 
-    public function activeProductsCount(): int
+    public function stopRequested(): bool
+    {
+        return (bool) $this->cache()->get(self::STOP_KEY);
+    }
+
+    public function clearStop(): void
+    {
+        $this->cache()->forget(self::STOP_KEY);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Product counts (cached for the dashboard)
+    |--------------------------------------------------------------------------
+    */
+
+    public function activeCount(): int
     {
         return Product::query()->where('is_active', true)->count();
     }
 
-    public function pendingProductsCount(): int
+    /**
+     * @return array{active:int, updated_at:string}
+     */
+    public function cachedCounts(): array
     {
-        return Product::query()
-            ->where('is_active', true)
-            ->whereNull('sitemapped_at')
-            ->count();
-    }
+        $cached = $this->settings->get(self::COUNTS_KEY);
 
-    public function bootstrapExistingGroups(?string $version = null): void
-    {
-        $version ??= $this->getCurrentVersion();
-
-        if (SitemapGroup::query()->where('version', $version)->exists()) {
-            return;
-        }
-
-        $files = glob(public_path('sitemaps/sitemap-*.xml.gz')) ?: [];
-        sort($files, SORT_NATURAL);
-
-        if (empty($files)) {
-            return;
-        }
-
-        foreach ($files as $index => $file) {
-            $stats = $this->readGzipStats($file);
-            $isComplete = $stats['url_count'] >= self::URLS_PER_GROUP;
-            $timestamp = Carbon::createFromTimestamp(filemtime($file));
-            $productIds = $stats['product_ids'];
-
-            if (! $isComplete) {
-                $draftPath = storage_path('app/sitemap_drafts/'.basename($file));
-                $draftDir = dirname($draftPath);
-
-                if (! is_dir($draftDir)) {
-                    mkdir($draftDir, 0755, true);
-                }
-
-                if (! file_exists($draftPath)) {
-                    rename($file, $draftPath);
-                } else {
-                    @unlink($file);
-                }
-            }
-
-            SitemapGroup::query()->create([
-                'version' => $version,
-                'group_index' => $index,
-                'filename' => basename($file),
-                'url_count' => $stats['url_count'],
-                'first_product_id' => $stats['first_product_id'],
-                'last_product_id' => $stats['last_product_id'],
-                'is_complete' => $isComplete,
-                'is_active' => true,
-                'created_at' => $timestamp,
-                'completed_at' => $isComplete ? $timestamp : null,
-            ]);
-
-            collect($productIds)
-                ->chunk(1000)
-                ->each(function ($ids) use ($timestamp) {
-                    Product::query()
-                        ->whereIn('id', $ids)
-                        ->whereNull('sitemapped_at')
-                        ->update(['sitemapped_at' => $timestamp]);
-                });
-        }
-
-        $this->rebuildSitemapIndexForVersion($version);
-        $this->refreshCachedCounts();
-    }
-
-    public function completeGroupsCount(string $version): int
-    {
-        return SitemapGroup::query()
-            ->where('version', $version)
-            ->where('is_active', true)
-            ->where('is_complete', true)
-            ->count();
-    }
-
-    public function pendingProductsNeededForNextGroup(?string $version = null): int
-    {
-        $version ??= $this->getCurrentVersion();
-
-        $incompleteGroup = $this->getIncompleteGroup($version);
-
-        if (! $incompleteGroup) {
-            return self::URLS_PER_GROUP;
-        }
-
-        return max(1, $incompleteGroup->remainingCapacity());
-    }
-
-    public function getCachedCounts(): array
-    {
-        $cached = $this->settings->get('sitemap.cached_counts', []);
-        if (
-            is_array($cached)
-            && array_key_exists('active_products', $cached)
-            && array_key_exists('pending_products', $cached)
-            && array_key_exists('updated_at', $cached)
-        ) {
+        if (is_array($cached) && isset($cached['active'], $cached['updated_at'])) {
             return [
-                'active_products' => (int) $cached['active_products'],
-                'pending_products' => (int) $cached['pending_products'],
+                'active' => (int) $cached['active'],
                 'updated_at' => (string) $cached['updated_at'],
             ];
         }
 
-        return $this->refreshCachedCounts();
+        return $this->refreshCounts();
     }
 
-    public function refreshCachedCounts(): array
+    /**
+     * @return array{active:int, updated_at:string}
+     */
+    public function refreshCounts(): array
     {
         $payload = [
-            'active_products' => $this->activeProductsCount(),
-            'pending_products' => $this->pendingProductsCount(),
+            'active' => $this->activeCount(),
             'updated_at' => now()->toIso8601String(),
         ];
 
-        $this->settings->set('sitemap.cached_counts', $payload);
+        $this->settings->set(self::COUNTS_KEY, $payload);
 
         return $payload;
     }
 
-    public function refreshCachedCountsIfDue(int $intervalMinutes = 10): ?array
+    /**
+     * @return array{active:int, updated_at:string}|null
+     */
+    public function refreshCountsIfDue(int $minutes = 10): ?array
     {
-        $cached = $this->settings->get('sitemap.cached_counts', []);
+        $cached = $this->settings->get(self::COUNTS_KEY);
         $updatedAt = isset($cached['updated_at']) ? Carbon::parse((string) $cached['updated_at']) : null;
 
-        if ($updatedAt && $updatedAt->diffInMinutes(now()) < $intervalMinutes) {
+        if ($updatedAt && $updatedAt->diffInMinutes(now()) < $minutes) {
             return null;
         }
 
-        return $this->refreshCachedCounts();
+        return $this->refreshCounts();
     }
 
-    public function getTailGzip(): ?array
+    /*
+    |--------------------------------------------------------------------------
+    | Starting a build
+    |--------------------------------------------------------------------------
+    */
+
+    public function start(): ?SitemapRunLog
     {
-        $tail = $this->settings->get('sitemap.tail_gzip');
-        return is_array($tail) ? $tail : null;
+        if ($this->getMode() === 'off' || $this->isRunning()) {
+            return null;
+        }
+
+        $this->clearStop();
+
+        // Plan into the next generation, leaving the current live one untouched.
+        $generation = $this->activeGeneration() + 1;
+
+        // Clear any stale half-planned rows for this generation number.
+        SitemapShard::query()->where('generation', $generation)->delete();
+
+        $run = SitemapRunLog::query()->create([
+            'run_id' => now()->format('Ymd_His').'_'.substr(bin2hex(random_bytes(3)), 0, 5),
+            'mode' => 'rebuild',
+            'status' => 'running',
+            'total_products' => $this->activeCount(),
+            'processed_products' => 0,
+            'started_at' => now(),
+            'meta' => ['generation' => $generation],
+        ]);
+
+        $this->markRunning();
+
+        SitemapBuildJob::dispatch($run->run_id, $generation);
+
+        return $run;
     }
 
-    public function setTailGzip(?array $data): void
+    public function startAuto(): ?SitemapRunLog
     {
-        $this->settings->set('sitemap.tail_gzip', $data);
-    }
-
-    public function clearTailGzip(): void
-    {
-        $this->settings->set('sitemap.tail_gzip', null);
-    }
-
-    public function rebuildSitemapIndex(): void
-    {
-        $appUrl = rtrim(config('app.url'), '/');
-        $files = glob(public_path('sitemaps/sitemap-*.xml.gz'));
-        sort($files);
-
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>';
-        $xml .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-
-        foreach ($files as $file) {
-            $filename = basename($file);
-            $lastmod = gmdate('Y-m-d\TH:i:sP', filemtime($file));
-            $loc = "{$appUrl}/sitemaps/{$filename}";
-
-            $xml .= '<sitemap>';
-            $xml .= '<loc>' . htmlspecialchars($loc, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</loc>';
-            $xml .= '<lastmod>' . $lastmod . '</lastmod>';
-            $xml .= '</sitemap>';
+        if ($this->getMode() === 'off' || $this->isRunning() || ! $this->isRebuildDue()) {
+            return null;
         }
-
-        $xml .= '</sitemapindex>';
-
-        file_put_contents(public_path('sitemap.xml'), $xml);
-    }
-
-    public function parseGzipProductIds(string $filePath): array
-    {
-        if (! file_exists($filePath)) {
-            return [];
-        }
-
-        $content = gzdecode(file_get_contents($filePath));
-        if ($content === false) {
-            return [];
-        }
-
-        $sxml = @simplexml_load_string($content);
-        if ($sxml === false) {
-            return [];
-        }
-
-        $ids = [];
-
-        foreach ($sxml->url as $url) {
-            $loc = (string) $url->loc;
-            if (preg_match('#/product/(\d+)#', $loc, $m)) {
-                $ids[] = (int) $m[1];
-            }
-        }
-
-        return $ids;
-    }
-
-    public function countGzipUrls(string $filePath): int
-    {
-        return $this->readGzipStats($filePath)['url_count'];
-    }
-
-    public function readGzipStats(string $filePath): array
-    {
-        if (! file_exists($filePath)) {
-            return [
-                'url_count' => 0,
-                'first_product_id' => null,
-                'last_product_id' => null,
-                'product_ids' => [],
-            ];
-        }
-
-        $content = gzdecode(file_get_contents($filePath));
-        if ($content === false) {
-            return [
-                'url_count' => 0,
-                'first_product_id' => null,
-                'last_product_id' => null,
-                'product_ids' => [],
-            ];
-        }
-
-        $sxml = @simplexml_load_string($content);
-        if ($sxml === false) {
-            return [
-                'url_count' => 0,
-                'first_product_id' => null,
-                'last_product_id' => null,
-                'product_ids' => [],
-            ];
-        }
-
-        $firstProductId = null;
-        $lastProductId = null;
-        $productIds = [];
-
-        foreach ($sxml->url as $url) {
-            $loc = (string) $url->loc;
-            if (! preg_match('#/product/(\d+)#', $loc, $m)) {
-                continue;
-            }
-
-            $productId = (string) $m[1];
-            $firstProductId = $firstProductId === null || $this->compareProductIds($productId, $firstProductId) < 0
-                ? $productId
-                : $firstProductId;
-            $lastProductId = $lastProductId === null || $this->compareProductIds($productId, $lastProductId) > 0
-                ? $productId
-                : $lastProductId;
-            $productIds[] = $productId;
-        }
-
-        return [
-            'url_count' => count($sxml->url),
-            'first_product_id' => $firstProductId,
-            'last_product_id' => $lastProductId,
-            'product_ids' => $productIds,
-        ];
-    }
-
-    private function compareProductIds(string $left, string $right): int
-    {
-        if (ctype_digit($left) && ctype_digit($right)) {
-            return strlen($left) === strlen($right)
-                ? strcmp($left, $right)
-                : strlen($left) <=> strlen($right);
-        }
-
-        return strcmp($left, $right);
-    }
-
-    public function productToUrlData(Product $product): array
-    {
-        $slug = str_slug_persian($product->title ?? '');
-        $lastMod = ($product->updated_at ?? $product->created_at)
-            ->setTimezone('UTC')
-            ->format('Y-m-d\TH:i:sP');
-
-        return [
-            'loc' => config('app.url') . '/product/' . $product->id . ($slug ? '/' . $slug : ''),
-            'lastmod' => $lastMod,
-        ];
-    }
-
-    public function writeGzipFromUrls(string $path, array $urls): void
-    {
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>';
-        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-
-        foreach ($urls as $url) {
-            $xml .= '<url>';
-            $xml .= '<loc>' . htmlspecialchars($url['loc'], ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</loc>';
-            $xml .= '<lastmod>' . $url['lastmod'] . '</lastmod>';
-            $xml .= '<changefreq>daily</changefreq>';
-            $xml .= '<priority>0.8</priority>';
-            $xml .= '</url>';
-        }
-
-        $xml .= '</urlset>';
-
-        $dir = dirname($path);
-        if (! is_dir($dir)) {
-            mkdir($dir, 0755, true);
-        }
-
-        file_put_contents($path, gzencode($xml, 9));
-    }
-    
-    public function deactivateOldVersionGroups(string $currentVersion): void
-    {
-        SitemapGroup::query()
-            ->where('version', '!=', $currentVersion)
-            ->where('is_active', true)
-            ->update(['is_active' => false]);
-    }
-    
-    public function cleanupOldVersionFiles(string $currentVersion): void
-    {
-        $oldGroups = SitemapGroup::query()
-            ->where('version', '!=', $currentVersion)
-            ->where('is_active', false)
-            ->get();
-            
-        foreach ($oldGroups as $group) {
-            $path = public_path("sitemaps/{$group->filename}");
-            if (file_exists($path)) {
-                @unlink($path);
-            }
-
-            $draftPath = storage_path("app/sitemap_drafts/{$group->filename}");
-            if (file_exists($draftPath)) {
-                @unlink($draftPath);
-            }
-        }
-        
-        SitemapGroup::query()
-            ->where('version', '!=', $currentVersion)
-            ->delete();
-    }
-    
-    public function rebuildSitemapIndexForVersion(string $version): void
-    {
-        $appUrl = rtrim(config('app.url'), '/');
-        
-        $groups = SitemapGroup::query()
-            ->where('version', $version)
-            ->where('is_active', true)
-            ->where('is_complete', true)
-            ->orderBy('group_index')
-            ->get();
-            
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>';
-        $xml .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-        
-        foreach ($groups as $group) {
-            $loc = "{$appUrl}/sitemaps/{$group->filename}";
-            $lastmod = ($group->completed_at ?? $group->created_at)->setTimezone('UTC')->format('Y-m-d\TH:i:sP');
-            
-            $xml .= '<sitemap>';
-            $xml .= '<loc>' . htmlspecialchars($loc, ENT_XML1 | ENT_QUOTES, 'UTF-8') . '</loc>';
-            $xml .= '<lastmod>' . $lastmod . '</lastmod>';
-            $xml .= '</sitemap>';
-        }
-        
-        $xml .= '</sitemapindex>';
-        
-        file_put_contents(public_path('sitemap.xml'), $xml);
-    }
-
-    public function reset(): ?SitemapRunLog
-    {
-        foreach (glob(public_path('sitemaps/sitemap-*.xml.gz')) ?: [] as $f) @unlink($f);
-        foreach (glob(storage_path('app/sitemap_chunks/*.json')) ?: [] as $f) @unlink($f);
-        foreach (glob(storage_path('app/sitemap_drafts/*.xml.gz')) ?: [] as $f) @unlink($f);
-
-        $indexFiles = [
-            public_path('sitemap.xml'),
-            public_path('sitemap-digikala.xml'),
-            public_path('sitemap-basalam.xml'),
-            public_path('sitemap-other.xml'),
-        ];
-        foreach ($indexFiles as $p) {
-            if (file_exists($p)) @unlink($p);
-        }
-
-        Cache::forget('sitemap:running');
-
-        DB::table('jobs')
-            ->where('queue', (string) config('queue.sitemap_queue', 'default'))
-            ->where(function ($q) {
-                $q->where('payload', 'like', '%Sitemap%');
-            })
-            ->delete();
-
-        SitemapRunLog::query()
-            ->where('status', 'running')
-            ->update([
-                'status' => 'failed',
-                'error_message' => 'بازنشانی توسط مدیر',
-                'completed_at' => now(),
-            ]);
-
-        $this->refreshCachedCounts();
-        $this->clearTailGzip();
-        SitemapGroup::query()->delete();
-        $this->setCurrentVersion('v1');
 
         return $this->start();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Shard planning (called by the build job, one pass at a time)
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Plan the next batch of shards for a generation, starting after the given
+     * product id. Returns the last product id consumed (cursor for the next
+     * pass) and whether more products remain.
+     *
+     * @return array{cursor:?string, exhausted:bool, planned:int, processed:int}
+     */
+    public function planPass(int $generation, ?string $cursor, int $shardIndexStart): array
+    {
+        $perShard = $this->urlsPerShard();
+        $budget = $this->productsPerPass();
+        $shardIndex = $shardIndexStart;
+        $planned = 0;
+        $processed = 0;
+        $lastId = $cursor;
+
+        while ($processed < $budget) {
+            // Bind the cursor as a string so the varchar id is compared
+            // lexicographically — matching ORDER BY id. An int-bound cursor makes
+            // MySQL coerce the column to a number, which is inconsistent with the
+            // ordering and would silently skip rows (e.g. "5987883" vs "29189691").
+            $rows = Product::query()
+                ->select(['id', 'updated_at', 'created_at'])
+                ->where('is_active', true)
+                ->when($lastId !== null, fn ($q) => $q->where('id', '>', (string) $lastId))
+                ->orderBy('id')
+                ->limit($perShard)
+                ->get();
+
+            if ($rows->isEmpty()) {
+                return ['cursor' => $lastId, 'exhausted' => true, 'planned' => $planned, 'processed' => $processed];
+            }
+
+            $lastmod = $rows
+                ->map(fn ($p) => $p->updated_at ?? $p->created_at)
+                ->filter()
+                ->max();
+
+            SitemapShard::query()->create([
+                'generation' => $generation,
+                'shard_index' => $shardIndex,
+                'first_product_id' => (string) $rows->first()->id,
+                'last_product_id' => (string) $rows->last()->id,
+                'url_count' => $rows->count(),
+                'lastmod' => $lastmod,
+            ]);
+
+            $shardIndex++;
+            $planned++;
+            $processed += $rows->count();
+            $lastId = (string) $rows->last()->id;
+
+            // A short final shard means the catalog is exhausted.
+            if ($rows->count() < $perShard) {
+                return ['cursor' => $lastId, 'exhausted' => true, 'planned' => $planned, 'processed' => $processed];
+            }
+        }
+
+        return ['cursor' => $lastId, 'exhausted' => false, 'planned' => $planned, 'processed' => $processed];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | XML rendering (on demand, cached)
+    |--------------------------------------------------------------------------
+    */
+
+    public function hasSitemap(): bool
+    {
+        return SitemapShard::query()->where('generation', $this->activeGeneration())->exists();
+    }
+
+    /**
+     * @return Collection<int, SitemapShard>
+     */
+    public function activeShards()
+    {
+        return SitemapShard::query()
+            ->where('generation', $this->activeGeneration())
+            ->orderBy('shard_index')
+            ->get();
+    }
+
+    public function shardCount(): int
+    {
+        return SitemapShard::query()->where('generation', $this->activeGeneration())->count();
+    }
+
+    /**
+     * Render the sitemap index (/sitemap.xml).
+     */
+    public function renderIndex(): string
+    {
+        $generation = $this->activeGeneration();
+
+        return $this->cache()->remember(
+            self::CACHE_TAG.":index:{$generation}",
+            $this->cacheTtl(),
+            fn () => $this->buildIndexXml(),
+        );
+    }
+
+    /**
+     * Render a single product sub-sitemap (/product-sitemap{n}.xml), or null if
+     * the shard does not exist.
+     */
+    public function renderShard(int $shardIndex): ?string
+    {
+        $generation = $this->activeGeneration();
+
+        return $this->cache()->remember(
+            self::CACHE_TAG.":shard:{$generation}:{$shardIndex}",
+            $this->cacheTtl(),
+            function () use ($generation, $shardIndex): ?string {
+                $shard = SitemapShard::query()
+                    ->where('generation', $generation)
+                    ->where('shard_index', $shardIndex)
+                    ->first();
+
+                return $shard ? $this->buildShardXml($shard) : null;
+            },
+        );
+    }
+
+    private function buildIndexXml(): string
+    {
+        $appUrl = rtrim((string) config('app.url'), '/');
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+        $xml .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
+
+        foreach ($this->activeShards() as $shard) {
+            $loc = $appUrl.'/product-sitemap'.$shard->shard_index.'.xml';
+            $lastmod = ($shard->lastmod ?? now())->setTimezone('UTC')->format('Y-m-d\TH:i:sP');
+
+            $xml .= '  <sitemap>'."\n";
+            $xml .= '    <loc>'.htmlspecialchars($loc, ENT_XML1 | ENT_QUOTES, 'UTF-8').'</loc>'."\n";
+            $xml .= '    <lastmod>'.$lastmod.'</lastmod>'."\n";
+            $xml .= '  </sitemap>'."\n";
+        }
+
+        $xml .= '</sitemapindex>'."\n";
+
+        return $xml;
+    }
+
+    private function buildShardXml(SitemapShard $shard): string
+    {
+        $appUrl = rtrim((string) config('app.url'), '/');
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
+
+        Product::query()
+            ->select(['id', 'title', 'updated_at', 'created_at'])
+            ->where('is_active', true)
+            // String-bind the boundaries so the range scan matches the
+            // lexicographic ordering the shards were planned with.
+            ->whereBetween('id', [(string) $shard->first_product_id, (string) $shard->last_product_id])
+            ->orderBy('id')
+            ->chunk(2_000, function ($products) use (&$xml, $appUrl): void {
+                foreach ($products as $product) {
+                    $slug = str_slug_persian((string) ($product->title ?? ''));
+                    $loc = $appUrl.'/product/'.$product->id.($slug !== '' ? '/'.$slug : '');
+                    $lastmod = ($product->updated_at ?? $product->created_at ?? now())
+                        ->setTimezone('UTC')->format('Y-m-d\TH:i:sP');
+
+                    $xml .= '  <url>'."\n";
+                    $xml .= '    <loc>'.htmlspecialchars($loc, ENT_XML1 | ENT_QUOTES, 'UTF-8').'</loc>'."\n";
+                    $xml .= '    <lastmod>'.$lastmod.'</lastmod>'."\n";
+                    $xml .= '    <changefreq>weekly</changefreq>'."\n";
+                    $xml .= '    <priority>0.8</priority>'."\n";
+                    $xml .= '  </url>'."\n";
+                }
+            });
+
+        $xml .= '</urlset>'."\n";
+
+        return $xml;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cache & reset
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Drop rendered XML for every generation. Cheap: keys are namespaced by
+     * generation, and stale ones expire on their own — but on a store that
+     * supports flushing we clear immediately.
+     */
+    public function flushCache(): void
+    {
+        // Rendered entries are keyed by generation, so bumping the pointer makes
+        // old ones unreachable. We also forget the current index eagerly so a
+        // manual rebuild is reflected without waiting for TTL.
+        for ($g = max(0, $this->activeGeneration() - 1); $g <= $this->activeGeneration() + 1; $g++) {
+            $this->cache()->forget(self::CACHE_TAG.":index:{$g}");
+        }
+    }
+
+    /**
+     * Wipe all sitemap state (shards, pointer, cache, run lock).
+     */
+    public function reset(): void
+    {
+        $this->requestStop();
+        $this->clearRunning();
+
+        SitemapShard::query()->delete();
+        $this->setActiveGeneration(0);
+        $this->settings->forget('sitemap.last_build_at');
+        $this->flushCache();
+        $this->clearStop();
+        $this->refreshCounts();
+    }
+
+    /**
+     * @return array{shard_count:int, active_generation:int, has_sitemap:bool, total_urls:int}
+     */
+    public function stats(): array
+    {
+        $shards = $this->activeShards();
+
+        return [
+            'shard_count' => $shards->count(),
+            'active_generation' => $this->activeGeneration(),
+            'has_sitemap' => $shards->isNotEmpty(),
+            'total_urls' => (int) $shards->sum('url_count'),
+        ];
     }
 }

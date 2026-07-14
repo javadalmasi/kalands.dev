@@ -4,44 +4,31 @@ namespace App\Console\Commands;
 
 use App\Services\Sitemap\SitemapGenerationService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 
 class GenerateSitemapCommand extends Command
 {
-    protected $signature = 'sitemap:generate {--force : Force full rebuild}';
+    protected $signature = 'sitemap:generate {--force : Rebuild now even if not yet due}';
 
-    protected $description = 'Start or ensure the continuous product sitemap generator is running';
+    protected $description = 'Plan the product sitemap shards (rebuild), or auto-rebuild when due';
 
-    public function handle(SitemapGenerationService $sitemapGenerationService): int
+    public function handle(SitemapGenerationService $service): int
     {
-        $sitemapGenerationService->refreshCachedCountsIfDue(10);
+        if ($service->isRunning()) {
+            $this->warn('A sitemap build is already running.');
 
-        if (Cache::get('sitemap:running')) {
-            $this->info('Continuous sitemap generation is already running.');
-            return Command::SUCCESS;
-        }
-        
-        $force = $this->option('force');
-        
-        if ($force) {
-            $this->warn('Starting FULL REBUILD - this will create a new sitemap version');
+            return self::SUCCESS;
         }
 
-        if (!$force && !$sitemapGenerationService->shouldStartAutomatically()) {
-            $this->warn('Continuous sitemap generation is not eligible to start now.');
-            return Command::SUCCESS;
+        $run = $this->option('force') ? $service->start() : $service->startAuto();
+
+        if (! $run) {
+            $this->line('No sitemap build was started (module off, not due, or already running).');
+
+            return self::SUCCESS;
         }
 
-        $run = $sitemapGenerationService->start($force);
+        $this->info("Sitemap build queued: run {$run->run_id} (generation ".($run->meta['generation'] ?? '?').').');
 
-        if (!$run) {
-            $this->warn('Sitemap generation was not enqueued.');
-            return Command::SUCCESS;
-        }
-
-        $rebuildType = $run->rebuild_type === 'full' ? 'FULL REBUILD' : 'INCREMENTAL';
-        $this->info("Sitemap generation started: {$rebuildType} (run: {$run->run_id}, version: {$run->version})");
-
-        return Command::SUCCESS;
+        return self::SUCCESS;
     }
 }

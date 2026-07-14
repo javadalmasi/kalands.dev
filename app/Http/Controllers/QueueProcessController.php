@@ -20,18 +20,17 @@ class QueueProcessController extends Controller
         GeoIPService $geoIPService,
         SitemapGenerationService $sitemapGenerationService,
         IndexNowService $indexNowService,
-    ): JsonResponse
-    {
+    ): JsonResponse {
         $queueSettings = $settingsRepository->get('queue.settings', []);
 
-        if (!($queueSettings['webservice_enabled'] ?? true)) {
+        if (! ($queueSettings['webservice_enabled'] ?? true)) {
             return response()->json(['message' => 'وبسرویس صف غیرفعال شده است.'], 403);
         }
 
         $expectedToken = $queueSettings['cron_token'] ?? null;
         $providedToken = request()->header('X-Queue-Token');
 
-        if (!$expectedToken || !$providedToken || !hash_equals((string) $expectedToken, (string) $providedToken)) {
+        if (! $expectedToken || ! $providedToken || ! hash_equals((string) $expectedToken, (string) $providedToken)) {
             QueueExecutionLog::query()->create([
                 'executed_at' => now(),
                 'status' => 'failed',
@@ -50,17 +49,14 @@ class QueueProcessController extends Controller
             // 1. Dispatch periodic analytics aggregation before draining the queue.
             AggregateAnalyticsEventsJob::dispatch();
 
-            $refreshedCounts = $sitemapGenerationService->refreshCachedCountsIfDue(10);
+            $refreshedCounts = $sitemapGenerationService->refreshCountsIfDue(10);
             if ($refreshedCounts) {
                 $meta['tasks'][] = 'بروزرسانی شمار محصولات سایت‌مپ (هر ۱۰ دقیقه) انجام شد.';
             }
 
-            if ($sitemapGenerationService->shouldStartAutomatically()) {
-                $run = $sitemapGenerationService->start(false);
-                if ($run) {
-                    $type = $run->rebuild_type === 'full' ? 'بازسازی کامل دوره‌ای' : 'اجرای افزایشی';
-                    $meta['tasks'][] = "شروع خودکار تولید سایت مپ ({$type}): اجرای {$run->run_id} در صف قرار گرفت.";
-                }
+            if ($run = $sitemapGenerationService->startAuto()) {
+                $type = $run->mode === 'full' ? 'بازسازی کامل دوره‌ای' : 'اجرای افزایشی';
+                $meta['tasks'][] = "شروع خودکار تولید سایت مپ ({$type}): اجرای {$run->run_id} در صف قرار گرفت.";
             }
 
             if ($indexNowService->dispatchContinuousIfDue()) {
@@ -101,12 +97,12 @@ class QueueProcessController extends Controller
 
             // 5. GeoIP Database Update (Every 5 hours)
             $lastGeoUpdate = $settingsRepository->get('geoip.last_run');
-            if (!$lastGeoUpdate || now()->diffInHours($lastGeoUpdate) >= 5) {
+            if (! $lastGeoUpdate || now()->diffInHours($lastGeoUpdate) >= 5) {
                 $geoResult = $geoIPService->updateDatabases();
                 if ($geoResult['success']) {
-                    $meta['tasks'][] = "بروزرسانی خودکار دیتابیس GeoIP با موفقیت انجام شد.";
+                    $meta['tasks'][] = 'بروزرسانی خودکار دیتابیس GeoIP با موفقیت انجام شد.';
                 } else {
-                    $meta['tasks'][] = "بروزرسانی خودکار دیتابیس GeoIP با خطا مواجه شد (جزئیات در ماژول GeoIP).";
+                    $meta['tasks'][] = 'بروزرسانی خودکار دیتابیس GeoIP با خطا مواجه شد (جزئیات در ماژول GeoIP).';
                 }
             }
 
@@ -132,7 +128,7 @@ class QueueProcessController extends Controller
     private function cleanupLaravelLogs(int $days): int
     {
         $logPath = storage_path('logs');
-        if (!File::isDirectory($logPath)) {
+        if (! File::isDirectory($logPath)) {
             return 0;
         }
 

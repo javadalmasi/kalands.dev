@@ -16,6 +16,5 @@
 /bootstrap/cache/*.php
 /.qwen/*
 /storage/app/backups/*
-/storage/app/sitemap_chunks/*
 /public/sitemap.xml
 /public/sitemaps/*

@@ -37,11 +37,13 @@ use App\Services\Communication\ChannelSettingsResolver;
 use App\Services\EmailTemplateService;
 use App\Services\GeoIPService;
 use App\Services\InternalAnalyticsService;
+use App\Services\ModuleRegistry;
 use App\Services\Sitemap\SitemapGenerationService;
 use App\Services\Slider\HomeCategoryBannerStorage;
 use App\Services\Slider\HomeItemsPayloadStorage;
 use App\Services\Slider\SliderStorage;
 use App\Services\VisitorIntelligenceService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -220,7 +222,7 @@ class AdminDashboardController extends Controller
             'status' => 'ok',
             'metric' => $mode,
             'metricLabel' => 'Mode',
-            'details' => $lastLog ? 'Last: ' . $lastLog->created_at->diffForHumans() : 'No logs',
+            'details' => $lastLog ? 'Last: '.$lastLog->created_at->diffForHumans() : 'No logs',
         ];
     }
 
@@ -236,7 +238,7 @@ class AdminDashboardController extends Controller
             'status' => 'ok',
             'metric' => ucfirst($driver),
             'metricLabel' => 'Driver',
-            'details' => $lastClear ? 'Cleared: ' . \Carbon\Carbon::parse($lastClear)->diffForHumans() : 'Never cleared',
+            'details' => $lastClear ? 'Cleared: '.Carbon::parse($lastClear)->diffForHumans() : 'Never cleared',
         ];
     }
 
@@ -252,7 +254,7 @@ class AdminDashboardController extends Controller
             'status' => 'ok',
             'metric' => $version,
             'metricLabel' => 'Version',
-            'details' => $lastUpdate ? 'Updated: ' . \Carbon\Carbon::parse($lastUpdate)->diffForHumans() : 'Never updated',
+            'details' => $lastUpdate ? 'Updated: '.Carbon::parse($lastUpdate)->diffForHumans() : 'Never updated',
         ];
     }
 
@@ -279,9 +281,9 @@ class AdminDashboardController extends Controller
 
     private function getAnalyticsStatus(): array
     {
-        $lastEvent = \App\Models\AnalyticsEvent::latest()->first();
-        $todayCount = \App\Models\AnalyticsEvent::whereDate('created_at', today())->count();
-        $liveCount = \App\Models\AnalyticsLiveVisitor::count();
+        $lastEvent = AnalyticsEvent::latest()->first();
+        $todayCount = AnalyticsEvent::whereDate('created_at', today())->count();
+        $liveCount = AnalyticsLiveVisitor::count();
 
         return [
             'name' => 'Analytics',
@@ -289,21 +291,22 @@ class AdminDashboardController extends Controller
             'status' => 'ok',
             'metric' => (string) $liveCount,
             'metricLabel' => 'Live Visitors',
-            'details' => "Today: $todayCount events | " . ($lastEvent ? 'Last: ' . $lastEvent->created_at->diffForHumans() : 'No data'),
+            'details' => "Today: $todayCount events | ".($lastEvent ? 'Last: '.$lastEvent->created_at->diffForHumans() : 'No data'),
         ];
     }
 
     private function getSitemapStatus(): array
     {
         $lastRun = SitemapRunLog::latest()->first();
+        $stats = app(SitemapGenerationService::class)->stats();
 
         return [
             'name' => 'Sitemap',
             'icon' => 'map',
             'status' => 'ok',
-            'metric' => $lastRun?->urls_count ?? 0,
-            'metricLabel' => 'URLs',
-            'details' => $lastRun ? 'Generated: ' . $lastRun->created_at->diffForHumans() : 'Never generated',
+            'metric' => $stats['shard_count'],
+            'metricLabel' => 'Shards',
+            'details' => $lastRun ? 'Generated: '.$lastRun->created_at->diffForHumans() : 'Never generated',
         ];
     }
 
@@ -796,7 +799,7 @@ class AdminDashboardController extends Controller
 
     public function modules(Request $request, SettingsRepository $settingsRepository, SliderStorage $sliderStorage, HomeCategoryBannerStorage $homeCategoryBannerStorage)
     {
-        $moduleRegistry = app(\App\Services\ModuleRegistry::class);
+        $moduleRegistry = app(ModuleRegistry::class);
         $modules = collect($moduleRegistry->all())->values()->toArray();
 
         $settings = [
@@ -842,7 +845,7 @@ class AdminDashboardController extends Controller
 
     public function moduleSettings(string $authkey, string $moduleKey, Request $request, SettingsRepository $settingsRepository, EmailTemplateService $emailTemplateService, SliderStorage $sliderStorage, HomeCategoryBannerStorage $homeCategoryBannerStorage)
     {
-        $moduleRegistry = app(\App\Services\ModuleRegistry::class);
+        $moduleRegistry = app(ModuleRegistry::class);
         $module = $moduleRegistry->get($moduleKey);
 
         abort_unless($module !== null, 404);
@@ -900,8 +903,8 @@ class AdminDashboardController extends Controller
 
             return view('dash.admin.communication', [
                 'settings' => [
-                    'mail_config'   => $mailCfg,
-                    'sms'           => $settingsRepository->get('sms.melipayamak', []),
+                    'mail_config' => $mailCfg,
+                    'sms' => $settingsRepository->get('sms.melipayamak', []),
                     'test_defaults' => $settingsRepository->get('communication.test_defaults', ['email' => '', 'phone' => '']),
                 ],
                 'authkey' => $authkey,
@@ -993,7 +996,7 @@ class AdminDashboardController extends Controller
         }
 
         if ($moduleKey === 'indexnow') {
-            return app(\App\Http\Controllers\Dashboard\IndexNowController::class)->hub($request);
+            return app(IndexNowController::class)->hub($request);
         }
 
         return view('dash.admin.module-settings', [
@@ -1287,18 +1290,18 @@ class AdminDashboardController extends Controller
         $mailer = $request->input('mailer', 'smtp');
 
         $rules = [
-            'mailer'       => ['required', 'in:smtp,sendmail,log'],
+            'mailer' => ['required', 'in:smtp,sendmail,log'],
             'sender_email' => ['required', 'email', 'max:255'],
-            'sender_name'  => ['required', 'string', 'max:100'],
+            'sender_name' => ['required', 'string', 'max:100'],
         ];
 
         if ($mailer === 'smtp') {
             $rules += [
-                'host'        => ['required', 'string', 'max:255'],
-                'port'        => ['required', 'integer', 'between:1,65535'],
-                'encryption'  => ['nullable', 'in:tls,ssl'],
-                'username'    => ['nullable', 'string'],
-                'password'    => ['nullable', 'string'],
+                'host' => ['required', 'string', 'max:255'],
+                'port' => ['required', 'integer', 'between:1,65535'],
+                'encryption' => ['nullable', 'in:tls,ssl'],
+                'username' => ['nullable', 'string'],
+                'password' => ['nullable', 'string'],
                 'verify_peer' => ['nullable', 'boolean'],
             ];
         } elseif ($mailer === 'sendmail') {
@@ -1315,7 +1318,7 @@ class AdminDashboardController extends Controller
             $settingsRepository->set('smtp.general', $data);
         }
 
-        $activityLogger->log('settings.mail.update', auth('admin')->user(), 'بروزرسانی تنظیمات ایمیل — درایور: ' . $mailer);
+        $activityLogger->log('settings.mail.update', auth('admin')->user(), 'بروزرسانی تنظیمات ایمیل — درایور: '.$mailer);
 
         return back()->with('message', 'تنظیمات ایمیل با موفقیت ذخیره شد.');
     }
@@ -1330,52 +1333,55 @@ class AdminDashboardController extends Controller
 
             // Force a fresh transport so config changes take effect immediately.
             foreach (['smtp', 'sendmail', 'mailgun', 'log'] as $m) {
-                try { app('mail.manager')->purge($m); } catch (\Throwable) {}
+                try {
+                    app('mail.manager')->purge($m);
+                } catch (\Throwable) {
+                }
             }
 
-            $driver   = config('mail.default', 'smtp');
+            $driver = config('mail.default', 'smtp');
             $mailable = new GenericTemplateMail(
-                'تست ایمیل — ' . config('app.name'),
-                '<p>ارسال آزمایشی ایمیل با موفقیت انجام شد.</p><p>زمان ارسال: ' . now()->format('Y-m-d H:i:s') . '</p>'
+                'تست ایمیل — '.config('app.name'),
+                '<p>ارسال آزمایشی ایمیل با موفقیت انجام شد.</p><p>زمان ارسال: '.now()->format('Y-m-d H:i:s').'</p>'
             );
             $mailable->shouldQueue = false;
             Mail::mailer($driver)->to($data['to'])->send($mailable);
 
             $elapsed = round((microtime(true) - $startTime) * 1000);
-            $cfg     = $settingsRepository->get('mail.config') ?: $settingsRepository->get('smtp.general', []);
+            $cfg = $settingsRepository->get('mail.config') ?: $settingsRepository->get('smtp.general', []);
 
-            $log  = "[OK] ارسال موفق\n";
+            $log = "[OK] ارسال موفق\n";
             $log .= "To       : {$data['to']}\n";
             $log .= "Elapsed  : {$elapsed}ms\n";
             $log .= "Driver   : {$driver}\n";
 
             if ($driver === 'smtp') {
-                $log .= "Host     : " . ($cfg['host'] ?? config('mail.mailers.smtp.host', '-')) . "\n";
-                $log .= "Port     : " . ($cfg['port'] ?? config('mail.mailers.smtp.port', '-')) . "\n";
-                $log .= "Encrypt  : " . strtoupper((string) ($cfg['encryption'] ?? 'none')) . "\n";
-                $log .= "TLSVerify: " . ((bool)($cfg['verify_peer'] ?? true) ? 'yes' : 'no') . "\n";
+                $log .= 'Host     : '.($cfg['host'] ?? config('mail.mailers.smtp.host', '-'))."\n";
+                $log .= 'Port     : '.($cfg['port'] ?? config('mail.mailers.smtp.port', '-'))."\n";
+                $log .= 'Encrypt  : '.strtoupper((string) ($cfg['encryption'] ?? 'none'))."\n";
+                $log .= 'TLSVerify: '.((bool) ($cfg['verify_peer'] ?? true) ? 'yes' : 'no')."\n";
             } elseif ($driver === 'mailgun') {
-                $log .= "Domain   : " . ($cfg['mailgun_domain'] ?? '-') . "\n";
-                $log .= "Endpoint : " . ($cfg['mailgun_endpoint'] ?? 'api.mailgun.net') . "\n";
+                $log .= 'Domain   : '.($cfg['mailgun_domain'] ?? '-')."\n";
+                $log .= 'Endpoint : '.($cfg['mailgun_endpoint'] ?? 'api.mailgun.net')."\n";
             } elseif ($driver === 'sendmail') {
-                $log .= "Path     : " . ($cfg['sendmail_path'] ?? '/usr/sbin/sendmail -bs -i') . "\n";
+                $log .= 'Path     : '.($cfg['sendmail_path'] ?? '/usr/sbin/sendmail -bs -i')."\n";
             }
 
-            $log .= "From     : " . ($cfg['sender_email'] ?? config('mail.from.address', '-')) . "\n";
-            $log .= "PHP      : " . PHP_VERSION . "\n";
-            $log .= "Laravel  : " . app()->version() . "\n";
+            $log .= 'From     : '.($cfg['sender_email'] ?? config('mail.from.address', '-'))."\n";
+            $log .= 'PHP      : '.PHP_VERSION."\n";
+            $log .= 'Laravel  : '.app()->version()."\n";
 
             return response()->json(['ok' => true, 'message' => $log]);
         } catch (\Throwable $e) {
             $elapsed = round((microtime(true) - $startTime) * 1000);
-            Log::error('Mail Test Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Mail Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
-            $log  = "[FAIL] ارسال ناموفق\n";
+            $log = "[FAIL] ارسال ناموفق\n";
             $log .= "To       : {$data['to']}\n";
             $log .= "Elapsed  : {$elapsed}ms\n";
-            $log .= "Driver   : " . config('mail.default', 'smtp') . "\n\n";
+            $log .= 'Driver   : '.config('mail.default', 'smtp')."\n\n";
             $log .= "--- Exception ---\n";
-            $log .= get_class($e) . ": " . $e->getMessage() . "\n\n";
+            $log .= get_class($e).': '.$e->getMessage()."\n\n";
             $log .= "--- Stack Trace ---\n";
             $log .= $e->getTraceAsString();
 
@@ -1423,13 +1429,13 @@ class AdminDashboardController extends Controller
             return response()->json(['ok' => true, 'message' => $log]);
         } catch (\Throwable $e) {
             $elapsed = round((microtime(true) - $startTime) * 1000);
-            Log::error('SMS Test Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('SMS Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
             $log = "[FAIL] ارسال ناموفق\n";
             $log .= "To       : {$data['to']}\n";
             $log .= "Elapsed  : {$elapsed}ms\n\n";
             $log .= "--- Exception ---\n";
-            $log .= $e->getMessage() . "\n\n";
+            $log .= $e->getMessage()."\n\n";
             $log .= "--- Stack Trace ---\n";
             $log .= $e->getTraceAsString();
 
@@ -3880,376 +3886,174 @@ class AdminDashboardController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function sitemapHub(SitemapGenerationService $sitemapGenerationService)
+    public function sitemapHub(SitemapGenerationService $sitemap)
     {
-        $isRunning = (bool) Cache::get('sitemap:running', false);
+        $counts = $sitemap->cachedCounts();
+        $stats = $sitemap->stats();
+        $appUrl = rtrim(config('app.url'), '/');
+
         $currentRun = SitemapRunLog::query()->where('status', 'running')->latest('id')->first();
         $lastRuns = SitemapRunLog::query()->latest('id')->limit(50)->get();
-        $lastCompletedRun = SitemapRunLog::query()->where('status', 'completed')->latest('id')->first();
-        $lastFailedRun = SitemapRunLog::query()->where('status', 'failed')->latest('id')->first();
-        $totalRuns = SitemapRunLog::query()->count();
-        $totalRunsCompleted = SitemapRunLog::query()->where('status', 'completed')->count();
+        $lastCompleted = SitemapRunLog::query()->where('status', 'completed')->latest('id')->first();
+        $lastFailed = SitemapRunLog::query()->where('status', 'failed')->latest('id')->first();
 
-        $lastCompletedForce = SitemapRunLog::query()
-            ->where('status', 'completed')
-            ->where('force_mode', true)
-            ->whereNotNull('completed_at')
-            ->latest('id')
-            ->first();
+        $shards = $sitemap->activeShards()->map(fn ($s) => [
+            'index' => $s->shard_index,
+            'url_count' => $s->url_count,
+            'lastmod' => $s->lastmod ? persianDateTime($s->lastmod) : null,
+            'url' => $appUrl.'/product-sitemap'.$s->shard_index.'.xml',
+        ]);
 
-        $forceDuration = null;
-        if ($lastCompletedForce && $lastCompletedForce->started_at && $lastCompletedForce->completed_at) {
-            $forceDuration = $lastCompletedForce->started_at->diffInSeconds($lastCompletedForce->completed_at);
-        }
-
-        $completedRuns = SitemapRunLog::query()
-            ->where('status', 'completed')
-            ->whereNotNull('completed_at')
-            ->where('processed_products', '>', 0)
-            ->latest('id')
-            ->limit(10)
-            ->get();
-
-        $speeds = [];
-        foreach ($completedRuns as $run) {
-            $secs = $run->started_at?->diffInSeconds($run->completed_at);
-            if ($secs && $secs > 0 && $run->processed_products > 0) {
-                $speeds[] = $run->processed_products / $secs;
-            }
-        }
-        $avgSpeed = !empty($speeds) ? round(array_sum($speeds) / count($speeds), 2) : null;
-
-        $cachedCounts = $sitemapGenerationService->getCachedCounts();
-        $totalActive = (int) $cachedCounts['active_products'];
-        $pendingProducts = (int) $cachedCounts['pending_products'];
-        $countsUpdatedAt = (string) $cachedCounts['updated_at'];
-
-
-        $settings = app(\App\Repositories\SettingsRepository::class);
-        $separateStores = (bool) $settings->get('sitemap.separate_stores', false);
-        $mode = $sitemapGenerationService->getMode();
-        $executionEnabled = $mode !== 'off';
-        $autoEnabled = $mode === 'auto';
-        $hourlyRates = $sitemapGenerationService->getHourlyRates();
-        $maxBatchesPerHour = $sitemapGenerationService->getMaxBatchesPerHour();
-
-        $nowTehran = now();
-        $currentTehranHour = (int) $nowTehran->format('G');
-        $currentRate = $sitemapGenerationService->getCurrentRate($currentTehranHour);
-        $currentBatchesPerHour = $sitemapGenerationService->getBatchesForHour($currentTehranHour);
-        $currentDelaySeconds = $sitemapGenerationService->getDelaySecondsForNextBatch($currentTehranHour);
-
-        $chunkFiles = glob(public_path('sitemaps/sitemap-*.xml.gz'));
-        $chunkCount = count($chunkFiles);
-
-        $dkChunkFiles = glob(public_path('sitemaps/sitemap-*-dk-*.xml.gz'));
-        $bsChunkFiles = glob(public_path('sitemaps/sitemap-*-bs-*.xml.gz'));
-        $mixedChunkFiles = array_filter($chunkFiles, fn($f) => !preg_match('/-(dk|bs)-g\d+\.xml\.gz$/', basename($f)));
-        $dkChunkCount = count($dkChunkFiles);
-        $bsChunkCount = count($bsChunkFiles);
-        $mixedChunkCount = count($mixedChunkFiles);
-
-        $sitemapIndexPath = public_path('sitemap.xml');
-        $sitemapIndexExists = file_exists($sitemapIndexPath);
-        $appUrl = rtrim(config('app.url'), '/');
-        $sitemapIndexUrl = $sitemapIndexExists ? $appUrl.'/sitemap.xml' : null;
-
-        $chunkFileUrls = [];
-        if ($chunkCount > 0) {
-            sort($chunkFiles);
-            foreach ($chunkFiles as $file) {
-                $chunkFileUrls[] = $appUrl.'/sitemaps/'.basename($file);
-            }
-        }
-
-        $totalSize = '—';
-        if ($chunkCount > 0) {
-            $bytes = array_sum(array_map('filesize', $chunkFiles));
-            $totalSize = $bytes > 1048576
-                ? round($bytes / 1048576, 1).' MB'
-                : round($bytes / 1024, 1).' KB';
-        }
-
-        $currentVersion = $sitemapGenerationService->getCurrentVersion();
-        $periodicRebuildEnabled = $sitemapGenerationService->getPeriodicRebuildEnabled();
-        $periodicRebuildDays = $sitemapGenerationService->getPeriodicRebuildDays();
-        $lastFullRebuildAt = $sitemapGenerationService->getLastFullRebuildAt();
-        $shouldDoFullRebuild = $sitemapGenerationService->shouldDoFullRebuild();
-        
-        $activeGroups = \App\Models\SitemapGroup::query()
-            ->where('version', $currentVersion)
-            ->where('is_active', true)
-            ->orderBy('group_index')
-            ->get();
-        
-        $totalGroups = $activeGroups->count();
-        $completeGroups = $activeGroups->where('is_complete', true)->count();
-        $incompleteGroups = $activeGroups->where('is_complete', false)->count();
-        $totalUrlsInGroups = $activeGroups->sum('url_count');
-        $draftUrlsInGroups = $activeGroups->where('is_complete', false)->sum('url_count');
-        $pendingNeededForNextGroup = $sitemapGenerationService->pendingProductsNeededForNextGroup($currentVersion);
-
-        $queueSettings = $settings->get('queue.settings', []);
-        $sitemapQueueName = (string) config('queue.sitemap_queue', 'default');
-        $pendingSitemapJobs = Schema::hasTable('jobs')
-            ? DB::table('jobs')
-                ->where('queue', $sitemapQueueName)
-                ->where('payload', 'like', '%Sitemap%')
-                ->count()
-            : 0;
-        $lastQueueRun = QueueExecutionLog::query()->latest('executed_at')->first();
-
-        return view('dash.admin.sitemap-hub', compact(
-            'isRunning',
-            'currentRun',
-            'lastRuns',
-            'lastCompletedRun',
-            'lastFailedRun',
-            'lastCompletedForce',
-            'forceDuration',
-            'totalRuns',
-            'totalRunsCompleted',
-            'chunkCount',
-            'dkChunkCount',
-            'bsChunkCount',
-            'mixedChunkCount',
-            'sitemapIndexPath',
-            'sitemapIndexExists',
-            'sitemapIndexUrl',
-            'chunkFileUrls',
-            'totalSize',
-            'totalActive',
-            'pendingProducts',
-            'countsUpdatedAt',
-            'separateStores',
-            'mode',
-            'executionEnabled',
-            'autoEnabled',
-            'hourlyRates',
-            'maxBatchesPerHour',
-            'nowTehran',
-            'currentTehranHour',
-            'currentRate',
-            'currentBatchesPerHour',
-            'currentDelaySeconds',
-            'avgSpeed',
-            'currentVersion',
-            'periodicRebuildEnabled',
-            'periodicRebuildDays',
-            'lastFullRebuildAt',
-            'shouldDoFullRebuild',
-            'totalGroups',
-            'completeGroups',
-            'incompleteGroups',
-            'totalUrlsInGroups',
-            'draftUrlsInGroups',
-            'pendingNeededForNextGroup',
-            'activeGroups',
-            'queueSettings',
-            'sitemapQueueName',
-            'pendingSitemapJobs',
-            'lastQueueRun',
-        ));
+        return view('dash.admin.sitemap-hub', [
+            'mode' => $sitemap->getMode(),
+            'isRunning' => $sitemap->isRunning(),
+            'currentRun' => $currentRun,
+            'lastRuns' => $lastRuns,
+            'lastCompleted' => $lastCompleted,
+            'lastFailed' => $lastFailed,
+            'totalRuns' => SitemapRunLog::query()->count(),
+            'completedRuns' => SitemapRunLog::query()->where('status', 'completed')->count(),
+            'activeProducts' => $counts['active'],
+            'countsUpdatedAt' => $counts['updated_at'],
+            'shardCount' => $stats['shard_count'],
+            'totalUrls' => $stats['total_urls'],
+            'activeGeneration' => $stats['active_generation'],
+            'hasSitemap' => $stats['has_sitemap'],
+            'indexUrl' => $stats['has_sitemap'] ? $appUrl.'/sitemap.xml' : null,
+            'shards' => $shards,
+            'rebuildIntervalHours' => $sitemap->rebuildIntervalHours(),
+            'lastBuildAt' => $sitemap->lastBuildAt(),
+            'rebuildDue' => $sitemap->isRebuildDue(),
+        ]);
     }
 
-    public function sitemapStatus(SitemapGenerationService $sitemapGenerationService): JsonResponse
+    public function sitemapStatus(SitemapGenerationService $sitemap): JsonResponse
     {
+        $counts = $sitemap->cachedCounts();
+        $stats = $sitemap->stats();
         $currentRun = SitemapRunLog::query()->where('status', 'running')->latest('id')->first();
-        $chunkFiles = glob(public_path('sitemaps/sitemap-*.xml.gz')) ?: [];
-        $hour = (int) now()->format('G');
 
         return response()->json([
-            'is_running' => (bool) Cache::get('sitemap:running', false),
-            'mode' => $sitemapGenerationService->getMode(),
-            'current_hour' => $hour,
-            'current_rate' => $sitemapGenerationService->getCurrentRate($hour),
-            'batches_per_hour' => $sitemapGenerationService->getBatchesForHour($hour),
-            'delay_seconds' => $sitemapGenerationService->getDelaySecondsForNextBatch($hour),
-            'max_batches_per_hour' => $sitemapGenerationService->getMaxBatchesPerHour(),
-            'pending_products' => (int) $sitemapGenerationService->getCachedCounts()['pending_products'],
-            'active_products' => (int) $sitemapGenerationService->getCachedCounts()['active_products'],
-            'counts_updated_at' => persianDateTime((string) $sitemapGenerationService->getCachedCounts()['updated_at']),
-            'chunk_count' => count($chunkFiles),
+            'is_running' => $sitemap->isRunning(),
+            'mode' => $sitemap->getMode(),
+            'active_products' => $counts['active'],
+            'counts_updated_at' => persianDateTime($counts['updated_at']),
+            'shard_count' => $stats['shard_count'],
+            'total_urls' => $stats['total_urls'],
+            'active_generation' => $stats['active_generation'],
             'current_run' => $currentRun ? [
                 'run_id' => $currentRun->run_id,
-                'status' => $currentRun->status,
-                'force_mode' => (bool) $currentRun->force_mode,
                 'processed_products' => (int) $currentRun->processed_products,
                 'total_products' => (int) ($currentRun->total_products ?? 0),
-                'total_chunks' => (int) $currentRun->total_chunks,
                 'progress' => $currentRun->progress,
                 'started_at' => $currentRun->started_at ? persianDateTime($currentRun->started_at) : null,
             ] : null,
         ]);
     }
 
-    public function saveSitemapSettings(Request $request, ActivityLogger $activityLogger, SitemapGenerationService $sitemapGenerationService): RedirectResponse
+    public function saveSitemapSettings(Request $request, ActivityLogger $activityLogger, SitemapGenerationService $sitemap): RedirectResponse
     {
-        $request->validate([
-            'separate_stores' => 'nullable|boolean',
+        $validated = $request->validate([
             'mode' => 'required|in:auto,off',
-            'max_batches_per_hour' => 'required|integer|min:1|max:3600',
-            'hourly_rates' => 'nullable',
+            'rebuild_interval_hours' => 'required|integer|min:1|max:720',
         ]);
 
-        $settings = app(\App\Repositories\SettingsRepository::class);
-        $settings->set('sitemap.separate_stores', (bool) $request->input('separate_stores', false));
-        $sitemapGenerationService->setMode((string) $request->input('mode', 'auto'));
-        $sitemapGenerationService->setMaxBatchesPerHour((int) $request->input('max_batches_per_hour'));
-
-        $ratesInput = $request->input('hourly_rates');
-        $rates = is_string($ratesInput) ? json_decode($ratesInput, true) : $ratesInput;
-        if (is_array($rates) && count($rates) === 24) {
-            $sitemapGenerationService->setHourlyRates($rates);
-        }
+        $sitemap->setMode($validated['mode']);
+        $sitemap->setRebuildIntervalHours((int) $validated['rebuild_interval_hours']);
 
         $activityLogger->log(
             'sitemap.settings',
             auth('admin')->user(),
-            'تنظیمات نرخ تولید و جداسازی فروشگاه‌های سایت مپ به‌روزرسانی شد',
+            'تنظیمات سایت‌مپ به‌روزرسانی شد',
         );
 
-        return back()->with('message', 'تنظیمات سایت مپ ذخیره شد.');
+        return back()->with('message', 'تنظیمات سایت‌مپ ذخیره شد.');
     }
 
-    public function stopSitemap(Request $request, ActivityLogger $activityLogger): RedirectResponse
+    public function startSitemapRebuild(Request $request, ActivityLogger $activityLogger, SitemapGenerationService $sitemap): RedirectResponse
     {
-        $runId = $request->input('run_id');
-
-        if (!$runId) {
-            return back()->withErrors(['message' => 'شناسه اجرا مشخص نشده است.']);
+        if ($sitemap->isRunning()) {
+            return back()->withErrors(['message' => 'یک فرآیند سایت‌مپ در حال اجراست. ابتدا آن را متوقف کنید.']);
         }
 
-        Cache::put("sitemap:stop:{$runId}", true, 86400);
-        Cache::forget('sitemap:running');
+        $run = $sitemap->start();
+
+        if (! $run) {
+            return back()->withErrors(['message' => 'امکان شروع بازسازی وجود ندارد (ماژول خاموش است).']);
+        }
+
+        $activityLogger->log(
+            'sitemap.rebuild',
+            auth('admin')->user(),
+            "بازسازی سایت‌مپ آغاز شد (اجرای {$run->run_id})",
+        );
+
+        return back()->with('message', 'بازسازی سایت‌مپ آغاز شد.');
+    }
+
+    public function stopSitemap(Request $request, ActivityLogger $activityLogger, SitemapGenerationService $sitemap): RedirectResponse
+    {
+        $sitemap->requestStop();
+        $sitemap->clearRunning();
 
         DB::table('jobs')
-            ->where('queue', (string) config('queue.sitemap_queue', 'default'))
-            ->where(function ($query) use ($runId) {
-                $query->where('payload', 'like', '%ProcessSitemapChunkJob%')
-                    ->orWhere('payload', 'like', '%CompressSitemapGroupJob%')
-                    ->orWhere('payload', 'like', '%FinalizeSitemapJob%')
-                    ->orWhere('payload', 'like', '%'.$runId.'%');
-            })
+            ->where('queue', $sitemap->queue())
+            ->where('payload', 'like', '%SitemapBuildJob%')
             ->delete();
 
         SitemapRunLog::query()
-            ->where('run_id', $runId)
             ->where('status', 'running')
             ->update([
                 'status' => 'failed',
-                'error_message' => 'توقف اضطراری',
+                'error_message' => 'توقف توسط مدیر',
                 'completed_at' => now(),
             ]);
 
         $activityLogger->log(
             'sitemap.stop',
             auth('admin')->user(),
-            'توقف اضطراری فرآیند سایت مپ',
+            'توقف فرآیند سایت‌مپ',
         );
 
-        return back()->with('message', 'فرآیند سایت مپ با موفقیت متوقف شد.');
+        return back()->with('message', 'فرآیند سایت‌مپ متوقف شد.');
     }
 
-    public function resetSitemap(Request $request, SitemapGenerationService $sitemap, ActivityLogger $activityLogger): RedirectResponse
+    public function resetSitemap(Request $request, ActivityLogger $activityLogger, SitemapGenerationService $sitemap): RedirectResponse
     {
-        $run = $sitemap->reset();
+        DB::table('jobs')
+            ->where('queue', $sitemap->queue())
+            ->where('payload', 'like', '%SitemapBuildJob%')
+            ->delete();
+
+        SitemapRunLog::query()
+            ->where('status', 'running')
+            ->update([
+                'status' => 'failed',
+                'error_message' => 'بازنشانی توسط مدیر',
+                'completed_at' => now(),
+            ]);
+
+        $sitemap->reset();
 
         $activityLogger->log(
             'sitemap.reset',
             auth('admin')->user(),
-            'بازنشانی کامل سایت‌مپ و شروع مجدد تولید',
+            'بازنشانی کامل سایت‌مپ',
         );
 
-        return back()->with(
-            'message',
-            $run
-                ? 'تمامی فایل‌های سایت‌مپ حذف و فرآیند تولید از نو آغاز شد.'
-                : 'تمامی فایل‌های سایت‌مپ حذف شدند اما ماژول غیرفعال است یا در حال اجراست.',
-        );
-    }
-
-    public function saveSitemapRebuildSettings(Request $request, ActivityLogger $activityLogger, SitemapGenerationService $sitemapGenerationService): RedirectResponse
-    {
-        $request->validate([
-            'periodic_rebuild_enabled' => 'nullable|boolean',
-            'periodic_rebuild_days' => 'required|integer|min:30|max:90',
-        ]);
-
-        $sitemapGenerationService->setPeriodicRebuildEnabled((bool) $request->input('periodic_rebuild_enabled', false));
-        $sitemapGenerationService->setPeriodicRebuildDays((int) $request->input('periodic_rebuild_days', 75));
-
-        $activityLogger->log(
-            'sitemap.rebuild_settings',
-            auth('admin')->user(),
-            'تنظیمات بازسازی دوره‌ای سایت‌مپ به‌روزرسانی شد',
-        );
-
-        return back()->with('message', 'تنظیمات بازسازی دوره‌ای ذخیره شد.');
-    }
-
-    public function forceFullRebuild(Request $request, SitemapGenerationService $sitemapGenerationService, ActivityLogger $activityLogger): RedirectResponse
-    {
-        if (Cache::get('sitemap:running')) {
-            return back()->withErrors(['message' => 'یک فرآیند سایت‌مپ در حال اجراست. لطفاً ابتدا آن را متوقف کنید.']);
-        }
-
-        $run = $sitemapGenerationService->start(true);
-
-        if (!$run) {
-            return back()->withErrors(['message' => 'امکان شروع بازسازی کامل وجود ندارد.']);
-        }
-
-        $activityLogger->log(
-            'sitemap.full_rebuild',
-            auth('admin')->user(),
-            'بازسازی کامل سایت‌مپ آغاز شد (نسخه جدید: ' . $run->version . ')',
-        );
-
-        return back()->with('message', "بازسازی کامل سایت‌مپ آغاز شد. نسخه جدید: {$run->version}");
-    }
-
-    public function getSitemapGroups(SitemapGenerationService $sitemapGenerationService): JsonResponse
-    {
-        $currentVersion = $sitemapGenerationService->getCurrentVersion();
-        
-        $groups = \App\Models\SitemapGroup::query()
-            ->where('version', $currentVersion)
-            ->where('is_active', true)
-            ->orderBy('group_index')
-            ->get()
-            ->map(function ($group) {
-                return [
-                    'group_index' => $group->group_index,
-                    'filename' => $group->filename,
-                    'url_count' => $group->url_count,
-                    'is_complete' => $group->is_complete,
-                    'first_product_id' => $group->first_product_id,
-                    'last_product_id' => $group->last_product_id,
-                    'created_at' => $group->created_at ? persianDateTime($group->created_at) : null,
-                    'completed_at' => $group->completed_at ? persianDateTime($group->completed_at) : null,
-                ];
-            });
-
-        return response()->json([
-            'current_version' => $currentVersion,
-            'groups' => $groups,
-            'total_groups' => $groups->count(),
-            'total_urls' => $groups->sum('url_count'),
-            'incomplete_groups' => $groups->where('is_complete', false)->count(),
-        ]);
+        return back()->with('message', 'سایت‌مپ بازنشانی شد. برای تولید مجدد یک بازسازی شروع کنید.');
     }
 
     public function cleanSitemapLogs(ActivityLogger $activityLogger): RedirectResponse
     {
-        $deletedCount = DB::table('sitemap_run_logs')->delete();
+        $deletedCount = SitemapRunLog::query()->where('status', '!=', 'running')->delete();
 
         $activityLogger->log(
             'sitemap.clean_logs',
             auth('admin')->user(),
-            "حذف همه لاگ‌های سایت‌مپ ({$deletedCount} رکورد حذف شد)",
+            "حذف لاگ‌های سایت‌مپ ({$deletedCount} رکورد)",
         );
 
-        return back()->with('message', "تمامی لاگ‌های سایت‌مپ حذف شدند. ({$deletedCount} رکورد)");
+        return back()->with('message', "لاگ‌های سایت‌مپ حذف شدند. ({$deletedCount} رکورد)");
     }
 }

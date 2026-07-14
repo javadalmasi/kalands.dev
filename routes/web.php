@@ -13,6 +13,7 @@ use App\Http\Controllers\CommentVoteController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Dashboard\AdminDashboardController;
 use App\Http\Controllers\Dashboard\AdminSearchController;
+use App\Http\Controllers\Dashboard\IndexNowController;
 use App\Http\Controllers\Dashboard\UserTicketController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\HomeController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QueueProcessController;
 use App\Http\Controllers\ResultController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\TwoFAController;
 use App\Http\Controllers\VisitorInfoController;
 use Illuminate\Support\Facades\Route;
@@ -37,15 +39,22 @@ Route::get('/api/bslm/{productId}', [AffiliateRedirectController::class, 'fetchA
 
 Route::get('/', [HomeController::class, 'home'])->name('index');
 
+// Dynamic XML sitemap (Yoast-style: index + per-shard product sitemaps).
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
+Route::get('/product-sitemap{shard}.xml', [SitemapController::class, 'shard'])
+    ->where('shard', '[1-9][0-9]*')
+    ->name('sitemap.shard');
+
 Route::get('/test-error/{code}', function ($code) {
     abort($code);
 });
 
 Route::get('/{key}.txt', function (string $key) {
     $path = public_path("{$key}.txt");
-    if (!file_exists($path)) {
+    if (! file_exists($path)) {
         abort(404);
     }
+
     return response()->file($path, ['Content-Type' => 'text/plain']);
 })->where('key', '[a-z0-9]{32}');
 
@@ -182,10 +191,10 @@ Route::prefix('dash/admin/{authkey}')
         Route::post('/queues/regenerate-token', [AdminDashboardController::class, 'regenerateQueueToken'])->name('queues.token.regenerate')->middleware('permission:queues.full');
 
         // ── Communication Hub ──────────────────────────────────────────────────────
-        Route::post('/mail-config',       [AdminDashboardController::class, 'saveMailConfig'])->name('mail.config.save')->middleware('permission:communication.edit');
-        Route::post('/mail-config/test',  [AdminDashboardController::class, 'sendMailTest'])->name('mail.config.test')->middleware('permission:communication.full');
-        Route::post('/sms-config',        [AdminDashboardController::class, 'saveSmsConfig'])->name('sms.config.save')->middleware('permission:communication.edit');
-        Route::post('/sms-config/test',   [AdminDashboardController::class, 'sendSmsTest'])->name('sms.config.test')->middleware('permission:communication.full');
+        Route::post('/mail-config', [AdminDashboardController::class, 'saveMailConfig'])->name('mail.config.save')->middleware('permission:communication.edit');
+        Route::post('/mail-config/test', [AdminDashboardController::class, 'sendMailTest'])->name('mail.config.test')->middleware('permission:communication.full');
+        Route::post('/sms-config', [AdminDashboardController::class, 'saveSmsConfig'])->name('sms.config.save')->middleware('permission:communication.edit');
+        Route::post('/sms-config/test', [AdminDashboardController::class, 'sendSmsTest'])->name('sms.config.test')->middleware('permission:communication.full');
         Route::post('/communication/defaults', [AdminDashboardController::class, 'saveCommunicationDefaults'])->name('communication.defaults.save')->middleware('permission:communication.edit');
         Route::get('/email-templates', [AdminDashboardController::class, 'emailTemplates'])->name('email.templates')->middleware('permission:email_templates.view');
         Route::post('/email-templates/layout', [AdminDashboardController::class, 'saveEmailTemplateLayout'])->name('email.templates.layout.save')->middleware('permission:email_templates.edit');
@@ -300,15 +309,13 @@ Route::prefix('dash/admin/{authkey}')
 
         Route::get('/modules/sitemap/status', [AdminDashboardController::class, 'sitemapStatus'])->name('sitemap.status')->middleware('permission:sitemap.view');
         Route::post('/modules/sitemap/settings', [AdminDashboardController::class, 'saveSitemapSettings'])->name('sitemap.settings')->middleware('permission:sitemap.view');
+        Route::post('/modules/sitemap/rebuild', [AdminDashboardController::class, 'startSitemapRebuild'])->name('sitemap.rebuild')->middleware('permission:sitemap.view');
         Route::post('/modules/sitemap/stop', [AdminDashboardController::class, 'stopSitemap'])->name('sitemap.stop')->middleware('permission:sitemap.view');
         Route::post('/modules/sitemap/reset', [AdminDashboardController::class, 'resetSitemap'])->name('sitemap.reset')->middleware('permission:sitemap.view');
-        Route::post('/modules/sitemap/rebuild-settings', [AdminDashboardController::class, 'saveSitemapRebuildSettings'])->name('sitemap.rebuild-settings')->middleware('permission:sitemap.view');
-        Route::post('/modules/sitemap/force-full-rebuild', [AdminDashboardController::class, 'forceFullRebuild'])->name('sitemap.force-full-rebuild')->middleware('permission:sitemap.view');
-        Route::get('/modules/sitemap/groups', [AdminDashboardController::class, 'getSitemapGroups'])->name('sitemap.groups')->middleware('permission:sitemap.view');
         Route::post('/modules/sitemap/clean-logs', [AdminDashboardController::class, 'cleanSitemapLogs'])->name('sitemap.clean-logs')->middleware('permission:sitemap.view');
 
-        Route::post('/modules/indexnow/settings', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'saveSettings'])->name('indexnow.settings.save')->middleware('permission:indexnow.edit');
-        Route::post('/modules/indexnow/regenerate-key', [\App\Http\Controllers\Dashboard\IndexNowController::class, 'regenerateKey'])->name('indexnow.key.regenerate')->middleware('permission:indexnow.edit');
+        Route::post('/modules/indexnow/settings', [IndexNowController::class, 'saveSettings'])->name('indexnow.settings.save')->middleware('permission:indexnow.edit');
+        Route::post('/modules/indexnow/regenerate-key', [IndexNowController::class, 'regenerateKey'])->name('indexnow.key.regenerate')->middleware('permission:indexnow.edit');
     });
 
 Route::prefix('admin')
