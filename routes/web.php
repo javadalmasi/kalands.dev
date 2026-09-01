@@ -18,7 +18,6 @@ use App\Http\Controllers\Dashboard\UserTicketController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LikeController;
-use App\Http\Controllers\LivewireAssetController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QueueProcessController;
@@ -29,7 +28,6 @@ use App\Http\Controllers\VisitorInfoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/api/info', [VisitorInfoController::class, 'index'])->name('visitor.info');
-Route::get('/api/assets/js', [LivewireAssetController::class, 'serveJs'])->name('livewire.asset');
 Route::get('/api/services/autocomplete/', [AutocompleteController::class, 'search'])->name('autocomplete.search');
 Route::get('/api/queue/process', [QueueProcessController::class, 'process'])->name('api.queue.process');
 Route::get('/go/{slug}', [AffiliateRedirectController::class, 'redirect'])->name('affiliate.go');

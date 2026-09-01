@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-danger/90 text-white';
             badge.innerHTML = '<span class="material-icons text-sm">error</span> ارسال ناموفق' + http;
-            msgEl.textContent = (data.error ? data.error + '\n\n' : '') + (data.trace ?? '');
+            msgEl.textContent = data.error ?? 'ارسال پیامک ناموفق بود.';
             msgEl.className   = 'text-[11px] font-mono whitespace-pre-wrap leading-5 text-red-400';
         }
 

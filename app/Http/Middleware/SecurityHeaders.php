@@ -15,6 +15,10 @@ class SecurityHeaders
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->is('*.map')) {
+            abort(404);
+        }
+
         $response = $next($request);
 
         $csp = implode('; ', [

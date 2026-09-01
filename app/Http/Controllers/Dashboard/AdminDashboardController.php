@@ -1330,24 +1330,20 @@ class AdminDashboardController extends Controller
             }
 
             $log .= 'From     : '.($cfg['sender_email'] ?? config('mail.from.address', '-'))."\n";
-            $log .= 'PHP      : '.PHP_VERSION."\n";
-            $log .= 'Laravel  : '.app()->version()."\n";
 
             return response()->json(['ok' => true, 'message' => $log]);
         } catch (\Throwable $e) {
             $elapsed = round((microtime(true) - $startTime) * 1000);
-            Log::error('Mail Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Mail Test Error: '.$e->getMessage(), [
+                'to' => $data['to'],
+                'elapsed_ms' => $elapsed,
+                'trace' => $e->getTraceAsString(),
+            ]);
 
-            $log = "[FAIL] ارسال ناموفق\n";
-            $log .= "To       : {$data['to']}\n";
-            $log .= "Elapsed  : {$elapsed}ms\n";
-            $log .= 'Driver   : '.config('mail.default', 'smtp')."\n\n";
-            $log .= "--- Exception ---\n";
-            $log .= get_class($e).': '.$e->getMessage()."\n\n";
-            $log .= "--- Stack Trace ---\n";
-            $log .= $e->getTraceAsString();
-
-            return response()->json(['ok' => false, 'error' => $e->getMessage(), 'trace' => $log]);
+            return response()->json([
+                'ok' => false,
+                'error' => 'ارسال ایمیل ناموفق بود. جزئیات خطا در لاگ سرور ثبت شد.',
+            ], 500);
         }
     }
 
@@ -1374,34 +1370,30 @@ class AdminDashboardController extends Controller
 
             $elapsed = round((microtime(true) - $startTime) * 1000);
             $httpStatus = $response->status();
-            $body = $response->body();
 
             if ($response->failed()) {
-                throw new \Exception("HTTP {$httpStatus} از وب‌سرویس: {$body}");
+                throw new \RuntimeException("HTTP {$httpStatus} از وب‌سرویس پیامک.");
             }
 
             $log = "[OK] پیامک ارسال شد\n";
             $log .= "To       : {$data['to']}\n";
             $log .= "Elapsed  : {$elapsed}ms\n";
             $log .= "HTTP     : {$httpStatus}\n";
-            $log .= "Endpoint : {$endpoint}/***\n\n";
-            $log .= "--- Response Body ---\n";
-            $log .= $body;
+            $log .= "Endpoint : {$endpoint}/***\n";
 
             return response()->json(['ok' => true, 'message' => $log]);
         } catch (\Throwable $e) {
             $elapsed = round((microtime(true) - $startTime) * 1000);
-            Log::error('SMS Test Error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('SMS Test Error: '.$e->getMessage(), [
+                'to' => $data['to'],
+                'elapsed_ms' => $elapsed,
+                'trace' => $e->getTraceAsString(),
+            ]);
 
-            $log = "[FAIL] ارسال ناموفق\n";
-            $log .= "To       : {$data['to']}\n";
-            $log .= "Elapsed  : {$elapsed}ms\n\n";
-            $log .= "--- Exception ---\n";
-            $log .= $e->getMessage()."\n\n";
-            $log .= "--- Stack Trace ---\n";
-            $log .= $e->getTraceAsString();
-
-            return response()->json(['ok' => false, 'error' => $e->getMessage(), 'trace' => $log]);
+            return response()->json([
+                'ok' => false,
+                'error' => 'ارسال پیامک ناموفق بود. جزئیات خطا در لاگ سرور ثبت شد.',
+            ], 500);
         }
     }
 
