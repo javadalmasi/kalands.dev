@@ -11,7 +11,7 @@ class Verify2FA
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::guard('web')->check() && !Auth::guard('admin')->check()) {
+        if (! Auth::guard('web')->check() && ! Auth::guard('admin')->check()) {
             return $next($request);
         }
 
@@ -21,7 +21,7 @@ class Verify2FA
 
         if (Auth::guard('admin')->check()) {
             $admin = Auth::guard('admin')->user();
-            if (!$admin->two_factor_secret) {
+            if (! $admin->two_factor_secret) {
                 return $next($request);
             }
 
@@ -33,7 +33,7 @@ class Verify2FA
         }
 
         $user = Auth::guard('web')->user();
-        if (!$user->two_factor_secret) {
+        if (! $user->two_factor_secret) {
             return $next($request);
         }
 

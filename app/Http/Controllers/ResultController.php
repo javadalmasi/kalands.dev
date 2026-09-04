@@ -8,15 +8,15 @@ class ResultController extends Controller
 {
     private function normalizeResultPayload($payload): array
     {
-        if (!is_array($payload)) {
+        if (! is_array($payload)) {
             return ['status' => 500, 'data' => ['products' => []]];
         }
 
-        if (!isset($payload['data']) || !is_array($payload['data'])) {
+        if (! isset($payload['data']) || ! is_array($payload['data'])) {
             $payload['data'] = [];
         }
 
-        if (!isset($payload['data']['products']) || !is_array($payload['data']['products'])) {
+        if (! isset($payload['data']['products']) || ! is_array($payload['data']['products'])) {
             $payload['data']['products'] = [];
         }
 
@@ -26,22 +26,22 @@ class ResultController extends Controller
     private function productUniqueKey(array $item, int $index = 0): string
     {
         if (isset($item['id']) && $item['id'] !== null && $item['id'] !== '') {
-            return 'id:' . (string)$item['id'];
+            return 'id:'.(string) $item['id'];
         }
 
         $uri = $item['url']['uri'] ?? '';
 
         if (is_string($uri) && $uri !== '') {
-            return 'uri:' . $uri;
+            return 'uri:'.$uri;
         }
 
         $title = $item['title_fa'] ?? ($item['title'] ?? '');
 
         if (is_string($title) && $title !== '') {
-            return 'title:' . $title;
+            return 'title:'.$title;
         }
 
-        return 'index:' . $index;
+        return 'index:'.$index;
     }
 
     private function deduplicateProducts(array $products): array
@@ -50,14 +50,14 @@ class ResultController extends Controller
         $seen = [];
 
         foreach (array_values($products) as $index => $product) {
-            if (!is_array($product)) {
+            if (! is_array($product)) {
                 continue;
             }
 
             // Filter by Digikala URL pattern
             $uri = $product['url']['uri'] ?? '';
             if ($uri !== '' && str_contains($uri, 'dkp-')) {
-                if (!str_starts_with($uri, '/product/dkp-')) {
+                if (! str_starts_with($uri, '/product/dkp-')) {
                     continue;
                 }
             }
@@ -79,7 +79,7 @@ class ResultController extends Controller
     {
         $products = $data['data']['products'] ?? null;
 
-        if (!is_array($products)) {
+        if (! is_array($products)) {
             return;
         }
 
@@ -100,13 +100,13 @@ class ResultController extends Controller
         foreach ($filterKeys as $filterKey) {
             $values = $request->input($filterKey, []);
 
-            if (!is_array($values)) {
+            if (! is_array($values)) {
                 continue;
             }
 
-            $values = array_values(array_filter($values, fn($value) => $value !== null && $value !== ''));
+            $values = array_values(array_filter($values, fn ($value) => $value !== null && $value !== ''));
 
-            if (!empty($values)) {
+            if (! empty($values)) {
                 $activeFilterGroups++;
                 $activeFilterValues += count($values);
             }
@@ -115,20 +115,20 @@ class ResultController extends Controller
         $canonical = null;
         $canonicalQuery = [];
 
-        if (!($isResultRoot && $request->filled('q'))) {
-            $canonical = rtrim(config('app.url'), '/') . '/' . ltrim($path, '/');
+        if (! ($isResultRoot && $request->filled('q'))) {
+            $canonical = rtrim(config('app.url'), '/').'/'.ltrim($path, '/');
 
             if (
                 $activeFilterGroups === 0
-                && !$request->filled('q')
+                && ! $request->filled('q')
                 && $request->filled('page')
-                && (int)$request->query('page') > 1
+                && (int) $request->query('page') > 1
             ) {
-                $canonicalQuery['page'] = (int)$request->query('page');
+                $canonicalQuery['page'] = (int) $request->query('page');
             }
 
-            if (!empty($canonicalQuery)) {
-                $canonical .= '?' . http_build_query($canonicalQuery);
+            if (! empty($canonicalQuery)) {
+                $canonical .= '?'.http_build_query($canonicalQuery);
             }
         }
 
@@ -148,7 +148,7 @@ class ResultController extends Controller
 
     private function signingKey(): string
     {
-        $key = (string)config('app.key');
+        $key = (string) config('app.key');
 
         if (str_starts_with($key, 'base64:')) {
             $decoded = base64_decode(substr($key, 7), true);
@@ -193,12 +193,12 @@ class ResultController extends Controller
         $signature = hash_hmac('sha256', $json, $this->signingKey());
         $encoded = rtrim(strtr(base64_encode($json), '+/', '-_'), '=');
 
-        return $encoded . '.' . $signature;
+        return $encoded.'.'.$signature;
     }
 
     private function decodeInfiniteToken(string $token): ?array
     {
-        if (!str_contains($token, '.')) {
+        if (! str_contains($token, '.')) {
             return null;
         }
 
@@ -211,17 +211,17 @@ class ResultController extends Controller
 
         $expectedSignature = hash_hmac('sha256', $json, $this->signingKey());
 
-        if (!hash_equals($expectedSignature, $signature)) {
+        if (! hash_equals($expectedSignature, $signature)) {
             return null;
         }
 
         $decoded = json_decode($json, true);
 
-        if (!is_array($decoded) || !isset($decoded['path']) || !isset($decoded['query'])) {
+        if (! is_array($decoded) || ! isset($decoded['path']) || ! isset($decoded['query'])) {
             return null;
         }
 
-        if (!is_string($decoded['path']) || !is_array($decoded['query'])) {
+        if (! is_string($decoded['path']) || ! is_array($decoded['query'])) {
             return null;
         }
 
@@ -232,11 +232,11 @@ class ResultController extends Controller
     {
         $values = $query[$key] ?? [];
 
-        if (!is_array($values)) {
+        if (! is_array($values)) {
             return [];
         }
 
-        return array_values(array_filter($values, fn($value) => $value !== null && $value !== ''));
+        return array_values(array_filter($values, fn ($value) => $value !== null && $value !== ''));
     }
 
     private function scalarFromQuery(array $query, string $key): string
@@ -247,7 +247,7 @@ class ResultController extends Controller
             return '';
         }
 
-        return trim((string)$value);
+        return trim((string) $value);
     }
 
     private function indexedQueryString(string $name, array $values): string
@@ -259,7 +259,7 @@ class ResultController extends Controller
         $queryString = '';
 
         foreach (array_values($values) as $index => $value) {
-            $queryString .= '&' . $name . '[' . $index . ']=' . urlencode((string)$value);
+            $queryString .= '&'.$name.'['.$index.']='.urlencode((string) $value);
         }
 
         return $queryString;
@@ -269,9 +269,9 @@ class ResultController extends Controller
     {
         $segments = array_values(array_filter(explode('/', trim($path, '/'))));
         $sort = $this->scalarFromQuery($query, 'sort');
-        $sortValue = ($sort === '' || !is_numeric($sort)) ? 1 : (int)$sort;
+        $sortValue = ($sort === '' || ! is_numeric($sort)) ? 1 : (int) $sort;
         $qValue = $this->scalarFromQuery($query, 'q');
-        $qQuery = $qValue !== '' ? '&q=' . urlencode($qValue) : '';
+        $qQuery = $qValue !== '' ? '&q='.urlencode($qValue) : '';
         $listValue = $this->scalarFromQuery($query, 'list');
 
         $categories = $this->indexedQueryString('categories', $this->filterValuesFromQuery($query, 'categories'));
@@ -280,50 +280,50 @@ class ResultController extends Controller
 
         if (($segments[0] ?? '') === 'result' && count($segments) === 1) {
             if ($listValue !== '') {
-                return 'promotions/plp_' . $listValue . '/?page=' . $page . '&sort=' . $sortValue . $categories . $brands . $colors;
+                return 'promotions/plp_'.$listValue.'/?page='.$page.'&sort='.$sortValue.$categories.$brands.$colors;
             }
 
-            return 'search/?q=' . urlencode($qValue) . '&page=' . $page . '&sort=' . $sortValue . $categories . $brands . $colors;
+            return 'search/?q='.urlencode($qValue).'&page='.$page.'&sort='.$sortValue.$categories.$brands.$colors;
         }
 
         if (($segments[0] ?? '') === 'result' && count($segments) === 2) {
             $category = str_replace('category-', '', urldecode($segments[1]));
 
-            return 'categories/' . $category . '/search/?page=' . $page . '&sort=' . $sortValue . $brands . $qQuery . $colors;
+            return 'categories/'.$category.'/search/?page='.$page.'&sort='.$sortValue.$brands.$qQuery.$colors;
         }
 
         if (($segments[0] ?? '') === 'result' && count($segments) >= 3) {
             $category = str_replace('category-', '', urldecode($segments[1]));
             $brand = urldecode($segments[2]);
 
-            return 'categories/' . $category . '/brands/' . $brand . '/search/?page=' . $page . '&sort=' . $sortValue . $qQuery . $colors;
+            return 'categories/'.$category.'/brands/'.$brand.'/search/?page='.$page.'&sort='.$sortValue.$qQuery.$colors;
         }
 
         if (($segments[0] ?? '') === 'main' && isset($segments[1])) {
             $category = urldecode($segments[1]);
 
-            return 'categories/' . $category . '/search/?page=' . $page . '&sort=' . $sortValue . $brands . $qQuery . $colors;
+            return 'categories/'.$category.'/search/?page='.$page.'&sort='.$sortValue.$brands.$qQuery.$colors;
         }
 
         if (($segments[0] ?? '') === 'seller' && isset($segments[1])) {
             $seller = urldecode($segments[1]);
 
-            return 'sellers/' . $seller . '/?page=' . $page . '&sort=' . $sortValue . $categories . $brands . $qQuery . $colors;
+            return 'sellers/'.$seller.'/?page='.$page.'&sort='.$sortValue.$categories.$brands.$qQuery.$colors;
         }
 
         if (($segments[0] ?? '') === 'product' && ($segments[1] ?? '') === 'brand' && isset($segments[2])) {
             $brandName = urldecode($segments[2]);
 
-            return 'brands/' . $brandName . '/?page=' . $page . '&sort=' . $sortValue . $categories . $colors . $qQuery;
+            return 'brands/'.$brandName.'/?page='.$page.'&sort='.$sortValue.$categories.$colors.$qQuery;
         }
 
-        return 'search/?q=' . urlencode($qValue) . '&page=' . $page . '&sort=' . $sortValue . $categories . $brands . $colors;
+        return 'search/?q='.urlencode($qValue).'&page='.$page.'&sort='.$sortValue.$categories.$brands.$colors;
     }
 
     private function buildInfiniteMeta(array $data): array
     {
-        $currentPage = (int)($data['data']['pager']['current_page'] ?? 1);
-        $maxPages = min((int)($data['data']['pager']['total_pages'] ?? 1), 100);
+        $currentPage = (int) ($data['data']['pager']['current_page'] ?? 1);
+        $maxPages = min((int) ($data['data']['pager']['total_pages'] ?? 1), 100);
         $nextPage = min($currentPage + 1, $maxPages);
 
         return [
@@ -336,8 +336,8 @@ class ResultController extends Controller
 
     public function infinite(Request $request)
     {
-        $page = (int)$request->query('page', 2);
-        $token = (string)$request->query('token', '');
+        $page = (int) $request->query('page', 2);
+        $token = (string) $request->query('token', '');
 
         if ($page < 2 || $page > 100 || $token === '') {
             return response()->json(['message' => 'Invalid request.'], 422);
@@ -352,8 +352,8 @@ class ResultController extends Controller
         $endpoint = $this->buildApiEndpoint($decodedToken['path'], $decodedToken['query'], $page);
         $data = ProductController::DigikalaApi($endpoint, 'v1');
         $products = $this->deduplicateProducts($data['data']['products'] ?? []);
-        $maxPages = min((int)($data['data']['pager']['total_pages'] ?? $page), 100);
-        $currentPage = min((int)($data['data']['pager']['current_page'] ?? $page), $maxPages);
+        $maxPages = min((int) ($data['data']['pager']['total_pages'] ?? $page), 100);
+        $currentPage = min((int) ($data['data']['pager']['current_page'] ?? $page), $maxPages);
 
         $html = '';
 
@@ -369,7 +369,7 @@ class ResultController extends Controller
         ]);
     }
 
-    function brand($brand_name)
+    public function brand($brand_name)
     {
         if (request()->has('pageno')) {
             return redirect(str_replace('pageno=', 'page=', request()->fullUrl()), 301);
@@ -380,11 +380,11 @@ class ResultController extends Controller
             }
             $page['num'] = request()->get('page');
             $page['Previous']['status'] = true;
-            $page['Previous']['1x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') - 1, request()->fullUrl());
-            $page['Next']['1x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 1, request()->fullUrl());
-            $page['Next']['2x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 2, request()->fullUrl());
-            $page['Next']['3x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 3, request()->fullUrl());
-            $page['Next']['10x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 10, request()->fullUrl());
+            $page['Previous']['1x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') - 1, request()->fullUrl());
+            $page['Next']['1x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 1, request()->fullUrl());
+            $page['Next']['2x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 2, request()->fullUrl());
+            $page['Next']['3x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 3, request()->fullUrl());
+            $page['Next']['10x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 10, request()->fullUrl());
         } else {
             $page['Previous']['status'] = false;
             $page['num'] = 1;
@@ -402,7 +402,7 @@ class ResultController extends Controller
         if (request()->has('categories')) {
             $categories = '';
             foreach (request()->get('categories') as $category) {
-                $categories .= '&categories[' . $couner . ']=' . $category;
+                $categories .= '&categories['.$couner.']='.$category;
                 $next_categories_id = $couner + 1;
                 $couner++;
             }
@@ -414,7 +414,7 @@ class ResultController extends Controller
         if (request()->has('colors')) {
             $colors = '';
             foreach (request()->get('colors') as $color) {
-                $colors .= '&color_palettes[' . $couner . ']=' . $color;
+                $colors .= '&color_palettes['.$couner.']='.$color;
                 $next_colors_id = $couner + 1;
                 $couner++;
             }
@@ -423,44 +423,45 @@ class ResultController extends Controller
             $colors = '';
         }
         if (request()->has('q')) {
-            $query = '&q=' . request()->get('q');
+            $query = '&q='.request()->get('q');
         } else {
             $query = '';
         }
         $Data = $this->normalizeResultPayload(
-            ProductController::DigikalaApi('brands/' . $brand_name . '/?page=' . $page['num'] . '&sort=' . $sort . $categories . $colors . $query, 'v1', true)
+            ProductController::DigikalaApi('brands/'.$brand_name.'/?page='.$page['num'].'&sort='.$sort.$categories.$colors.$query, 'v1', true)
         );
 
         if (($Data['status'] ?? null) == 301) {
             $premiumData = $this->normalizeResultPayload(
-                ProductController::DigikalaApi('brands/' . $brand_name . '/premium/?page=' . $page['num'] . '&sort=' . $sort . $categories . $colors . $query, 'v1')
+                ProductController::DigikalaApi('brands/'.$brand_name.'/premium/?page='.$page['num'].'&sort='.$sort.$categories.$colors.$query, 'v1')
             );
             $premiumBrandId = $premiumData['data']['brand']['id'] ?? null;
             $premiumBrandTitle = $premiumData['data']['brand']['title_fa'] ?? null;
 
             if ($premiumBrandId && $premiumBrandTitle) {
-                return redirect(config('app.url') . '/result/?brands[0]=' . $premiumBrandId . '&title=' . $premiumBrandTitle);
+                return redirect(config('app.url').'/result/?brands[0]='.$premiumBrandId.'&title='.$premiumBrandTitle);
             }
 
             abort(404);
         }
 
-        $isValidBrandResponse = ((int)($Data['status'] ?? 500) === 200)
+        $isValidBrandResponse = ((int) ($Data['status'] ?? 500) === 200)
             && isset($Data['data']['brand'])
             && is_array($Data['data']['brand'])
-            && !empty($Data['data']['brand']['id']);
+            && ! empty($Data['data']['brand']['id']);
 
-        if (!$isValidBrandResponse) {
+        if (! $isValidBrandResponse) {
             abort(404);
         }
 
         $this->deduplicateDataProducts($Data);
         $seo = $this->buildSeoMeta();
         $infinite = $this->buildInfiniteMeta($Data);
+
         return view('layouts.result.index', compact('Data', 'page', 'next_categories_id', 'next_colors_id', 'seo', 'infinite'));
     }
 
-    function query()
+    public function query()
     {
         if (request()->has('pageno')) {
             return redirect(str_replace('pageno=', 'page=', request()->fullUrl()), 301);
@@ -471,11 +472,11 @@ class ResultController extends Controller
             }
             $page['num'] = request()->get('page');
             $page['Previous']['status'] = true;
-            $page['Previous']['1x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') - 1, request()->fullUrl());
-            $page['Next']['1x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 1, request()->fullUrl());
-            $page['Next']['2x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 2, request()->fullUrl());
-            $page['Next']['3x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 3, request()->fullUrl());
-            $page['Next']['10x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 10, request()->fullUrl());
+            $page['Previous']['1x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') - 1, request()->fullUrl());
+            $page['Next']['1x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 1, request()->fullUrl());
+            $page['Next']['2x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 2, request()->fullUrl());
+            $page['Next']['3x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 3, request()->fullUrl());
+            $page['Next']['10x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 10, request()->fullUrl());
         } else {
             $page['Previous']['status'] = false;
             $page['num'] = 1;
@@ -493,7 +494,7 @@ class ResultController extends Controller
         if (request()->has('categories')) {
             $categories = '';
             foreach (request()->get('categories') as $category) {
-                $categories .= '&categories[' . $couner . ']=' . $category;
+                $categories .= '&categories['.$couner.']='.$category;
                 $next_categories_id = $couner + 1;
                 $couner++;
             }
@@ -505,7 +506,7 @@ class ResultController extends Controller
         if (request()->has('brands')) {
             $brands = '';
             foreach (request()->get('brands') as $brand) {
-                $brands .= '&brands[' . $couner . ']=' . $brand;
+                $brands .= '&brands['.$couner.']='.$brand;
                 $next_brands_id = $couner + 1;
                 $couner++;
             }
@@ -517,7 +518,7 @@ class ResultController extends Controller
         if (request()->has('colors')) {
             $colors = '';
             foreach (request()->get('colors') as $color) {
-                $colors .= '&color_palettes[' . $couner . ']=' . $color;
+                $colors .= '&color_palettes['.$couner.']='.$color;
                 $next_colors_id = $couner + 1;
                 $couner++;
             }
@@ -527,17 +528,18 @@ class ResultController extends Controller
         }
         $filter_search_enable = false;
         if (request()->has('list')) {
-            $Data = ProductController::DigikalaApi('promotions/plp_' . request()->get('list') . '/' . '?page=' . $page['num'] . '&sort=' . $sort . $categories . $brands . $colors, 'v1');
+            $Data = ProductController::DigikalaApi('promotions/plp_'.request()->get('list').'/'.'?page='.$page['num'].'&sort='.$sort.$categories.$brands.$colors, 'v1');
         } else {
-            $Data = ProductController::DigikalaApi('search/?q=' . request()->get('q') . '&page=' . $page['num'] . '&sort=' . $sort . $categories . $brands . $colors, 'v1');
+            $Data = ProductController::DigikalaApi('search/?q='.request()->get('q').'&page='.$page['num'].'&sort='.$sort.$categories.$brands.$colors, 'v1');
         }
         $this->deduplicateDataProducts($Data);
         $seo = $this->buildSeoMeta();
         $infinite = $this->buildInfiniteMeta($Data);
+
         return view('layouts.result.index', compact('Data', 'page', 'next_categories_id', 'next_brands_id', 'filter_search_enable', 'next_categories_id', 'seo', 'infinite'));
     }
 
-    function category($category)
+    public function category($category)
     {
         if (request()->has('pageno')) {
             return redirect(str_replace('pageno=', 'page=', request()->fullUrl()), 301);
@@ -548,11 +550,11 @@ class ResultController extends Controller
             }
             $page['num'] = request()->get('page');
             $page['Previous']['status'] = true;
-            $page['Previous']['1x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') - 1, request()->fullUrl());
-            $page['Next']['1x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 1, request()->fullUrl());
-            $page['Next']['2x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 2, request()->fullUrl());
-            $page['Next']['3x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 3, request()->fullUrl());
-            $page['Next']['10x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 10, request()->fullUrl());
+            $page['Previous']['1x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') - 1, request()->fullUrl());
+            $page['Next']['1x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 1, request()->fullUrl());
+            $page['Next']['2x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 2, request()->fullUrl());
+            $page['Next']['3x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 3, request()->fullUrl());
+            $page['Next']['10x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 10, request()->fullUrl());
         } else {
             $page['Previous']['status'] = false;
             $page['num'] = 1;
@@ -570,7 +572,7 @@ class ResultController extends Controller
         if (request()->has('brands')) {
             $brands = '';
             foreach (request()->get('brands') as $brand) {
-                $brands .= '&brands[' . $couner . ']=' . $brand;
+                $brands .= '&brands['.$couner.']='.$brand;
                 $next_brands_id = $couner + 1;
                 $couner++;
             }
@@ -579,7 +581,7 @@ class ResultController extends Controller
             $brands = '';
         }
         if (request()->has('q')) {
-            $query = '&q=' . request()->get('q');
+            $query = '&q='.request()->get('q');
         } else {
             $query = '';
         }
@@ -587,7 +589,7 @@ class ResultController extends Controller
         if (request()->has('colors')) {
             $colors = '';
             foreach (request()->get('colors') as $color) {
-                $colors .= '&color_palettes[' . $couner . ']=' . $color;
+                $colors .= '&color_palettes['.$couner.']='.$color;
                 $next_colors_id = $couner + 1;
                 $couner++;
             }
@@ -595,14 +597,15 @@ class ResultController extends Controller
             $next_colors_id = 0;
             $colors = '';
         }
-        $Data = ProductController::DigikalaApi('categories/' . str_replace('category-', '', $category) . '/search/?page=' . $page['num'] . '&sort=' . $sort . $brands . $query . $colors, 'v1');
+        $Data = ProductController::DigikalaApi('categories/'.str_replace('category-', '', $category).'/search/?page='.$page['num'].'&sort='.$sort.$brands.$query.$colors, 'v1');
         $this->deduplicateDataProducts($Data);
         $seo = $this->buildSeoMeta();
         $infinite = $this->buildInfiniteMeta($Data);
+
         return view('layouts.result.index', compact('Data', 'page', 'next_brands_id', 'next_colors_id', 'seo', 'infinite'));
     }
 
-    function category_brand($category, $brand)
+    public function category_brand($category, $brand)
     {
         if (request()->has('pageno')) {
             return redirect(str_replace('pageno=', 'page=', request()->fullUrl()), 301);
@@ -613,11 +616,11 @@ class ResultController extends Controller
             }
             $page['num'] = request()->get('page');
             $page['Previous']['status'] = true;
-            $page['Previous']['1x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') - 1, request()->fullUrl());
-            $page['Next']['1x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 1, request()->fullUrl());
-            $page['Next']['2x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 2, request()->fullUrl());
-            $page['Next']['3x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 3, request()->fullUrl());
-            $page['Next']['10x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 10, request()->fullUrl());
+            $page['Previous']['1x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') - 1, request()->fullUrl());
+            $page['Next']['1x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 1, request()->fullUrl());
+            $page['Next']['2x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 2, request()->fullUrl());
+            $page['Next']['3x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 3, request()->fullUrl());
+            $page['Next']['10x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 10, request()->fullUrl());
         } else {
             $page['Previous']['status'] = false;
             $page['num'] = 1;
@@ -632,7 +635,7 @@ class ResultController extends Controller
             $sort = 1;
         }
         if (request()->has('q')) {
-            $query = '&q=' . request()->get('q');
+            $query = '&q='.request()->get('q');
         } else {
             $query = '';
         }
@@ -640,7 +643,7 @@ class ResultController extends Controller
         if (request()->has('colors')) {
             $colors = '';
             foreach (request()->get('colors') as $color) {
-                $colors .= '&color_palettes[' . $couner . ']=' . $color;
+                $colors .= '&color_palettes['.$couner.']='.$color;
                 $next_colors_id = $couner + 1;
                 $couner++;
             }
@@ -648,19 +651,20 @@ class ResultController extends Controller
             $next_colors_id = 0;
             $colors = '';
         }
-        $Data = ProductController::DigikalaApi('categories/' . str_replace('category-', '', $category) . '/brands/' . $brand . '/search/?page=' . $page['num'] . '&sort=' . $sort . $query . $colors, 'v1');
+        $Data = ProductController::DigikalaApi('categories/'.str_replace('category-', '', $category).'/brands/'.$brand.'/search/?page='.$page['num'].'&sort='.$sort.$query.$colors, 'v1');
 
-        if ((int)($Data['status'] ?? 500) !== 200) {
+        if ((int) ($Data['status'] ?? 500) !== 200) {
             abort(404);
         }
 
         $this->deduplicateDataProducts($Data);
         $seo = $this->buildSeoMeta();
         $infinite = $this->buildInfiniteMeta($Data);
+
         return view('layouts.result.index', compact('Data', 'page', 'next_colors_id', 'seo', 'infinite'));
     }
 
-    function main_category($category)
+    public function main_category($category)
     {
         if (request()->has('pageno')) {
             return redirect(str_replace('pageno=', 'page=', request()->fullUrl()), 301);
@@ -671,11 +675,11 @@ class ResultController extends Controller
             }
             $page['num'] = request()->get('page');
             $page['Previous']['status'] = true;
-            $page['Previous']['1x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') - 1, request()->fullUrl());
-            $page['Next']['1x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 1, request()->fullUrl());
-            $page['Next']['2x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 2, request()->fullUrl());
-            $page['Next']['3x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 3, request()->fullUrl());
-            $page['Next']['10x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 10, request()->fullUrl());
+            $page['Previous']['1x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') - 1, request()->fullUrl());
+            $page['Next']['1x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 1, request()->fullUrl());
+            $page['Next']['2x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 2, request()->fullUrl());
+            $page['Next']['3x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 3, request()->fullUrl());
+            $page['Next']['10x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 10, request()->fullUrl());
         } else {
             $page['Previous']['status'] = false;
             $page['num'] = 1;
@@ -690,12 +694,11 @@ class ResultController extends Controller
             $sort = 1;
         }
 
-
         $couner = 0;
         if (request()->has('brands')) {
             $brands = '';
             foreach (request()->get('brands') as $brand) {
-                $brands .= '&brands[' . $couner . ']=' . $brand;
+                $brands .= '&brands['.$couner.']='.$brand;
                 $next_brands_id = $couner + 1;
                 $couner++;
             }
@@ -704,7 +707,7 @@ class ResultController extends Controller
             $brands = '';
         }
         if (request()->has('q')) {
-            $query = '&q=' . request()->get('q');
+            $query = '&q='.request()->get('q');
         } else {
             $query = '';
         }
@@ -712,7 +715,7 @@ class ResultController extends Controller
         if (request()->has('colors')) {
             $colors = '';
             foreach (request()->get('colors') as $color) {
-                $colors .= '&color_palettes[' . $couner . ']=' . $color;
+                $colors .= '&color_palettes['.$couner.']='.$color;
                 $next_colors_id = $couner + 1;
                 $couner++;
             }
@@ -720,14 +723,15 @@ class ResultController extends Controller
             $next_colors_id = 0;
             $colors = '';
         }
-        $Data = ProductController::DigikalaApi('categories/' . $category . '/search/?page=' . $page['num'] . '&sort=' . $sort . $brands . $query . $colors, 'v1');
+        $Data = ProductController::DigikalaApi('categories/'.$category.'/search/?page='.$page['num'].'&sort='.$sort.$brands.$query.$colors, 'v1');
         $this->deduplicateDataProducts($Data);
         $seo = $this->buildSeoMeta();
         $infinite = $this->buildInfiniteMeta($Data);
+
         return view('layouts.result.index', compact('Data', 'page', 'next_brands_id', 'seo', 'infinite'));
     }
 
-    function seller($seller_id)
+    public function seller($seller_id)
     {
         if (request()->has('pageno')) {
             return redirect(str_replace('pageno=', 'page=', request()->fullUrl()), 301);
@@ -738,11 +742,11 @@ class ResultController extends Controller
             }
             $page['num'] = request()->get('page');
             $page['Previous']['status'] = true;
-            $page['Previous']['1x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') - 1, request()->fullUrl());
-            $page['Next']['1x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 1, request()->fullUrl());
-            $page['Next']['2x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 2, request()->fullUrl());
-            $page['Next']['3x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 3, request()->fullUrl());
-            $page['Next']['10x'] = str_replace('page=' . request()->get('page'), 'page=' . request()->get('page') + 10, request()->fullUrl());
+            $page['Previous']['1x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') - 1, request()->fullUrl());
+            $page['Next']['1x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 1, request()->fullUrl());
+            $page['Next']['2x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 2, request()->fullUrl());
+            $page['Next']['3x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 3, request()->fullUrl());
+            $page['Next']['10x'] = str_replace('page='.request()->get('page'), 'page='.request()->get('page') + 10, request()->fullUrl());
         } else {
             $page['Previous']['status'] = false;
             $page['num'] = 1;
@@ -760,7 +764,7 @@ class ResultController extends Controller
         if (request()->has('brands')) {
             $brands = '';
             foreach (request()->get('brands') as $brand) {
-                $brands .= '&brands[' . $couner . ']=' . $brand;
+                $brands .= '&brands['.$couner.']='.$brand;
                 $next_brands_id = $couner + 1;
                 $couner++;
             }
@@ -772,7 +776,7 @@ class ResultController extends Controller
         if (request()->has('categories')) {
             $categories = '';
             foreach (request()->get('categories') as $category) {
-                $categories .= '&categories[' . $couner . ']=' . $category;
+                $categories .= '&categories['.$couner.']='.$category;
                 $next_categories_id = $couner + 1;
                 $couner++;
             }
@@ -784,7 +788,7 @@ class ResultController extends Controller
         if (request()->has('brands')) {
             $brands = '';
             foreach (request()->get('brands') as $brand) {
-                $brands .= '&brands[' . $couner . ']=' . $brand;
+                $brands .= '&brands['.$couner.']='.$brand;
                 $next_brands_id = $couner + 1;
                 $couner++;
             }
@@ -793,7 +797,7 @@ class ResultController extends Controller
             $brands = '';
         }
         if (request()->has('q')) {
-            $query = '&q=' . request()->get('q');
+            $query = '&q='.request()->get('q');
         } else {
             $query = '';
         }
@@ -801,7 +805,7 @@ class ResultController extends Controller
         if (request()->has('colors')) {
             $colors = '';
             foreach (request()->get('colors') as $color) {
-                $colors .= '&color_palettes[' . $couner . ']=' . $color;
+                $colors .= '&color_palettes['.$couner.']='.$color;
                 $next_colors_id = $couner + 1;
                 $couner++;
             }
@@ -809,10 +813,11 @@ class ResultController extends Controller
             $next_colors_id = 0;
             $colors = '';
         }
-        $Data = ProductController::DigikalaApi('sellers/' . $seller_id . '/?page=' . $page['num'] . '&sort=' . $sort . $categories . $brands . $query . $colors, 'v1');
+        $Data = ProductController::DigikalaApi('sellers/'.$seller_id.'/?page='.$page['num'].'&sort='.$sort.$categories.$brands.$query.$colors, 'v1');
         $this->deduplicateDataProducts($Data);
         $seo = $this->buildSeoMeta();
         $infinite = $this->buildInfiniteMeta($Data);
+
         return view('layouts.result.index', compact('Data', 'page', 'next_categories_id', 'next_brands_id', 'next_colors_id', 'seo', 'infinite'));
     }
 }

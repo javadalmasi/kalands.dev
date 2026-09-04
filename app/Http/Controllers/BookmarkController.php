@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBookmarkRequest;
 use App\Models\Bookmark;
 use App\Models\BookmarkCategory;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class BookmarkController extends Controller
@@ -44,6 +44,7 @@ class BookmarkController extends Controller
 
         if ($bookmark) {
             $bookmark->delete();
+
             return back()->with('message', 'از بوک مارک ها حذف شد.');
         }
 
@@ -61,7 +62,9 @@ class BookmarkController extends Controller
 
     public function delete(string $authkey, Bookmark $bookmark)
     {
-        if ($bookmark->user_id != auth()->id()) abort(403);
+        if ($bookmark->user_id != auth()->id()) {
+            abort(403);
+        }
 
         $bookmark->delete();
 

@@ -23,7 +23,7 @@ class QueueExecutionLog extends Model
 
     public function getPersianExecutedAtAttribute(): ?string
     {
-        if (!$this->executed_at) {
+        if (! $this->executed_at) {
             return null;
         }
 

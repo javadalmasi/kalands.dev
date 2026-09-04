@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -45,14 +45,14 @@ return new class extends Migration
         // Update products
         DB::table('products')->where('id', 'like', '55140%')->update([
             'store' => 'basalam',
-            'id' => DB::raw("SUBSTRING(id, 6)")
+            'id' => DB::raw('SUBSTRING(id, 6)'),
         ]);
 
         // Update related tables
         $tables = ['comments', 'likes', 'bookmarks', 'affiliate_links'];
         foreach ($tables as $table) {
             DB::table($table)->where('product_id', 'like', '55140%')->update([
-                'product_id' => DB::raw("SUBSTRING(product_id, 6)")
+                'product_id' => DB::raw('SUBSTRING(product_id, 6)'),
             ]);
         }
 

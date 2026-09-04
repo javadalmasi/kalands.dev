@@ -23,6 +23,7 @@ class CommentVoteController extends Controller
 
         if ($existingVote && (int) $existingVote->vote === $voteValue) {
             $existingVote->delete();
+
             return back()->with('message', 'رای شما حذف شد.');
         }
 

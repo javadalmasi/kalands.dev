@@ -78,7 +78,7 @@ class SliderStorage
         $desktopSlides = array_map(fn (array $slide) => array_merge($slide, ['device' => 'desktop']), (array) ($payload['desktop_slides'] ?? []));
         $mobileSlides = array_map(fn (array $slide) => array_merge($slide, ['device' => 'mobile']), (array) ($payload['mobile_slides'] ?? []));
         $slides = array_values(array_filter(array_merge($desktopSlides, $mobileSlides), function (array $slide) {
-            return !empty($slide['image'] ?? null);
+            return ! empty($slide['image'] ?? null);
         }));
 
         $slider->items()->delete();
@@ -165,6 +165,7 @@ class SliderStorage
     private function deviceConfig(array $config, string $device): array
     {
         $current = (array) ($config[$device] ?? []);
+
         return $this->mergeConfigDefaults($current);
     }
 }

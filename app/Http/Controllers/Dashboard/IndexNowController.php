@@ -8,9 +8,9 @@ use App\Models\Product;
 use App\Repositories\SettingsRepository;
 use App\Services\ActivityLogger;
 use App\Services\IndexNowService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 
 class IndexNowController extends Controller
@@ -53,7 +53,7 @@ class IndexNowController extends Controller
             ->where('is_active', true)
             ->where(function ($q) {
                 $q->whereNull('indexnow_submitted_at')
-                  ->orWhereColumn('updated_at', '>', 'indexnow_submitted_at');
+                    ->orWhereColumn('updated_at', '>', 'indexnow_submitted_at');
             })
             ->count();
 
@@ -62,7 +62,7 @@ class IndexNowController extends Controller
 
         $estimatedDaily = [];
         foreach ($engines as $e) {
-            if ($enabled[$e] && !empty($keys[$e])) {
+            if ($enabled[$e] && ! empty($keys[$e])) {
                 $totalWeight = array_sum($weights[$e]);
                 $estimatedDaily[$e] = $totalWeight > 0
                     ? number_format($dailyLimit)
@@ -123,7 +123,7 @@ class IndexNowController extends Controller
         $oldSharedKey = $this->indexNowService->getSharedVerificationKey();
 
         if ($newSharedKey !== $oldSharedKey) {
-            if (!empty($oldSharedKey)) {
+            if (! empty($oldSharedKey)) {
                 $oldPath = public_path("{$oldSharedKey}.txt");
                 if (file_exists($oldPath)) {
                     unlink($oldPath);
@@ -160,7 +160,7 @@ class IndexNowController extends Controller
     public function regenerateKey(Request $request, ActivityLogger $activityLogger): JsonResponse
     {
         $oldKey = $this->indexNowService->getSharedVerificationKey();
-        if (!empty($oldKey)) {
+        if (! empty($oldKey)) {
             $oldPath = public_path("{$oldKey}.txt");
             if (file_exists($oldPath)) {
                 unlink($oldPath);
@@ -179,5 +179,4 @@ class IndexNowController extends Controller
 
         return response()->json(['key' => $newKey]);
     }
-
 }

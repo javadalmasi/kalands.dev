@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\Slider\SliderStorage;
 use App\Services\Slider\HomeCategoryBannerStorage;
+use App\Services\Slider\SliderStorage;
 use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
     public function home(SliderStorage $sliderStorage, HomeCategoryBannerStorage $homeCategoryBannerStorage)
     {
-        if (!Cache::has('home')) {
+        if (! Cache::has('home')) {
             $Data = [];
             $Data['data']['offers'] = $this->homeSection(
                 'incredible-offers/products/?page=1',
@@ -26,7 +26,8 @@ class HomeController extends Controller
             Cache::put('home', $Data, 3600);
             $slider = $sliderStorage->loadByModule('home_main_banners');
             $homeCategoryBanners = $homeCategoryBannerStorage->load();
-			return response()->view('layouts.home.index', compact('Data', 'slider', 'homeCategoryBanners'));
+
+            return response()->view('layouts.home.index', compact('Data', 'slider', 'homeCategoryBanners'));
             // return response()->view('layouts.home.index', compact('Data'))->header('Cache-Control', 'private, max-age=3600');
         } else {
             $Data = Cache::get('home');
@@ -35,9 +36,10 @@ class HomeController extends Controller
 
             $slider = $sliderStorage->loadByModule('home_main_banners');
             $homeCategoryBanners = $homeCategoryBannerStorage->load();
+
             return response()->view('layouts.home.index', compact('Data', 'slider', 'homeCategoryBanners'));
-			// ->header('Cache-Control', 'private, max-age=3600')
-		// 	// ->header('X-LiteSpeed-Cache-Control', 'private, max-age=3600')
+            // ->header('Cache-Control', 'private, max-age=3600')
+            // 	// ->header('X-LiteSpeed-Cache-Control', 'private, max-age=3600')
         }
     }
 
@@ -50,15 +52,15 @@ class HomeController extends Controller
             $payload = ['data' => ['products' => []]];
         }
 
-        if (!is_array($payload)) {
+        if (! is_array($payload)) {
             $payload = ['data' => ['products' => []]];
         }
 
-        if (!isset($payload['data']) || !is_array($payload['data'])) {
+        if (! isset($payload['data']) || ! is_array($payload['data'])) {
             $payload['data'] = ['products' => []];
         }
 
-        if (!isset($payload['data']['products']) || !is_array($payload['data']['products'])) {
+        if (! isset($payload['data']['products']) || ! is_array($payload['data']['products'])) {
             $payload['data']['products'] = [];
         }
 
@@ -69,6 +71,7 @@ class HomeController extends Controller
             if (str_contains($uri, 'dkp-')) {
                 return str_starts_with($uri, '/product/dkp-');
             }
+
             return true;
         }));
 

@@ -3,8 +3,8 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\Admin;
-use App\Models\Role;
 use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

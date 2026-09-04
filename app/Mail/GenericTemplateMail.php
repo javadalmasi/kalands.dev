@@ -17,8 +17,7 @@ class GenericTemplateMail extends Mailable implements ShouldQueue
         private readonly string $subjectLine,
         private readonly string $html,
         public bool $shouldQueue = true
-    ) {
-    }
+    ) {}
 
     public function envelope(): Envelope
     {

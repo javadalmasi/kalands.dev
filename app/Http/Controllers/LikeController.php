@@ -41,11 +41,12 @@ class LikeController extends Controller
                 ->where('product_id', request('product_id'))
                 ->where('user_id', auth()->id())
                 ->delete();
+
             return back()->with('message', 'از پسند شده ها حذف شد.');
         }
 
         request()->merge([
-            'user_id' => auth()->id()
+            'user_id' => auth()->id(),
         ]);
 
         Like::query()->create(request()->all());
@@ -55,7 +56,9 @@ class LikeController extends Controller
 
     public function delete(string $authkey, Like $like)
     {
-        if ($like->user_id != auth()->id()) abort(403);
+        if ($like->user_id != auth()->id()) {
+            abort(403);
+        }
 
         $like->delete();
 

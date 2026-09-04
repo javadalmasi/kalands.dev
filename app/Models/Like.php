@@ -10,8 +10,8 @@ class Like extends Model
     use HasFactory;
 
     protected $fillable = [
-        "product_id",
-        "user_id",
+        'product_id',
+        'user_id',
     ];
 
     public function product()

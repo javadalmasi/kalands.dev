@@ -15,13 +15,14 @@ class AdminController extends Controller
     public function comments()
     {
         $comments = Comment::query()->latest()->get();
+
         return view('admin.comments', compact('comments'));
     }
 
     public function rejectComment(Comment $comment)
     {
         $comment->update([
-            'status' => Comment::STATUS_REJECTED
+            'status' => Comment::STATUS_REJECTED,
         ]);
 
         return back();
@@ -30,7 +31,7 @@ class AdminController extends Controller
     public function acceptComment(Comment $comment)
     {
         $comment->update([
-            'status' => Comment::STATUS_APPROVED
+            'status' => Comment::STATUS_APPROVED,
         ]);
 
         return back();

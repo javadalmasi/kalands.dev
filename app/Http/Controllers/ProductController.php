@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessProductCategoriesJob;
 use App\Models\Comment;
 use App\Models\Product;
 use App\Models\ProductIdMapping;
+use App\Repositories\SettingsRepository;
 use App\Services\Auth\JsChallengeService;
-use App\Jobs\ProcessProductCategoriesJob;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 
 class ProductController extends Controller
@@ -20,14 +22,15 @@ class ProductController extends Controller
 
         return $mapping?->new_product_id ?? $productId;
     }
+
     public static function DigikalaApi($url, $version, $skip = null, $cache = null)
     {
-		//www.kalands.ir/api/services/dcom
-		// http://bws.kalands.ir/api/3600/
+        // www.kalands.ir/api/services/dcom
+        // http://bws.kalands.ir/api/3600/
         if ($cache) {
-            $backend = "89.42.44.25/api/86400";
+            $backend = '89.42.44.25/api/86400';
         } else {
-            $backend = "89.42.44.25/api/3600";
+            $backend = '89.42.44.25/api/3600';
         }
 
         try {
@@ -36,7 +39,7 @@ class ProductController extends Controller
                 'Host' => 'bws.kalands.ir',
             ])->withOptions(['verify' => false])
                 ->timeout(10)
-                ->get('http://' . $backend . '/' . $version . '/' . $url);
+                ->get('http://'.$backend.'/'.$version.'/'.$url);
         } catch (\Throwable $exception) {
             if ($skip == true) {
                 return ['status' => 503, 'data' => ['products' => []]];
@@ -61,7 +64,7 @@ class ProductController extends Controller
                             'Host' => 'bws.kalands.ir',
                         ])->withOptions(['verify' => false])
                             ->timeout(10)
-                            ->get('http://' . $backend . '/fresh/v1/' . $url);
+                            ->get('http://'.$backend.'/fresh/v1/'.$url);
 
                         return $freshResponse->json() ?? [];
                     } catch (\Throwable $exception) {
@@ -89,11 +92,11 @@ class ProductController extends Controller
                         }
                     }
 
-                    return self::DigikalaApi('product/' . $newProductId . '/', $version, $skip, $cache);
+                    return self::DigikalaApi('product/'.$newProductId.'/', $version, $skip, $cache);
                 }
             }
 
-            abort($status, 'Error Code : ' . $status);
+            abort($status, 'Error Code : '.$status);
         }
 
         return $data;
@@ -107,7 +110,7 @@ class ProductController extends Controller
                 'Host' => 'bws.kalands.ir',
             ])->withOptions(['verify' => false])
                 ->timeout(10)
-                ->get('https://89.42.44.25/api/bs/86400/' . $version . '/' . $url);
+                ->get('https://89.42.44.25/api/bs/86400/'.$version.'/'.$url);
         } catch (\Throwable $exception) {
             if ($skip == true) {
                 return null;
@@ -121,7 +124,7 @@ class ProductController extends Controller
         }
 
         if ($skip != true) {
-            abort($response->status(), 'Error Code : ' . $response->status());
+            abort($response->status(), 'Error Code : '.$response->status());
         }
 
         return null;
@@ -132,7 +135,7 @@ class ProductController extends Controller
         try {
             $response = Http::withHeaders(['User-Agent' => request()->header('user-agent')])
                 ->timeout(10)
-                ->get('https://core.basalam.com/' . $version . '/' . $url);
+                ->get('https://core.basalam.com/'.$version.'/'.$url);
         } catch (\Throwable $exception) {
             if ($skip == true) {
                 return null;
@@ -146,7 +149,7 @@ class ProductController extends Controller
         }
 
         if ($skip != true) {
-            abort($response->status(), 'Error Code : ' . $response->status());
+            abort($response->status(), 'Error Code : '.$response->status());
         }
 
         return null;
@@ -174,9 +177,9 @@ class ProductController extends Controller
         if ($title) {
             // Clean title for better search results
             $searchQuery = self::TextMuted($title);
-            $searchData = self::DigikalaApi('search/?q=' . urlencode($searchQuery) . '&page=1', 'v1', true);
+            $searchData = self::DigikalaApi('search/?q='.urlencode($searchQuery).'&page=1', 'v1', true);
             $recommendations = $searchData['data']['products'] ?? [];
-            if (!empty($recommendations)) {
+            if (! empty($recommendations)) {
                 $recommendationTitle = 'محصولات مشابه';
             }
         }
@@ -193,6 +196,7 @@ class ProductController extends Controller
             if (str_contains($uri, 'dkp-')) {
                 return str_starts_with($uri, '/product/dkp-');
             }
+
             return true;
         }));
 
@@ -201,20 +205,20 @@ class ProductController extends Controller
         return response()->view('errors.product-inactive', [
             'recommendations' => $recommendations,
             'recommendationTitle' => $recommendationTitle,
-            'productTitle' => $title
+            'productTitle' => $title,
         ]);
     }
 
     public static function ProductParser($ProductID, $ProductName)
     {
         if (str_starts_with(request()->path(), 'product/XBS-')) {
-            $data = self::BasalamApi('product/' . str_replace('XBS-', '', $ProductID), 'api_v1.0');
+            $data = self::BasalamApi('product/'.str_replace('XBS-', '', $ProductID), 'api_v1.0');
             $basalamProduct = Product::find((string) $data['id']);
-            if ($basalamProduct && !$basalamProduct->is_active) {
+            if ($basalamProduct && ! $basalamProduct->is_active) {
                 return self::renderInactiveProductView($data['title'] ?? null);
             }
             $basalamProduct = Product::where('id', (string) $data['id'])->first();
-            if (!$basalamProduct) {
+            if (! $basalamProduct) {
                 $basalamProduct = Product::create([
                     'id' => (string) $data['id'],
                     'title' => $data['title'],
@@ -222,18 +226,18 @@ class ProductController extends Controller
                 ]);
             }
 
-            if (!$basalamProduct->category_id && !empty($data['navigation'])) {
+            if (! $basalamProduct->category_id && ! empty($data['navigation'])) {
                 // Prepare navigation data (Basalam uses a different structure)
                 $breadcrumb = [];
                 $nav = $data['navigation'];
                 // Traverse up
                 $tempNav = $nav;
-                while($tempNav) {
+                while ($tempNav) {
                     array_unshift($breadcrumb, ['title' => $tempNav['title']]);
                     $tempNav = $tempNav['parent'] ?? null;
                 }
 
-                ProcessProductCategoriesJob::dispatch((string)$data['id'], $breadcrumb, 'basalam');
+                ProcessProductCategoriesJob::dispatch((string) $data['id'], $breadcrumb, 'basalam');
             }
             $comments = Comment::query()
                 ->where('product_id', (string) $data['id'])
@@ -246,46 +250,47 @@ class ProductController extends Controller
                     'votes',
                 ])
                 ->withCount([
-                    'votes as likes_count' => fn($query) => $query->where('vote', 1),
-                    'votes as dislikes_count' => fn($query) => $query->where('vote', -1),
+                    'votes as likes_count' => fn ($query) => $query->where('vote', 1),
+                    'votes as dislikes_count' => fn ($query) => $query->where('vote', -1),
                 ])
                 ->get();
             $challenge = app(JsChallengeService::class)->issue('comment_form');
-        $commentSettings = app(\App\Repositories\SettingsRepository::class)->get('comments.settings', ['enabled' => true, 'disabled_message' => 'ارسال نظر در این زمان ممکن نیست.']);
+            $commentSettings = app(SettingsRepository::class)->get('comments.settings', ['enabled' => true, 'disabled_message' => 'ارسال نظر در این زمان ممکن نیست.']);
 
             $response = response()->view('layouts.product.index', [
                 'data' => $data,
                 'product' => Product::find((string) $data['id']),
                 'comments' => $comments,
                 'challenge' => $challenge,
-            'commentSettings' => $commentSettings,
-                'store' => 'basalam'
+                'commentSettings' => $commentSettings,
+                'store' => 'basalam',
             ]);
 
             self::applyProductCacheHeaders($response);
 
             return $response;
         } elseif (str_starts_with(request()->path(), 'product/xbs-')) {
-            return redirect(config('app.url') . '/product/' . str_replace('xbs-', 'XBS-', $ProductID) . '/' . $ProductName);
+            return redirect(config('app.url').'/product/'.str_replace('xbs-', 'XBS-', $ProductID).'/'.$ProductName);
         } else {
             $resolvedProductId = self::resolveProductId($ProductID, 'digikala');
-            $data = self::DigikalaApi('product/' . $resolvedProductId . '/', 'v2');
+            $data = self::DigikalaApi('product/'.$resolvedProductId.'/', 'v2');
 
             $actualProductId = $data['data']['product']['id'] ?? $resolvedProductId;
 
             $digikalaProduct = Product::find($actualProductId);
-            if ($digikalaProduct && !$digikalaProduct->is_active) {
+            if ($digikalaProduct && ! $digikalaProduct->is_active) {
                 return self::renderInactiveProductView($data['data']['product']['title_fa'] ?? null);
             }
 
-            if (!empty($data['data']['product']['is_inactive'])) {
+            if (! empty($data['data']['product']['is_inactive'])) {
                 $title = $data['data']['product']['title_fa'] ?? null;
                 Product::where('id', $actualProductId)->update(['is_active' => false]);
+
                 return self::renderInactiveProductView($title);
             }
 
             $digikalaProduct = Product::where('id', (string) $actualProductId)->first();
-            if (!$digikalaProduct) {
+            if (! $digikalaProduct) {
                 $digikalaProduct = Product::create([
                     'id' => (string) $actualProductId,
                     'title' => $data['data']['product']['title_fa'],
@@ -294,11 +299,11 @@ class ProductController extends Controller
                 ]);
             }
 
-            if (!$digikalaProduct->category_id && !empty($data['data']['product']['breadcrumb'])) {
+            if (! $digikalaProduct->category_id && ! empty($data['data']['product']['breadcrumb'])) {
                 $breadcrumb = $data['data']['product']['breadcrumb'];
 
                 // 1. Remove the first item if it's "Digikala"
-                if (!empty($breadcrumb) && in_array($breadcrumb[0]['title'] ?? '', ['دیجی‌کالا', 'دیجیکالا'])) {
+                if (! empty($breadcrumb) && in_array($breadcrumb[0]['title'] ?? '', ['دیجی‌کالا', 'دیجیکالا'])) {
                     array_shift($breadcrumb);
                 }
 
@@ -307,9 +312,9 @@ class ProductController extends Controller
                     array_pop($breadcrumb);
                 }
 
-                if (!empty($breadcrumb)) {
+                if (! empty($breadcrumb)) {
                     ProcessProductCategoriesJob::dispatch(
-                        (string)$data['data']['product']['id'],
+                        (string) $data['data']['product']['id'],
                         $breadcrumb,
                         'digikala'
                     );
@@ -334,20 +339,20 @@ class ProductController extends Controller
                     'votes',
                 ])
                 ->withCount([
-                    'votes as likes_count' => fn($query) => $query->where('vote', 1),
-                    'votes as dislikes_count' => fn($query) => $query->where('vote', -1),
+                    'votes as likes_count' => fn ($query) => $query->where('vote', 1),
+                    'votes as dislikes_count' => fn ($query) => $query->where('vote', -1),
                 ])
                 ->get();
             $challenge = app(JsChallengeService::class)->issue('comment_form');
-        $commentSettings = app(\App\Repositories\SettingsRepository::class)->get('comments.settings', ['enabled' => true, 'disabled_message' => 'ارسال نظر در این زمان ممکن نیست.']);
+            $commentSettings = app(SettingsRepository::class)->get('comments.settings', ['enabled' => true, 'disabled_message' => 'ارسال نظر در این زمان ممکن نیست.']);
 
             $response = response()->view('layouts.product.index', [
                 'data' => $data,
                 'product' => Product::find($actualProductId),
                 'comments' => $comments,
                 'challenge' => $challenge,
-            'commentSettings' => $commentSettings,
-                'store' => 'digikala'
+                'commentSettings' => $commentSettings,
+                'store' => 'digikala',
             ]);
 
             self::applyProductCacheHeaders($response);
@@ -359,24 +364,25 @@ class ProductController extends Controller
     public static function ProductRedirect($ProductID)
     {
         if (str_starts_with(request()->path(), 'product/XBS-')) {
-            return redirect(config('app.url') . '/product/' . $ProductID . '/no?utm_source=to_new_url&utm_medium=redirect&utm_campaign=old_url');
+            return redirect(config('app.url').'/product/'.$ProductID.'/no?utm_source=to_new_url&utm_medium=redirect&utm_campaign=old_url');
 
         } elseif (str_starts_with(request()->path(), 'product/xbs-')) {
-            return redirect(config('app.url') . '/product/' . str_replace('xbs-', 'XBS-', $ProductID) . '/no?utm_source=to_new_url&utm_medium=redirect&utm_campaign=old_url');
+            return redirect(config('app.url').'/product/'.str_replace('xbs-', 'XBS-', $ProductID).'/no?utm_source=to_new_url&utm_medium=redirect&utm_campaign=old_url');
         } else {
             $resolvedProductId = self::resolveProductId($ProductID, 'digikala');
-            $data = self::DigikalaApi('product/' . $resolvedProductId . '/', 'v2');
+            $data = self::DigikalaApi('product/'.$resolvedProductId.'/', 'v2');
 
             $actualProductId = $data['data']['product']['id'] ?? $resolvedProductId;
 
             $digikalaProduct = Product::find($actualProductId);
-            if ($digikalaProduct && !$digikalaProduct->is_active) {
+            if ($digikalaProduct && ! $digikalaProduct->is_active) {
                 return self::renderInactiveProductView($data['data']['product']['title_fa'] ?? null);
             }
 
-            if (!empty($data['data']['product']['is_inactive'])) {
+            if (! empty($data['data']['product']['is_inactive'])) {
                 $title = $data['data']['product']['title_fa'] ?? null;
                 Product::where('id', $actualProductId)->update(['is_active' => false]);
+
                 return self::renderInactiveProductView($title);
             }
 
@@ -384,74 +390,81 @@ class ProductController extends Controller
         }
     }
 
-
-    public static function ImgProfile($url, $w, $h, $q, $webp, $CleanURl = null, $Store = "digikala")
+    public static function ImgProfile($url, $w, $h, $q, $webp, $CleanURl = null, $Store = 'digikala')
     {
         $cdn = config('services.cdn.images');
 
-        if ($Store == "digikala") {
+        if ($Store == 'digikala') {
             $url = str_replace(
                 ['https://dkstatics-public.digikala.com/digikala-products/', 'https://dkstatics-public-2.digikala.com/digikala-products/', 'https://dkstatics-private.digikala.com/digikala-products/', 'https://dkstatics-public.digikala.com/digikala-content-creation-requests/', 'https://dkstatics-public-2.digikala.com/digikala-content-creation-requests/', 'https://dkstatics-private.digikala.com/digikala-content-creation-requests/'],
-                ['https://' . $cdn . '/klnd/01/', 'https://' . $cdn . '/klnd/02/', 'https://' . $cdn . '/klnd/04/', 'https://' . $cdn . '/klnd/05/', 'https://' . $cdn . '/klnd/05/', 'https://' . $cdn . '/klnd/05/'],
+                ['https://'.$cdn.'/klnd/01/', 'https://'.$cdn.'/klnd/02/', 'https://'.$cdn.'/klnd/04/', 'https://'.$cdn.'/klnd/05/', 'https://'.$cdn.'/klnd/05/', 'https://'.$cdn.'/klnd/05/'],
                 $url
             );
             $part_url = parse_url($url);
-            $hostname = $part_url["host"] ?? '';
-            $path = $part_url["path"] ?? '';
+            $hostname = $part_url['host'] ?? '';
+            $path = $part_url['path'] ?? '';
 
             if ($CleanURl == true) {
-                return 'https://' . $hostname . $path;
+                return 'https://'.$hostname.$path;
             }
-            return 'https://' . $hostname . $path . '?x-oss-process=image/resize,m_pad,h_' . $h . ',w_' . $w . ',color_FFFFFF/quality,q_' . $q . ($webp == true ? '/format,webp' : '');
+
+            return 'https://'.$hostname.$path.'?x-oss-process=image/resize,m_pad,h_'.$h.',w_'.$w.',color_FFFFFF/quality,q_'.$q.($webp == true ? '/format,webp' : '');
         }
-        if ($Store == "basalam") {
+        if ($Store == 'basalam') {
             preg_match('/https:\/\/statics.basalam.com\/public-([0-9]*)\/users\//', $url, $output_array);
-            if (!empty($output_array[1])) {
-                $baslink = ['باسلام', 'https://statics.basalam.com/public-' . $output_array[1] . '/users/'];
-                $kllink = ['کالندز', 'https://' . $cdn . '/klnd/03/' . $output_array[1] . '/'];
+            if (! empty($output_array[1])) {
+                $baslink = ['باسلام', 'https://statics.basalam.com/public-'.$output_array[1].'/users/'];
+                $kllink = ['کالندز', 'https://'.$cdn.'/klnd/03/'.$output_array[1].'/'];
+
                 return str_replace($baslink, $kllink, $url);
             } else {
-                return str_replace('https://statics.basalam.com/public/users/', 'https://' . $cdn . '/klnd/03/', $url);
+                return str_replace('https://statics.basalam.com/public/users/', 'https://'.$cdn.'/klnd/03/', $url);
             }
         }
     }
 
     public static function GetSpecialLink($shop, $id, $title = null)
     {
-        if ($shop == "digikala") {
+        if ($shop == 'digikala') {
             if ($id && is_numeric($id)) {
-                return config('app.url') . '/go/d' . $id;
+                return config('app.url').'/go/d'.$id;
             }
             if ($title) {
                 $b64 = base64_encode($title);
                 $b64 = str_replace(['+', '/', '='], ['-', '_', ''], $b64);
-                return config('app.url') . '/go/ds_' . $b64;
+
+                return config('app.url').'/go/ds_'.$b64;
             }
+
             return '#';
         }
-        if ($shop == "basalam") {
+        if ($shop == 'basalam') {
             if ($id && is_numeric($id)) {
-                return config('app.url') . '/go/b' . $id;
+                return config('app.url').'/go/b'.$id;
             }
+
             return '#';
         }
+
         return '#';
     }
 
     public static function GetBaseLink($shop, $id, $title = null)
     {
-        if ($shop == "digikala" && isset($title)) {
+        if ($shop == 'digikala' && isset($title)) {
             if ($id) {
-                return config('app.url') . '/product/' . $id . '/' . str_slug_persian($title);
+                return config('app.url').'/product/'.$id.'/'.str_slug_persian($title);
             }
-            return config('app.url') . '/result/?q=' . urlencode($title) . '&sort=22';
+
+            return config('app.url').'/result/?q='.urlencode($title).'&sort=22';
         }
+
         return '#';
     }
 
     public static function AffiliateLinkGenerator($shop, $id, $title = null)
     {
-        if (!request()->isRobot() && !request()->hasHeader('asnbot')) {
+        if (! request()->isRobot() && ! request()->hasHeader('asnbot')) {
             return self::GetSpecialLink($shop, $id, $title);
         } else {
             return self::GetBaseLink($shop, $id, $title);
@@ -470,18 +483,19 @@ class ProductController extends Controller
             'dkstatics-public.digikala.com/digikala-products/', 'dkstatics-public-2.digikala.com/digikala-products/', 'dkstatics-private.digikala.com/digikala-products/', 'dkstatics-public.digikala.com/digikala-content-creation-requests/',
             'statics.basalam.com\/public\/users\/', 'statics.basalam.com/public/users/',
             'باسلام',
-            'quality,q_90', 'quality,q_80'
+            'quality,q_90', 'quality,q_80',
         ];
         $ReplacedLink = [
             'www.kalands.ir', '/product/', '/result',
-            $cdn . '\/klnd\/01', $cdn . '\/klnd\/02', $cdn . '\/klnd\/04', $cdn . '\/klnd\/05',
+            $cdn.'\/klnd\/01', $cdn.'\/klnd\/02', $cdn.'\/klnd\/04', $cdn.'\/klnd\/05',
             'کالندز', 'کالندز', 'کالندز',
-            $cdn . '/klnd/01', $cdn . '/klnd/02', $cdn . '/klnd/04', $cdn . '/klnd/05',
-            $cdn . '\/klnd\/03', $cdn . '/klnd/03',
+            $cdn.'/klnd/01', $cdn.'/klnd/02', $cdn.'/klnd/04', $cdn.'/klnd/05',
+            $cdn.'\/klnd\/03', $cdn.'/klnd/03',
             'کالندز',
-            'quality,q_90/format,webp', 'quality,q_80/format,webp'
+            'quality,q_90/format,webp', 'quality,q_80/format,webp',
         ];
         $Result = str_replace($MainLink, $ReplacedLink, $Query);
+
         return $Result;
     }
 
@@ -490,6 +504,7 @@ class ProductController extends Controller
         $MainText = ['| فروشگاه اینترنتی دیجی‌کالا', 'دیجیکالا', 'دیجی کالا', 'دیجی‌کالا'];
         $ReplacesText = ['', 'کالندز', 'کالندز', 'کالندز'];
         $Result = str_replace($MainText, $ReplacesText, $Query);
+
         return $Result;
     }
 
@@ -497,12 +512,13 @@ class ProductController extends Controller
     {
         $MainText = ['| فروشگاه اینترنتی دیجی‌کالا', 'دیجیکالا', 'دیجی کالا', 'دیجی‌کالا'];
         $Result = str_replace($MainText, '', $Query);
+
         return $Result;
     }
 
-    private static function applyProductCacheHeaders(\Illuminate\Http\Response $response): void
+    private static function applyProductCacheHeaders(Response $response): void
     {
-        $cacheSettings = app(\App\Repositories\SettingsRepository::class)->get('cache.webservices', []);
+        $cacheSettings = app(SettingsRepository::class)->get('cache.webservices', []);
 
         $ttl = (int) ($cacheSettings['product_ttl'] ?? 86400);
         $type = $cacheSettings['product_cache_type'] ?? 'public';
@@ -676,10 +692,9 @@ class ProductController extends Controller
             '/[\x{E0062}-\x{E0063}]/u',
             '/[\x{E006C}]/u',
             '/[\x{E006E}]/u',
-            '/[\x{E007F}]/u'
+            '/[\x{E007F}]/u',
         ];
 
         return preg_replace($regexEmoticons, '', $text);
     }
-
 }

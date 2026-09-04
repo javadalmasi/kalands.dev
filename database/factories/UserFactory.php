@@ -3,8 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Services\Auth\PasswordHashService;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 class UserFactory extends Factory
@@ -23,12 +23,12 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => fake()->randomElement([
                 now(),
-                null
+                null,
             ]),
             'phone' => '09'.fake()->numberBetween(112223344, 667778899),
             'phone_verified_at' => fake()->randomElement([
                 now(),
-                null
+                null,
             ]),
             'password_hash' => $password['hash'],
             'password_salt' => $password['salt'],

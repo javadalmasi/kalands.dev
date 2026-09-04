@@ -16,8 +16,7 @@ class ContactController extends Controller
         JsChallengeService $challengeService,
         DashboardAuthKeyService $dashboardAuthKeyService,
         SettingsRepository $settingsRepository
-    )
-    {
+    ) {
         if (Auth::guard('web')->check()) {
             $authkey = $dashboardAuthKeyService->currentKey('user') ?? Auth::guard('web')->user()->dashboard_authkey;
 

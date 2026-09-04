@@ -2,11 +2,11 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use App\Services\VisitorIntelligenceService;
 use App\Repositories\SettingsRepository;
+use App\Services\VisitorIntelligenceService;
 use Illuminate\Support\Facades\Cache;
 use Mockery;
+use Tests\TestCase;
 
 class VisitorIntelligenceServiceTest extends TestCase
 {
@@ -15,13 +15,13 @@ class VisitorIntelligenceServiceTest extends TestCase
         $settings = Mockery::mock(SettingsRepository::class);
         $settings->shouldReceive('get')->once()->andReturn([
             'robots_pattern' => 'default',
-            'trusted_asns' => []
+            'trusted_asns' => [],
         ]);
 
         Cache::shouldReceive('rememberForever')
             ->once()
             ->with('visitor_intelligence:config', Mockery::type('Closure'))
-            ->andReturnUsing(function($key, $callback) {
+            ->andReturnUsing(function ($key, $callback) {
                 return $callback();
             });
 

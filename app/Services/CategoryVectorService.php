@@ -2,9 +2,10 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
-use App\Repositories\SettingsRepository;
 use App\Models\AiUsageLog;
+use App\Models\Category;
+use App\Repositories\SettingsRepository;
+use Illuminate\Support\Facades\Http;
 
 class CategoryVectorService
 {
@@ -22,7 +23,7 @@ class CategoryVectorService
 
     public function getVector(string $text): array
     {
-        if ($this->settings['vector_engine'] === 'external' && !empty($this->settings['api_endpoint'])) {
+        if ($this->settings['vector_engine'] === 'external' && ! empty($this->settings['api_endpoint'])) {
             return $this->getExternalVector($text);
         }
 
@@ -59,7 +60,7 @@ class CategoryVectorService
     {
         try {
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->settings['api_key'],
+                'Authorization' => 'Bearer '.$this->settings['api_key'],
             ])->timeout(5)->post($this->settings['api_endpoint'], [
                 'model' => $this->settings['external_model'],
                 'input' => $text,
@@ -75,19 +76,22 @@ class CategoryVectorService
                     'action' => 'embedding',
                     'tokens_used' => $data['usage']['total_tokens'] ?? 0,
                     'request_count' => 1,
-                    'metadata' => ['text_length' => mb_strlen($text)]
+                    'metadata' => ['text_length' => mb_strlen($text)],
                 ]);
 
                 return $vector;
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         return $this->getLocalVector($text);
     }
 
     public function calculateSimilarity(array $vec1, array $vec2): float
     {
-        if (empty($vec1) || empty($vec2)) return 0;
+        if (empty($vec1) || empty($vec2)) {
+            return 0;
+        }
 
         $isNumeric = isset($vec1[0]) && is_numeric($vec1[0]);
 
@@ -134,10 +138,10 @@ class CategoryVectorService
         return ($normA == 0 || $normB == 0) ? 0 : $dotProduct / (sqrt($normA) * sqrt($normB));
     }
 
-    public function findSimilar(\App\Models\Category $category, int $limit = 5): array
+    public function findSimilar(Category $category, int $limit = 5): array
     {
         $targetStores = ['digikala', 'basalam', 'snappshop'];
-        $targets = \App\Models\Category::where('id', '!=', $category->id)->get();
+        $targets = Category::where('id', '!=', $category->id)->get();
         $matches = [];
 
         foreach ($targets as $target) {
@@ -152,7 +156,7 @@ class CategoryVectorService
             }
         }
 
-        usort($matches, fn($a, $b) => $b['score'] <=> $a['score']);
+        usort($matches, fn ($a, $b) => $b['score'] <=> $a['score']);
 
         return array_slice($matches, 0, $limit);
     }
@@ -164,7 +168,7 @@ class CategoryVectorService
         $duration = round((microtime(true) - $start) * 1000, 2);
 
         return [
-            'ok' => !empty($vector),
+            'ok' => ! empty($vector),
             'source' => $this->getSource(),
             'model' => $this->getModel(),
             'duration_ms' => $duration,
@@ -177,6 +181,7 @@ class CategoryVectorService
     {
         $text = mb_strtolower($text);
         $text = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $text);
+
         return trim($text);
     }
 }

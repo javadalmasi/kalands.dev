@@ -11,13 +11,14 @@ class Verified
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::guard('web')->check()) {
+        if (! Auth::guard('web')->check()) {
             return $next($request);
         }
 
         $user = Auth::guard('web')->user();
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             Auth::guard('web')->logout();
+
             return redirect()->route('auth.login')->withErrors('حساب کاربری شما غیرفعال است.');
         }
 

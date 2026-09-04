@@ -22,6 +22,7 @@ class TwoFAController extends Controller
             $admin = Auth::guard('admin')->user();
             if ($admin->two_factor_secret && $twoFactorService->verify($code, $admin->two_factor_secret)) {
                 session(['2fa_checked_admin' => true]);
+
                 return redirect()->route('dash.admin.index', ['authkey' => $admin->dashboard_authkey]);
             }
         }
@@ -30,6 +31,7 @@ class TwoFAController extends Controller
             $user = Auth::guard('web')->user();
             if ($user->two_factor_secret && $twoFactorService->verify($code, $user->two_factor_secret)) {
                 session(['2fa_checked_user' => true]);
+
                 return redirect()->route('dash.user.index', ['authkey' => $user->dashboard_authkey]);
             }
         }

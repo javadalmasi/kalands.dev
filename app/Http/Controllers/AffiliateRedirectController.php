@@ -6,6 +6,7 @@ use App\Models\AffiliateLink;
 use App\Repositories\SettingsRepository;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AffiliateRedirectController extends Controller
 {
@@ -17,12 +18,14 @@ class AffiliateRedirectController extends Controller
         // Handle Basalam Product: b{id}
         if (preg_match('/^b([0-9a-z]+)$/', $slug, $matches)) {
             $productId = $matches[1];
+
             return $this->fetchFromBasalamAndRedirect($productId, $slug, $settingsRepository, $cacheSettings);
         }
 
         // Handle Digikala Product: d{id}
         if (preg_match('/^d([0-9a-z]+)$/', $slug, $matches)) {
             $productId = $matches[1];
+
             return $this->redirectToDigikala($productId, $cacheSettings);
         }
 
@@ -41,16 +44,17 @@ class AffiliateRedirectController extends Controller
     {
         // Check DB first
         $affiliate = AffiliateLink::query()->where('product_id', $productId)->where('store', 'basalam')->first();
-        
+
         $settings = $settingsRepository->get('affiliate.basalam', []);
-        $prefix = rtrim($settings['url_prefix'] ?? 'https://a.bslm.ir/api/v1/tracking/click/', '/') . '/';
+        $prefix = rtrim($settings['url_prefix'] ?? 'https://a.bslm.ir/api/v1/tracking/click/', '/').'/';
 
         if ($affiliate) {
             if ($affiliate->status === 'error') {
                 abort(404, 'محصول یافت نشد');
             }
-            
-            $url = str_starts_with($affiliate->link, 'http') ? $affiliate->link : $prefix . $affiliate->link;
+
+            $url = str_starts_with($affiliate->link, 'http') ? $affiliate->link : $prefix.$affiliate->link;
+
             return $this->secureRedirect($url, $cacheSettings);
         }
 
@@ -67,7 +71,7 @@ class AffiliateRedirectController extends Controller
                 'Content-Type' => 'application/json',
                 'Origin' => 'https://affiliate.basalam.com',
                 'Connection' => 'keep-alive',
-                'Cookie' => 'accessToken=' . ($settings['access_token'] ?? ''),
+                'Cookie' => 'accessToken='.($settings['access_token'] ?? ''),
                 'Sec-Fetch-Dest' => 'empty',
                 'Sec-Fetch-Mode' => 'cors',
                 'Sec-Fetch-Site' => 'same-site',
@@ -78,11 +82,11 @@ class AffiliateRedirectController extends Controller
                 'reference_type' => 'PRODUCT',
                 'reference_id' => $productId,
                 'title' => 'لینک محصول',
-                'utm_campaign' => 'affiliate_' . round(microtime(true) * 1000)
+                'utm_campaign' => 'affiliate_'.round(microtime(true) * 1000),
             ]);
 
             $data = $response->json();
-            \Illuminate\Support\Facades\Log::info('Basalam API Response', ['status' => $response->status(), 'data' => $data]);
+            Log::info('Basalam API Response', ['status' => $response->status(), 'data' => $data]);
 
             if (isset($data['detail'])) {
                 AffiliateLink::query()->create([
@@ -90,7 +94,7 @@ class AffiliateRedirectController extends Controller
                     'store' => 'basalam',
                     'link' => $data['detail'],
                     'status' => 'error',
-                    'slug' => $slug
+                    'slug' => $slug,
                 ]);
                 abort(404, 'محصول یافت نشد');
             }
@@ -106,7 +110,7 @@ class AffiliateRedirectController extends Controller
                     'store' => 'basalam',
                     'link' => $linkToSave,
                     'status' => 'active',
-                    'slug' => $slug
+                    'slug' => $slug,
                 ]);
 
                 return $this->secureRedirect($shortUrl, $cacheSettings);
@@ -120,13 +124,15 @@ class AffiliateRedirectController extends Controller
 
     private function redirectToDigikala(int $productId, array $cacheSettings = []): RedirectResponse
     {
-        $fullUrl = 'https://dgkl.io/api/v1/Click/b/4dJ4L?b64=' . base64_encode('https://www.digikala.com/product/dkp-' . $productId . '/');
+        $fullUrl = 'https://dgkl.io/api/v1/Click/b/4dJ4L?b64='.base64_encode('https://www.digikala.com/product/dkp-'.$productId.'/');
+
         return $this->secureRedirect($fullUrl, $cacheSettings);
     }
 
     private function redirectToSearch(string $query, string $store, array $cacheSettings = []): RedirectResponse
     {
-        $fullUrl = 'https://dgkl.io/api/v1/Click/b/4dJ4L?b64=' . base64_encode('https://www.digikala.com/search/?q=' . urlencode($query));
+        $fullUrl = 'https://dgkl.io/api/v1/Click/b/4dJ4L?b64='.base64_encode('https://www.digikala.com/search/?q='.urlencode($query));
+
         return $this->secureRedirect($fullUrl, $cacheSettings);
     }
 

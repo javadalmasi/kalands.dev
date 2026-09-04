@@ -62,39 +62,39 @@ return new class extends Migration
 
     private function alterUsersTable(): void
     {
-        if (!Schema::hasTable('users')) {
+        if (! Schema::hasTable('users')) {
             return;
         }
 
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'password_hash')) {
+            if (! Schema::hasColumn('users', 'password_hash')) {
                 $table->text('password_hash')->nullable()->after('phone_verified_at');
             }
-            if (!Schema::hasColumn('users', 'password_salt')) {
+            if (! Schema::hasColumn('users', 'password_salt')) {
                 $table->string('password_salt', 64)->nullable()->after('password_hash');
             }
-            if (!Schema::hasColumn('users', 'two_factor_secret')) {
+            if (! Schema::hasColumn('users', 'two_factor_secret')) {
                 $table->text('two_factor_secret')->nullable()->after('remember_token');
             }
-            if (!Schema::hasColumn('users', 'two_factor_recovery_codes')) {
+            if (! Schema::hasColumn('users', 'two_factor_recovery_codes')) {
                 $table->json('two_factor_recovery_codes')->nullable()->after('two_factor_secret');
             }
-            if (!Schema::hasColumn('users', 'dashboard_authkey')) {
+            if (! Schema::hasColumn('users', 'dashboard_authkey')) {
                 $table->string('dashboard_authkey', 64)->nullable()->index()->after('two_factor_recovery_codes');
             }
-            if (!Schema::hasColumn('users', 'dashboard_authkey_expires_at')) {
+            if (! Schema::hasColumn('users', 'dashboard_authkey_expires_at')) {
                 $table->timestamp('dashboard_authkey_expires_at')->nullable()->after('dashboard_authkey');
             }
-            if (!Schema::hasColumn('users', 'theme_preference')) {
+            if (! Schema::hasColumn('users', 'theme_preference')) {
                 $table->string('theme_preference', 10)->default('light')->after('dashboard_authkey_expires_at');
             }
-            if (!Schema::hasColumn('users', 'is_active')) {
+            if (! Schema::hasColumn('users', 'is_active')) {
                 $table->boolean('is_active')->default(true)->after('theme_preference');
             }
-            if (!Schema::hasColumn('users', 'profile_bio')) {
+            if (! Schema::hasColumn('users', 'profile_bio')) {
                 $table->string('profile_bio', 500)->nullable()->after('is_active');
             }
-            if (!Schema::hasColumn('users', 'marketing_opt_in')) {
+            if (! Schema::hasColumn('users', 'marketing_opt_in')) {
                 $table->boolean('marketing_opt_in')->default(false)->after('profile_bio');
             }
         });
@@ -147,7 +147,7 @@ return new class extends Migration
     {
         if (Schema::hasTable('bookmarks')) {
             Schema::table('bookmarks', function (Blueprint $table) {
-                if (!Schema::hasColumn('bookmarks', 'category_name')) {
+                if (! Schema::hasColumn('bookmarks', 'category_name')) {
                     $table->string('category_name', 50)->default('عمومی')->after('product_id');
                 }
                 $table->unique(['user_id', 'product_id'], 'unique_bookmark');
@@ -163,7 +163,7 @@ return new class extends Migration
 
     private function createSupportTables(): void
     {
-        if (!Schema::hasTable('password_reset_codes')) {
+        if (! Schema::hasTable('password_reset_codes')) {
             Schema::create('password_reset_codes', function (Blueprint $table) {
                 $table->id();
                 $table->string('identifier', 180)->unique();
@@ -172,7 +172,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('ticket_categories')) {
+        if (! Schema::hasTable('ticket_categories')) {
             Schema::create('ticket_categories', function (Blueprint $table) {
                 $table->id();
                 $table->string('name', 100);
@@ -182,7 +182,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('tickets')) {
+        if (! Schema::hasTable('tickets')) {
             Schema::create('tickets', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('user_id');
@@ -197,7 +197,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('ticket_messages')) {
+        if (! Schema::hasTable('ticket_messages')) {
             Schema::create('ticket_messages', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('ticket_id');
@@ -211,7 +211,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('contact_messages')) {
+        if (! Schema::hasTable('contact_messages')) {
             Schema::create('contact_messages', function (Blueprint $table) {
                 $table->id();
                 $table->string('name', 120);
@@ -224,7 +224,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('system_configs')) {
+        if (! Schema::hasTable('system_configs')) {
             Schema::create('system_configs', function (Blueprint $table) {
                 $table->id();
                 $table->string('config_key', 150)->unique();
@@ -234,7 +234,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('queue_execution_logs')) {
+        if (! Schema::hasTable('queue_execution_logs')) {
             Schema::create('queue_execution_logs', function (Blueprint $table) {
                 $table->id();
                 $table->timestamp('executed_at')->index();
@@ -245,7 +245,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('affiliate_links')) {
+        if (! Schema::hasTable('affiliate_links')) {
             Schema::create('affiliate_links', function (Blueprint $table) {
                 $table->id();
                 $table->unsignedBigInteger('product_id')->unique();
@@ -258,7 +258,7 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('activity_logs')) {
+        if (! Schema::hasTable('activity_logs')) {
             Schema::create('activity_logs', function (Blueprint $table) {
                 $table->id();
                 $table->string('actor_type', 20);

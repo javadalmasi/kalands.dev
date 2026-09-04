@@ -28,7 +28,7 @@ class ForgetPasswordRequest extends FormRequest
                 'required',
                 'string',
                 function (string $attribute, mixed $value, Closure $fail) {
-                    if (!isPhoneOrEmail((string) $value)) {
+                    if (! isPhoneOrEmail((string) $value)) {
                         $fail('شماره موبایل یا ایمیل معتبر وارد کنید.');
                     }
                 },

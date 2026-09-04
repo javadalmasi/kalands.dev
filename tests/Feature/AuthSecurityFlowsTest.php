@@ -95,19 +95,19 @@ class AuthSecurityFlowsTest extends TestCase
             return true;
         });
 
-        $this->assertDatabaseHas((new PasswordResetCode())->getTable(), [
+        $this->assertDatabaseHas((new PasswordResetCode)->getTable(), [
             'identifier' => 'reza@example.com',
         ]);
     }
 
     private function challengeSession(string $context, int $answer): array
     {
-        $key = $context . ':test-key';
+        $key = $context.':test-key';
 
         return [
             'key' => $key,
             'session' => [
-                'js_challenge.' . $key => [
+                'js_challenge.'.$key => [
                     'answer' => $answer,
                     'context' => $context,
                     'expires_at' => now()->addMinutes(10)->toISOString(),

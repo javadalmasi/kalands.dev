@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Traits\HasPermissions;
-use Illuminate\Database\Eloquent\Attributes\Casts;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -33,7 +32,7 @@ use Illuminate\Notifications\Notifiable;
 ])]
 class Admin extends Authenticatable
 {
-    use HasFactory, Notifiable, HasPermissions;
+    use HasFactory, HasPermissions, Notifiable;
 
     protected function casts(): array
     {

@@ -17,7 +17,7 @@ class DashboardAuthKeyServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new DashboardAuthKeyService();
+        $this->service = new DashboardAuthKeyService;
     }
 
     public function test_it_can_issue_and_validate_key()
@@ -40,7 +40,7 @@ class DashboardAuthKeyServiceTest extends TestCase
     {
         $admin = Admin::factory()->create([
             'dashboard_authkey' => 'some-key',
-            'dashboard_authkey_expires_at' => CarbonImmutable::now()->subMinute()
+            'dashboard_authkey_expires_at' => CarbonImmutable::now()->subMinute(),
         ]);
 
         $this->assertFalse($this->service->isValid($admin, 'some-key'));

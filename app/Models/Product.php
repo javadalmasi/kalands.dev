@@ -2,9 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\HasBookmarks;
-use App\Traits\HasComments;
-use App\Traits\HasLikes;
 use Illuminate\Database\Eloquent\Attributes\Casts;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\PrimaryKey;
@@ -19,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
     'category_id',
     'is_active',
     'api_status',
-    'last_checked_at'
+    'last_checked_at',
 ])]
 #[Casts([
     'is_active' => 'boolean',

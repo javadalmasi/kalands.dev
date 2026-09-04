@@ -10,9 +10,9 @@ class Bookmark extends Model
     use HasFactory;
 
     protected $fillable = [
-        "product_id",
-        "user_id",
-        "category_name",
+        'product_id',
+        'user_id',
+        'category_name',
     ];
 
     public function product()

@@ -31,7 +31,7 @@ class ForgetPasswordController extends Controller
             ? User::query()->where('email', $identifier)->exists() || Admin::query()->where('email_address', $identifier)->exists()
             : User::query()->where('phone', $identifier)->exists() || Admin::query()->where('mobile_number', $identifier)->exists();
 
-        if (!$exists) {
+        if (! $exists) {
             return back()->withErrors('حسابی با این اطلاعات پیدا نشد.')->withInput();
         }
 

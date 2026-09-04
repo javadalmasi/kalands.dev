@@ -21,7 +21,7 @@ class StoreCommentRequest extends FormRequest
                 'nullable',
                 'exists:comments,id',
                 function (string $attribute, mixed $value, Closure $fail) {
-                    if (!$value) {
+                    if (! $value) {
                         return;
                     }
 

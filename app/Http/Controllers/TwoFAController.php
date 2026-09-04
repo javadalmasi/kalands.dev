@@ -19,7 +19,7 @@ class TwoFAController extends Controller
             $secret
         );
 
-        session(["2fa_secret" => $secret]);
+        session(['2fa_secret' => $secret]);
 
         return view('profile.2fa', [
             'qr_code' => $qr_code,
@@ -29,7 +29,7 @@ class TwoFAController extends Controller
 
     public function enable(Request $request, TwoFactorService $twoFactorService, ActivityLogger $activityLogger)
     {
-        $secret = session("2fa_secret");
+        $secret = session('2fa_secret');
         $user = auth()->user();
 
         if ($secret && $twoFactorService->verify((string) $request->input('otp'), $secret)) {
@@ -38,7 +38,7 @@ class TwoFAController extends Controller
                 'two_factor_recovery_codes' => $twoFactorService->generateRecoveryCodes(),
             ]);
 
-            session(["2fa_checked_user" => true]);
+            session(['2fa_checked_user' => true]);
             $activityLogger->log('2fa.enabled', $user, 'فعال‌سازی احراز دو مرحله‌ای');
 
             return redirect()->route('dash.user.2fa.show', ['authkey' => $user->dashboard_authkey]);

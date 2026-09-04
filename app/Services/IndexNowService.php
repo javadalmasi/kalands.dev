@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\Log;
 class IndexNowService
 {
     private const BING_URL = 'https://www.bing.com/indexnow';
+
     private const YANDEX_URL = 'https://yandex.com/indexnow';
+
     private const ENGINES = ['bing', 'yandex'];
 
     public function __construct(
@@ -33,6 +35,7 @@ class IndexNowService
     {
         if (in_array($engine, self::ENGINES, true)) {
             $this->setSharedVerificationKey($key);
+
             return;
         }
 
@@ -80,6 +83,7 @@ class IndexNowService
         for ($h = 1; $h <= 6; $h++) {
             $default[$h] = 7;
         }
+
         return $this->settings->get("indexnow.{$engine}.weights", $default);
     }
 
@@ -109,12 +113,14 @@ class IndexNowService
         }
 
         $dailyLimit = $this->getDailyLimit();
+
         return (int) floor(($hourWeight / $totalWeight) * $dailyLimit);
     }
 
     public function buildProductUrl(Product $product): string
     {
         $appUrl = rtrim(config('app.url'), '/');
+
         return "{$appUrl}/product/{$product->id}";
     }
 
@@ -126,7 +132,7 @@ class IndexNowService
         }
 
         $host = parse_url(config('app.url'), PHP_URL_HOST);
-        $keyLocation = rtrim(config('app.url'), '/') . "/{$key}.txt";
+        $keyLocation = rtrim(config('app.url'), '/')."/{$key}.txt";
 
         $endpoint = $engine === 'yandex' ? self::YANDEX_URL : self::BING_URL;
 
@@ -159,7 +165,7 @@ class IndexNowService
                 'status' => $status,
             ];
         } catch (\Throwable $e) {
-            Log::error("IndexNow {$engine} HTTP error: " . $e->getMessage());
+            Log::error("IndexNow {$engine} HTTP error: ".$e->getMessage());
 
             return [
                 'success' => false,
@@ -184,7 +190,7 @@ class IndexNowService
     public function removeVerificationFile(?string $engine = null): void
     {
         $key = $this->getSharedVerificationKey();
-        if (!empty($key)) {
+        if (! empty($key)) {
             $path = public_path("{$key}.txt");
             if (file_exists($path)) {
                 unlink($path);
@@ -246,6 +252,7 @@ class IndexNowService
     private function getPerMinuteCap(): int
     {
         $cap = (int) ceil($this->getDailyLimit() / 1440);
+
         return max(1, $cap);
     }
 

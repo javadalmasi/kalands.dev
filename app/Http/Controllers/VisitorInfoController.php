@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Repositories\SettingsRepository;
 use GeoIp2\Database\Reader;
+use Illuminate\Http\Request;
 
 class VisitorInfoController extends Controller
 {
@@ -11,7 +12,7 @@ class VisitorInfoController extends Controller
      * Display visitor information in a plain text format.
      * Inspired by Cloudflare's cdn-cgi/trace
      */
-    public function index(Request $request, \App\Repositories\SettingsRepository $settingsRepository)
+    public function index(Request $request, SettingsRepository $settingsRepository)
     {
         $ip = $request->ip();
         $userAgent = $request->header('User-Agent');
@@ -30,7 +31,8 @@ class VisitorInfoController extends Controller
                 $asn = $record->autonomousSystemNumber;
                 $readerAsn->close();
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         try {
             $countryDatabasePath = storage_path('app/geoip/GeoLite2-Country.mmdb');
@@ -40,7 +42,8 @@ class VisitorInfoController extends Controller
                 $loc = $record->country->isoCode ?? 'unknown';
                 $readerCountry->close();
             }
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+        }
 
         $isBot = $request->isRobot() ? 'on' : 'off';
         $asnbot = $request->hasHeader('asnbot') ? 'on' : 'off';
@@ -52,7 +55,7 @@ class VisitorInfoController extends Controller
             'uag' => $userAgent,
             'loc' => $loc,
             'asn' => $asn,
-            'http' => 'HTTP/' . $protocol,
+            'http' => 'HTTP/'.$protocol,
             'st' => $isBot,
             'ast' => $asnbot,
             'ts' => microtime(true),

@@ -37,8 +37,15 @@ class ChannelSettingsResolver
      * Backward-compat aliases — both now delegate to applyMailConfig().
      * Kept so that existing Jobs (e.g. SendPasswordResetCodeJob) still compile.
      */
-    public function applyTransactionalSmtp(): void { $this->applyMailConfig(); }
-    public function applyGeneralSmtp(): void       { $this->applyMailConfig(); }
+    public function applyTransactionalSmtp(): void
+    {
+        $this->applyMailConfig();
+    }
+
+    public function applyGeneralSmtp(): void
+    {
+        $this->applyMailConfig();
+    }
 
     /** Returns SMS config, falling back to env/services config. */
     public function resolveSms(): array
@@ -46,9 +53,9 @@ class ChannelSettingsResolver
         $cfg = $this->settingsRepository->get('sms.melipayamak', []);
 
         return [
-            'endpoint'      => $cfg['endpoint']      ?? 'https://console.melipayamak.com/api/send/otp',
-            'api_token'     => $cfg['api_token']      ?? config('services.melipayamak.key'),
-            'sender_number' => $cfg['sender_number']  ?? null,
+            'endpoint' => $cfg['endpoint'] ?? 'https://console.melipayamak.com/api/send/otp',
+            'api_token' => $cfg['api_token'] ?? config('services.melipayamak.key'),
+            'sender_number' => $cfg['sender_number'] ?? null,
         ];
     }
 
@@ -61,14 +68,14 @@ class ChannelSettingsResolver
         // Always set the global From address & name.
         config([
             'mail.from.address' => $cfg['sender_email'] ?: config('mail.from.address'),
-            'mail.from.name'    => $cfg['sender_name']  ?: config('mail.from.name'),
+            'mail.from.name' => $cfg['sender_name'] ?: config('mail.from.name'),
         ]);
 
         match ($cfg['mailer']) {
             'sendmail' => config([
-                'mail.default'                    => 'sendmail',
+                'mail.default' => 'sendmail',
                 'mail.mailers.sendmail.transport' => 'sendmail',
-                'mail.mailers.sendmail.path'      => $cfg['sendmail_path']
+                'mail.mailers.sendmail.path' => $cfg['sendmail_path']
                     ?: env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
             ]),
 
@@ -77,15 +84,15 @@ class ChannelSettingsResolver
             ]),
 
             default => config([   // smtp
-                'mail.default'                   => 'smtp',
-                'mail.mailers.smtp.transport'    => 'smtp',
-                'mail.mailers.smtp.host'         => $cfg['host'],
-                'mail.mailers.smtp.port'         => (int) ($cfg['port'] ?? 587),
-                'mail.mailers.smtp.username'     => $cfg['username'],
-                'mail.mailers.smtp.password'     => $cfg['password'],
-                'mail.mailers.smtp.encryption'   => $cfg['encryption'] ?: null,
-                'mail.mailers.smtp.verify_peer'  => (bool) ($cfg['verify_peer'] ?? true),
-                'mail.mailers.smtp.timeout'      => 30,
+                'mail.default' => 'smtp',
+                'mail.mailers.smtp.transport' => 'smtp',
+                'mail.mailers.smtp.host' => $cfg['host'],
+                'mail.mailers.smtp.port' => (int) ($cfg['port'] ?? 587),
+                'mail.mailers.smtp.username' => $cfg['username'],
+                'mail.mailers.smtp.password' => $cfg['password'],
+                'mail.mailers.smtp.encryption' => $cfg['encryption'] ?: null,
+                'mail.mailers.smtp.verify_peer' => (bool) ($cfg['verify_peer'] ?? true),
+                'mail.mailers.smtp.timeout' => 30,
             ]),
         };
     }
@@ -97,19 +104,19 @@ class ChannelSettingsResolver
         }
 
         return [
-            'mailer'        => in_array($raw['mailer'] ?? '', ['smtp', 'sendmail', 'log']) ? $raw['mailer'] : 'smtp',
+            'mailer' => in_array($raw['mailer'] ?? '', ['smtp', 'sendmail', 'log']) ? $raw['mailer'] : 'smtp',
             // SMTP
-            'host'          => $raw['host']          ?? null,
-            'port'          => $raw['port']          ?? 587,
-            'username'      => $raw['username']      ?? null,
-            'password'      => $raw['password']      ?? null,
-            'encryption'    => $raw['encryption']    ?? null,
-            'verify_peer'   => $raw['verify_peer']   ?? true,
+            'host' => $raw['host'] ?? null,
+            'port' => $raw['port'] ?? 587,
+            'username' => $raw['username'] ?? null,
+            'password' => $raw['password'] ?? null,
+            'encryption' => $raw['encryption'] ?? null,
+            'verify_peer' => $raw['verify_peer'] ?? true,
             // Sendmail
             'sendmail_path' => $raw['sendmail_path'] ?? null,
             // Shared
-            'sender_email'  => $raw['sender_email']  ?? null,
-            'sender_name'   => $raw['sender_name']   ?? null,
+            'sender_email' => $raw['sender_email'] ?? null,
+            'sender_name' => $raw['sender_name'] ?? null,
         ];
     }
 }

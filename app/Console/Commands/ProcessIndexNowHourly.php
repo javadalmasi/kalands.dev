@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 class ProcessIndexNowHourly extends Command
 {
     protected $signature = 'indexnow:process-hourly {--hour= : Force a specific hour (0-23)}';
+
     protected $description = 'Dispatch IndexNow submissions for the current hour based on weights';
 
     public function handle(): int
@@ -18,6 +19,7 @@ class ProcessIndexNowHourly extends Command
             $hour = (int) $hour;
             if ($hour < 0 || $hour > 23) {
                 $this->error('Hour must be between 0 and 23.');
+
                 return self::FAILURE;
             }
         } else {

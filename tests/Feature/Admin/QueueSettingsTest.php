@@ -13,6 +13,7 @@ class QueueSettingsTest extends TestCase
     use RefreshDatabase;
 
     protected $admin;
+
     protected $authKey = 'secret-key';
 
     protected function setUp(): void

@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Admin;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Seeder;

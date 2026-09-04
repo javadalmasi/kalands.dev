@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cookie;
 class DashboardAuthKeyService
 {
     private const AUTHKEY_COOKIE = 'dashboard_authkey';
+
     private const GUARD_COOKIE = 'dashboard_authkey_guard';
 
     public function issue(Model&Authenticatable $model, string $guard, int $sessionMinutes): string
@@ -57,13 +58,13 @@ class DashboardAuthKeyService
 
     public function isValid(Model&Authenticatable $model, string $authKey): bool
     {
-        if (!$model->dashboard_authkey || $model->dashboard_authkey !== $authKey) {
+        if (! $model->dashboard_authkey || $model->dashboard_authkey !== $authKey) {
             return false;
         }
 
         $expiresAt = $model->dashboard_authkey_expires_at;
 
-        if (!$expiresAt) {
+        if (! $expiresAt) {
             return false;
         }
 

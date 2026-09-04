@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 class Category extends Model
 {
@@ -46,7 +45,7 @@ class Category extends Model
         if ($this->store === 'digikala') {
             return $this->hasMany(CategoryMapping::class, 'digikala_category_id');
         }
+
         return $this->hasMany(CategoryMapping::class, 'basalam_category_id');
     }
-
 }

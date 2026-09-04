@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('affiliate_links', function (Blueprint $table) {
-            if (!Schema::hasColumn('affiliate_links', 'store')) {
+            if (! Schema::hasColumn('affiliate_links', 'store')) {
                 $table->string('store', 20)->default('basalam')->after('id');
             }
         });

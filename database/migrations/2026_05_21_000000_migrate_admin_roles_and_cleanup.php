@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         // Run PermissionSeeder to ensure roles and permissions exist
-        (new PermissionSeeder())->run();
+        (new PermissionSeeder)->run();
 
         $roleModels = Role::all()->keyBy('name');
 
@@ -20,7 +20,7 @@ return new class extends Migration
         // We use DB::table to avoid model events or missing columns if Admin model is already updated
         $admins = DB::table('admins')->get();
         foreach ($admins as $admin) {
-            $oldLevel = (string)$admin->access_level;
+            $oldLevel = (string) $admin->access_level;
             if (isset($roleModels[$oldLevel])) {
                 DB::table('model_has_roles')->updateOrInsert([
                     'role_id' => $roleModels[$oldLevel]->id,

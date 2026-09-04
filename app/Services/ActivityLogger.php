@@ -16,7 +16,7 @@ class ActivityLogger
     ): void {
         $actor = $actor ?? auth('admin')->user() ?? auth('web')->user();
 
-        if (!$actor) {
+        if (! $actor) {
             return;
         }
 

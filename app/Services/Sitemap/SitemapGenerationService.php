@@ -321,6 +321,8 @@ class SitemapGenerationService
      */
     public function planPass(int $generation, ?string $cursor, int $shardIndexStart): array
     {
+        SitemapShard::query()->where('generation', $generation)->where('shard_index', '>=', $shardIndexStart)->delete();
+
         $perShard = $this->urlsPerShard();
         $budget = $this->productsPerPass();
         $shardIndex = $shardIndexStart;

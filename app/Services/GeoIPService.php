@@ -12,10 +12,12 @@ use Illuminate\Support\Facades\Log;
 class GeoIPService
 {
     protected $settings;
+
     protected $dbDir;
+
     protected $files = [
-        "GeoLite2-ASN.mmdb"     => "https://git.io/GeoLite2-ASN.mmdb",
-        "GeoLite2-Country.mmdb" => "https://git.io/GeoLite2-Country.mmdb",
+        'GeoLite2-ASN.mmdb' => 'https://git.io/GeoLite2-ASN.mmdb',
+        'GeoLite2-Country.mmdb' => 'https://git.io/GeoLite2-Country.mmdb',
     ];
 
     public function __construct(SettingsRepository $settings)
@@ -31,7 +33,7 @@ class GeoIPService
      */
     public function updateDatabases(): array
     {
-        if (!File::isDirectory($this->dbDir)) {
+        if (! File::isDirectory($this->dbDir)) {
             File::makeDirectory($this->dbDir, 0755, true);
         }
 
@@ -39,8 +41,8 @@ class GeoIPService
         $overallSuccess = true;
 
         foreach ($this->files as $name => $url) {
-            $tmpFile = $this->dbDir . "/" . $name . ".tmp";
-            $finalFile = $this->dbDir . "/" . $name;
+            $tmpFile = $this->dbDir.'/'.$name.'.tmp';
+            $finalFile = $this->dbDir.'/'.$name;
 
             try {
                 $response = Http::timeout(120)->withOptions([
@@ -73,7 +75,7 @@ class GeoIPService
                 }
                 $results[$name] = [
                     'status' => 'failed',
-                    'message' => "خطای سیستمی در دانلود $name: " . $e->getMessage(),
+                    'message' => "خطای سیستمی در دانلود $name: ".$e->getMessage(),
                 ];
                 $overallSuccess = false;
             }
@@ -119,9 +121,9 @@ class GeoIPService
             ];
         }
 
-        return Cache::remember('geoip:country:' . hash('sha256', $ip), 86400, function () use ($ip) {
-            $databasePath = $this->dbDir . '/GeoLite2-Country.mmdb';
-            if (!File::exists($databasePath)) {
+        return Cache::remember('geoip:country:'.hash('sha256', $ip), 86400, function () use ($ip) {
+            $databasePath = $this->dbDir.'/GeoLite2-Country.mmdb';
+            if (! File::exists($databasePath)) {
                 return [
                     'country_code' => null,
                     'country_name' => null,
@@ -138,7 +140,7 @@ class GeoIPService
                     'country_name' => $record->country->names['fa'] ?? $record->country->name ?? null,
                 ];
             } catch (\Throwable $exception) {
-                Log::warning('GeoIP country lookup failed: ' . $exception->getMessage());
+                Log::warning('GeoIP country lookup failed: '.$exception->getMessage());
 
                 return [
                     'country_code' => null,

@@ -93,7 +93,7 @@ class QueueProcessController extends Controller
 
             // 5. GeoIP Database Update (Every 5 hours)
             $lastGeoUpdate = $settingsRepository->get('geoip.last_run');
-            if (! $lastGeoUpdate || now()->diffInHours($lastGeoUpdate) >= 5) {
+            if (! $lastGeoUpdate || now()->diffInHours($lastGeoUpdate, true) >= 5) {
                 $geoResult = $geoIPService->updateDatabases();
                 if ($geoResult['success']) {
                     $meta['tasks'][] = 'بروزرسانی خودکار دیتابیس GeoIP با موفقیت انجام شد.';

@@ -36,8 +36,9 @@ class RegisterStepOneRequest extends FormRequest
                 'string',
                 function (string $attribute, mixed $value, Closure $fail) {
                     $type = isPhoneOrEmail((string) $value);
-                    if (!$type) {
+                    if (! $type) {
                         $fail('شماره موبایل یا ایمیل معتبر وارد کنید.');
+
                         return;
                     }
 

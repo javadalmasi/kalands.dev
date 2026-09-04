@@ -63,7 +63,7 @@ class AdminCommentModerationTest extends TestCase
             ]))
             ->assertRedirect();
 
-        $this->assertDatabaseHas((new Comment())->getTable(), [
+        $this->assertDatabaseHas((new Comment)->getTable(), [
             'id' => $comment->id,
             'status' => Comment::STATUS_APPROVED,
         ]);
@@ -122,7 +122,7 @@ class AdminCommentModerationTest extends TestCase
             ]))
             ->assertRedirect();
 
-        $this->assertDatabaseMissing((new Comment())->getTable(), [
+        $this->assertDatabaseMissing((new Comment)->getTable(), [
             'id' => $comment->id,
         ]);
 

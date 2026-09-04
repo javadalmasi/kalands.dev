@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Category;
 use App\Models\Product;
-use Illuminate\Support\Str;
 
 class CategoryService
 {
@@ -13,9 +12,8 @@ class CategoryService
     /**
      * Process a breadcrumb array and return the leaf category.
      *
-     * @param array $breadcrumb Array of items with 'title' and optional 'id'
-     * @param string $store 'digikala' or 'basalam'
-     * @return Category
+     * @param  array  $breadcrumb  Array of items with 'title' and optional 'id'
+     * @param  string  $store  'digikala' or 'basalam'
      */
     public function findOrCreateFromBreadcrumb(array $breadcrumb, string $store): Category
     {
@@ -27,7 +25,9 @@ class CategoryService
 
         foreach ($breadcrumb as $index => $item) {
             $title = $item['title'] ?? $item['header'] ?? null;
-            if (!$title) continue;
+            if (! $title) {
+                continue;
+            }
 
             // Normalize title
             $title = trim($title);
@@ -51,7 +51,7 @@ class CategoryService
             );
 
             // Update vector if not set OR if vector source/model has changed to something more specific
-            if (!$category->vector) {
+            if (! $category->vector) {
                 $category->vector = $this->vectorService->getVector($title);
                 $category->vector_source = $this->vectorService->getSource();
                 $category->vector_model = $this->vectorService->getModel();
@@ -115,11 +115,12 @@ class CategoryService
 
         // Skip if contains query string
         if (str_contains($href, '?')) {
-            if (!empty($node['children'])) {
+            if (! empty($node['children'])) {
                 foreach ($node['children'] as $child) {
                     $this->processSnappNode($child, $parentId);
                 }
             }
+
             return;
         }
 
@@ -135,12 +136,13 @@ class CategoryService
         $segments = array_values(array_filter(explode('/', trim($path, '/'))));
         $isValidUrl = (count($segments) === 2 && $segments[0] === 'category');
 
-        if (!$title || $title === 'همه دسته‌بندی‌ها' || $title === 'همه کالاها' || !$isValidUrl) {
-            if (!empty($node['children'])) {
+        if (! $title || $title === 'همه دسته‌بندی‌ها' || $title === 'همه کالاها' || ! $isValidUrl) {
+            if (! empty($node['children'])) {
                 foreach ($node['children'] as $child) {
                     $this->processSnappNode($child, $parentId);
                 }
             }
+
             return;
         }
 
@@ -160,14 +162,14 @@ class CategoryService
             ]
         );
 
-        if (!$category->vector) {
+        if (! $category->vector) {
             $category->vector = $this->vectorService->getVector($title);
             $category->vector_source = $this->vectorService->getSource();
             $category->vector_model = $this->vectorService->getModel();
             $category->save();
         }
 
-        if (!empty($node['children'])) {
+        if (! empty($node['children'])) {
             foreach ($node['children'] as $child) {
                 $this->processSnappNode($child, $category->id);
             }
@@ -179,9 +181,11 @@ class CategoryService
 
     protected function getRecursiveRelationships($depth = 10): array
     {
-        if ($depth <= 0) return [];
+        if ($depth <= 0) {
+            return [];
+        }
 
-        return ['children' => function($query) use ($depth) {
+        return ['children' => function ($query) use ($depth) {
             $query->with($this->getRecursiveRelationships($depth - 1));
         }];
     }

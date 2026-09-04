@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('affiliate_links', function (Blueprint $table) {
-            if (!Schema::hasColumn('affiliate_links', 'click_count')) {
+            if (! Schema::hasColumn('affiliate_links', 'click_count')) {
                 $table->unsignedInteger('click_count')->default(0)->after('link');
             }
         });

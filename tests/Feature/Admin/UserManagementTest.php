@@ -4,7 +4,6 @@ namespace Tests\Feature\Admin;
 
 use App\Models\Admin;
 use App\Models\Role;
-use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -14,6 +13,7 @@ class UserManagementTest extends TestCase
     use RefreshDatabase;
 
     protected $admin;
+
     protected $authKey = 'secret-key';
 
     protected function setUp(): void
@@ -55,7 +55,7 @@ class UserManagementTest extends TestCase
         $response->assertRedirect("/dash/admin/{$this->authKey}/users");
         $this->assertDatabaseHas('users', [
             'email' => 'john@example.com',
-            'first_name' => 'John'
+            'first_name' => 'John',
         ]);
     }
 

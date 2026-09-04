@@ -12,7 +12,7 @@ class EnsureDashboardAuthKey
 {
     public function handle(Request $request, Closure $next, string $guard = 'web'): Response
     {
-        if (!Auth::guard($guard)->check()) {
+        if (! Auth::guard($guard)->check()) {
             return redirect()->route('auth.login');
         }
 
@@ -25,7 +25,7 @@ class EnsureDashboardAuthKey
         $cookieAuthkey = (string) $request->cookie('dashboard_authkey');
         $cookieGuard = (string) $request->cookie('dashboard_authkey_guard');
 
-        if (($cookieAuthkey !== '' && !hash_equals($cookieAuthkey, $authkey))
+        if (($cookieAuthkey !== '' && ! hash_equals($cookieAuthkey, $authkey))
             || ($cookieGuard !== '' && $cookieGuard !== $sessionGuard)) {
             Auth::guard($guard)->logout();
             $service->forgetCookie();
@@ -36,7 +36,7 @@ class EnsureDashboardAuthKey
                 ->withErrors('نشست شما منقضی شده است. لطفا دوباره وارد شوید.');
         }
 
-        if (!$service->isValid($user, $authkey)) {
+        if (! $service->isValid($user, $authkey)) {
             Auth::guard($guard)->logout();
             $service->forgetCookie();
             $request->session()->invalidate();
@@ -46,10 +46,11 @@ class EnsureDashboardAuthKey
                 ->withErrors('نشست شما منقضی شده است. لطفا دوباره وارد شوید.');
         }
 
-        if (!$sessionKey) {
+        if (! $sessionKey) {
             session()->put("dashboard.{$sessionGuard}.authkey", $authkey);
             session()->put("dashboard.{$sessionGuard}.expires_at", optional($user->dashboard_authkey_expires_at)?->toISOString());
             $service->syncCookie($authkey, $sessionGuard);
+
             return $next($request);
         }
 

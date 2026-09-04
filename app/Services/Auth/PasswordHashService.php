@@ -9,7 +9,7 @@ class PasswordHashService
     public function make(string $plainPassword): array
     {
         $salt = bin2hex(random_bytes(16));
-        $hash = Hash::make($plainPassword . $salt);
+        $hash = Hash::make($plainPassword.$salt);
 
         return [
             'salt' => $salt,
@@ -19,6 +19,6 @@ class PasswordHashService
 
     public function verify(string $plainPassword, string $salt, string $hash): bool
     {
-        return Hash::check($plainPassword . $salt, $hash);
+        return Hash::check($plainPassword.$salt, $hash);
     }
 }

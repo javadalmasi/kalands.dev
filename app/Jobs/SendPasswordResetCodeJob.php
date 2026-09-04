@@ -13,7 +13,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
-class SendPasswordResetCodeJob implements ShouldQueue, ShouldBeUnique
+class SendPasswordResetCodeJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -23,8 +23,7 @@ class SendPasswordResetCodeJob implements ShouldQueue, ShouldBeUnique
         private readonly string $channel,
         private readonly string $destination,
         private readonly string $code
-    ) {
-    }
+    ) {}
 
     public function uniqueId(): string
     {
@@ -36,13 +35,14 @@ class SendPasswordResetCodeJob implements ShouldQueue, ShouldBeUnique
         if ($this->channel === 'email') {
             $channelSettingsResolver->applyTransactionalSmtp();
             Mail::to($this->destination)->send(new PasswordResetCodeMail($this->code));
+
             return;
         }
 
         $config = $channelSettingsResolver->resolveSms();
         $token = $config['api_token'] ?? null;
 
-        if (!$token) {
+        if (! $token) {
             return;
         }
 

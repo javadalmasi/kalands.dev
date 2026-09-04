@@ -17,7 +17,7 @@ class AutocompleteController extends Controller
                 'status' => 200,
                 'data' => [
                     'auto_complete' => [],
-                ]
+                ],
             ]);
         }
 
@@ -34,12 +34,12 @@ class AutocompleteController extends Controller
                 $response = response()->json([
                     'status' => 200,
                     'data' => [
-                        'auto_complete' => $autoCompleteData
-                    ]
+                        'auto_complete' => $autoCompleteData,
+                    ],
                 ]);
 
                 // Apply caching headers if results exist
-                if (!empty($autoCompleteData)) {
+                if (! empty($autoCompleteData)) {
                     $cacheSettings = $settingsRepository->get('cache.webservices', []);
                     $ttl = (int) ($cacheSettings['autocomplete_ttl'] ?? 31536000);
                     $litespeedEnabled = (bool) ($cacheSettings['autocomplete_litespeed'] ?? true);
@@ -90,20 +90,20 @@ class AutocompleteController extends Controller
                 return response()->json([
                     'status' => 200,
                     'data' => [
-                        'auto_complete' => []
-                    ]
+                        'auto_complete' => [],
+                    ],
                 ]);
             }
         } catch (\Exception $e) {
             // Log the error for debugging purposes
-            \Log::error('Autocomplete API error: ' . $e->getMessage());
+            \Log::error('Autocomplete API error: '.$e->getMessage());
 
             // Return empty results if there's an error
             return response()->json([
                 'status' => 200,
                 'data' => [
-                    'auto_complete' => []
-                ]
+                    'auto_complete' => [],
+                ],
             ]);
         }
     }

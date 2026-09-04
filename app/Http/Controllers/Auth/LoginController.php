@@ -8,8 +8,8 @@ use App\Services\ActivityLogger;
 use App\Services\Auth\AuthenticationService;
 use App\Services\Auth\DashboardAuthKeyService;
 use App\Services\Auth\JsChallengeService;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
@@ -32,7 +32,7 @@ class LoginController extends Controller
             $request->string('password')->toString(),
         );
 
-        if (!$result) {
+        if (! $result) {
             return back()
                 ->withErrors('اطلاعات ورود صحیح نیست.')
                 ->withInput($request->except('password'));
@@ -61,7 +61,7 @@ class LoginController extends Controller
             'remember' => $request->boolean('remember'),
         ]);
 
-        if (!empty($account->two_factor_secret)) {
+        if (! empty($account->two_factor_secret)) {
             return redirect()->route('auth.2fa');
         }
 

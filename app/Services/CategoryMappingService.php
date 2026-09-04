@@ -17,7 +17,9 @@ class CategoryMappingService
      */
     public function autoMap(Category $sourceCategory, float $threshold = 0.6): ?CategoryMapping
     {
-        if ($sourceCategory->store === 'digikala') return null;
+        if ($sourceCategory->store === 'digikala') {
+            return null;
+        }
 
         $digikalaCategories = Category::where('store', 'digikala')->get();
         $bestMatch = null;
@@ -61,7 +63,9 @@ class CategoryMappingService
 
         foreach ($sources as $source) {
             $mapping = $this->autoMap($source);
-            if ($mapping) $count++;
+            if ($mapping) {
+                $count++;
+            }
         }
 
         return $count;

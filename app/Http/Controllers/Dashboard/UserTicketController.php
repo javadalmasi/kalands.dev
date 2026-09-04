@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTicketMessageRequest;
 use App\Http\Requests\StoreTicketRequest;
+use App\Mail\GenericTemplateMail;
 use App\Models\Ticket;
 use App\Models\TicketCategory;
 use App\Repositories\SettingsRepository;
+use App\Services\EmailTemplateService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Mail;
 
 class UserTicketController extends Controller
 {
@@ -40,7 +43,7 @@ class UserTicketController extends Controller
     public function store(StoreTicketRequest $request, SettingsRepository $settingsRepository): RedirectResponse
     {
         $settings = $settingsRepository->get('tickets.settings', ['enabled' => true]);
-        if (!($settings['enabled'] ?? true)) {
+        if (! ($settings['enabled'] ?? true)) {
             return back()->withErrors($settings['disabled_message'] ?? 'ارسال تیکت در این زمان ممکن نیست.');
         }
 
@@ -66,7 +69,7 @@ class UserTicketController extends Controller
         // Send notification to admin if set
         if ($adminEmail = ($settings['admin_email'] ?? null)) {
             try {
-                $emailTemplateService = app(\App\Services\EmailTemplateService::class);
+                $emailTemplateService = app(EmailTemplateService::class);
                 $rendered = $emailTemplateService->render('ticket_created', [
                     'ticket_id' => $ticket->id,
                     'ticket_subject' => $ticket->subject,
@@ -74,7 +77,7 @@ class UserTicketController extends Controller
                     'app_name' => config('app.name'),
                 ]);
 
-                \Illuminate\Support\Facades\Mail::to($adminEmail)->send(new \App\Mail\GenericTemplateMail($rendered['subject'], $rendered['html']));
+                Mail::to($adminEmail)->send(new GenericTemplateMail($rendered['subject'], $rendered['html']));
             } catch (\Exception $e) {
                 // Log or ignore
             }
@@ -93,6 +96,7 @@ class UserTicketController extends Controller
         }
 
         $ticket->load(['category', 'messages.user', 'messages.admin']);
+
         return view('dash.user.tickets.show', compact('ticket'));
     }
 
@@ -103,7 +107,7 @@ class UserTicketController extends Controller
         }
 
         $settings = $settingsRepository->get('tickets.settings', ['enabled' => true]);
-        if (!($settings['enabled'] ?? true)) {
+        if (! ($settings['enabled'] ?? true)) {
             return back()->withErrors($settings['disabled_message'] ?? 'ارسال تیکت در این زمان ممکن نیست.');
         }
 

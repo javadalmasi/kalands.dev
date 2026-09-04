@@ -16,10 +16,11 @@ class SubmitBatchJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $timeout = 120;
+
     public int $tries = 3;
 
     /**
-     * @param array<int, string> $productIds
+     * @param  array<int, string>  $productIds
      */
     public function __construct(
         private array $productIds,
@@ -38,7 +39,7 @@ class SubmitBatchJob implements ShouldQueue
             return;
         }
 
-        $urls = $products->map(fn(Product $p) => $service->buildProductUrl($p))->values()->all();
+        $urls = $products->map(fn (Product $p) => $service->buildProductUrl($p))->values()->all();
 
         $chunks = array_chunk($urls, 5000);
         $totalSubmitted = 0;

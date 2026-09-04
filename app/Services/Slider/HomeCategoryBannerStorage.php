@@ -8,9 +8,7 @@ class HomeCategoryBannerStorage
 {
     private const SETTINGS_KEY = 'home.category_banners';
 
-    public function __construct(private readonly SettingsRepository $settingsRepository)
-    {
-    }
+    public function __construct(private readonly SettingsRepository $settingsRepository) {}
 
     public function load(): array
     {
@@ -33,7 +31,7 @@ class HomeCategoryBannerStorage
                 'show_title' => true,
                 'show_navigation' => true,
                 'show_pagination' => false,
-                'items' => []
+                'items' => [],
             ],
             'categories_bottom' => [
                 'enabled' => false,
@@ -45,7 +43,7 @@ class HomeCategoryBannerStorage
                 'show_title' => true,
                 'show_navigation' => true,
                 'show_pagination' => false,
-                'items' => []
+                'items' => [],
             ],
             'categories' => [], // Legacy
         ];
@@ -75,11 +73,12 @@ class HomeCategoryBannerStorage
             }
         }
 
-        $processCategories = function(array $items) {
+        $processCategories = function (array $items) {
             return array_values(array_filter(array_map(function (array $item) {
                 if (empty($item['title'] ?? null) || empty($item['link'] ?? null) || empty($item['image'] ?? null)) {
                     return null;
                 }
+
                 return [
                     'title' => (string) ($item['title'] ?? ''),
                     'link' => (string) ($item['link'] ?? '#'),
@@ -101,7 +100,7 @@ class HomeCategoryBannerStorage
                 'show_title' => isset($payload['categories_top']['show_title']),
                 'show_navigation' => isset($payload['categories_top']['show_navigation']),
                 'show_pagination' => isset($payload['categories_top']['show_pagination']),
-                'items' => $processCategories((array) ($payload['categories_top']['items'] ?? []))
+                'items' => $processCategories((array) ($payload['categories_top']['items'] ?? [])),
             ];
         }
 
@@ -116,7 +115,7 @@ class HomeCategoryBannerStorage
                 'show_title' => isset($payload['categories_bottom']['show_title']),
                 'show_navigation' => isset($payload['categories_bottom']['show_navigation']),
                 'show_pagination' => isset($payload['categories_bottom']['show_pagination']),
-                'items' => $processCategories((array) ($payload['categories_bottom']['items'] ?? []))
+                'items' => $processCategories((array) ($payload['categories_bottom']['items'] ?? [])),
             ];
         }
 
@@ -134,5 +133,4 @@ class HomeCategoryBannerStorage
         $state['payload_url'] = $payloadUrl;
         $this->settingsRepository->set(self::SETTINGS_KEY, $state);
     }
-
 }

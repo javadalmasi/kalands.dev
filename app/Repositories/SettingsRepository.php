@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 class SettingsRepository
 {
     private const CACHE_PREFIX = 'system_config:';
+
     private const CACHE_TTL_SECONDS = 3600;
 
     public function get(string $key, mixed $default = null): mixed
@@ -49,6 +50,6 @@ class SettingsRepository
 
     private function cacheKey(string $key): string
     {
-        return self::CACHE_PREFIX . $key;
+        return self::CACHE_PREFIX.$key;
     }
 }

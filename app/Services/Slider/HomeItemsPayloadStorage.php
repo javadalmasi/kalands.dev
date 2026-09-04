@@ -21,13 +21,13 @@ class HomeItemsPayloadStorage
             }
         }
 
-        $filename = 'homeitems-' . Str::lower(Str::random(16)) . '.json';
-        $relativePath = 'assets/home-items/' . $filename;
+        $filename = 'homeitems-'.Str::lower(Str::random(16)).'.json';
+        $relativePath = 'assets/home-items/'.$filename;
 
         $normalize = function (array $item): array {
             foreach (['image'] as $key) {
                 if (! empty($item[$key]) && ! str_starts_with((string) $item[$key], 'http://') && ! str_starts_with((string) $item[$key], 'https://')) {
-                    $item[$key] = '/' . ltrim((string) $item[$key], '/');
+                    $item[$key] = '/'.ltrim((string) $item[$key], '/');
                 }
             }
 
@@ -83,6 +83,6 @@ class HomeItemsPayloadStorage
 
         File::put(public_path($relativePath), json_encode($json, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
-        return '/' . $relativePath;
+        return '/'.$relativePath;
     }
 }

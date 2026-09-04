@@ -41,7 +41,7 @@ class RegisterController extends Controller
 
     public function showStep2(JsChallengeService $challengeService)
     {
-        if (!session()->has('register.step1')) {
+        if (! session()->has('register.step1')) {
             return redirect()->route('auth.register.step1');
         }
 
@@ -57,7 +57,7 @@ class RegisterController extends Controller
         DashboardAuthKeyService $dashboardAuthKeyService,
         ActivityLogger $activityLogger
     ): RedirectResponse {
-        if (!session()->has('register.step1')) {
+        if (! session()->has('register.step1')) {
             return redirect()->route('auth.register.step1');
         }
 

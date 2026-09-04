@@ -29,7 +29,9 @@ class ProcessProductCategoriesJob implements ShouldQueue
     ): void {
         try {
             $product = Product::find($this->productId);
-            if (!$product) return;
+            if (! $product) {
+                return;
+            }
 
             // 1. Build/Find the category tree
             $category = $categoryService->findOrCreateFromBreadcrumb($this->breadcrumb, $this->store);
@@ -46,7 +48,7 @@ class ProcessProductCategoriesJob implements ShouldQueue
             }
 
         } catch (\Throwable $e) {
-            Log::error("Error processing categories for product {$this->productId}: " . $e->getMessage());
+            Log::error("Error processing categories for product {$this->productId}: ".$e->getMessage());
         }
     }
 }

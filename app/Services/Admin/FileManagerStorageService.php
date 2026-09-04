@@ -10,13 +10,14 @@ use RuntimeException;
 class FileManagerStorageService
 {
     private const AVIF_QUALITY = 72;
+
     private const IMAGE_META_ARTIST = 'www.kalands.ir';
+
     private const IMAGE_META_COPYRIGHT = 'Copyright (c) www.kalands.ir';
+
     private const IMAGE_META_DESCRIPTION = 'Uploaded for www.kalands.ir';
 
-    public function __construct(private readonly array $settings)
-    {
-    }
+    public function __construct(private readonly array $settings) {}
 
     public function workingRoot(): string
     {
@@ -25,7 +26,7 @@ class FileManagerStorageService
 
     public function cacheRoot(): string
     {
-        return $this->workingRoot() . '/.cache';
+        return $this->workingRoot().'/.cache';
     }
 
     public function ensureWorkingRoot(): void
@@ -40,7 +41,7 @@ class FileManagerStorageService
 
         $path = trim(str_replace(['..', '\\'], ['', '/'], $path), '/');
         $base = rtrim($this->workingRoot(), '/');
-        $current = $path === '' ? $base : $base . '/' . $path;
+        $current = $path === '' ? $base : $base.'/'.$path;
 
         if (! is_dir($current)) {
             $current = $base;
@@ -49,7 +50,8 @@ class FileManagerStorageService
 
         $directories = collect(File::directories($current))
             ->map(function (string $directory) use ($base) {
-                $relative = Str::after($directory, $base . DIRECTORY_SEPARATOR);
+                $relative = Str::after($directory, $base.DIRECTORY_SEPARATOR);
+
                 return [
                     'name' => basename($directory),
                     'path' => str_replace(DIRECTORY_SEPARATOR, '/', $relative),
@@ -62,7 +64,7 @@ class FileManagerStorageService
         $files = collect(File::files($current))
             ->reject(fn ($file) => $file->getFilename() === '.gitignore')
             ->map(function ($file) use ($base) {
-                $relative = Str::after($file->getPathname(), $base . DIRECTORY_SEPARATOR);
+                $relative = Str::after($file->getPathname(), $base.DIRECTORY_SEPARATOR);
                 $relativeUrl = str_replace(DIRECTORY_SEPARATOR, '/', $relative);
 
                 return [
@@ -81,7 +83,7 @@ class FileManagerStorageService
         $segments = $path === '' ? [] : explode('/', $path);
         $accumulated = '';
         foreach ($segments as $segment) {
-            $accumulated = $accumulated === '' ? $segment : $accumulated . '/' . $segment;
+            $accumulated = $accumulated === '' ? $segment : $accumulated.'/'.$segment;
             $breadcrumbs[] = [
                 'name' => $segment,
                 'path' => $accumulated,
@@ -105,7 +107,8 @@ class FileManagerStorageService
     {
         $clean = $this->sanitizePath($path);
         $base = rtrim($this->workingRoot(), '/');
-        return $clean === '' ? $base : ($base . '/' . $clean);
+
+        return $clean === '' ? $base : ($base.'/'.$clean);
     }
 
     public function createDirectory(string $parentPath, string $name): void
@@ -114,7 +117,7 @@ class FileManagerStorageService
         File::ensureDirectoryExists($parent);
         $safeName = trim(str_replace(['..', '/', '\\'], '', $name));
         abort_if($safeName === '', 422);
-        File::ensureDirectoryExists($parent . '/' . $safeName);
+        File::ensureDirectoryExists($parent.'/'.$safeName);
     }
 
     public function deletePath(string $path): void
@@ -122,6 +125,7 @@ class FileManagerStorageService
         $absolute = $this->absolutePath($path);
         if (is_dir($absolute)) {
             File::deleteDirectory($absolute);
+
             return;
         }
         if (is_file($absolute)) {
@@ -136,11 +140,12 @@ class FileManagerStorageService
         abort_if(is_file($absolute), 422, 'نام فایل قابل تغییر نیست.');
         $safeName = trim(str_replace(['..', '/', '\\'], '', $newName));
         abort_if($safeName === '', 422);
-        $newAbsolute = dirname($absolute) . '/' . $safeName;
+        $newAbsolute = dirname($absolute).'/'.$safeName;
         File::move($absolute, $newAbsolute);
 
         $base = rtrim($this->workingRoot(), '/');
-        $relative = Str::after($newAbsolute, $base . DIRECTORY_SEPARATOR);
+        $relative = Str::after($newAbsolute, $base.DIRECTORY_SEPARATOR);
+
         return str_replace(DIRECTORY_SEPARATOR, '/', $relative);
     }
 
@@ -150,11 +155,12 @@ class FileManagerStorageService
         abort_unless(file_exists($source), 404);
         $targetDir = $this->absolutePath($targetDirectory);
         File::ensureDirectoryExists($targetDir);
-        $target = rtrim($targetDir, '/') . '/' . basename($source);
+        $target = rtrim($targetDir, '/').'/'.basename($source);
         File::move($source, $target);
 
         $base = rtrim($this->workingRoot(), '/');
-        $relative = Str::after($target, $base . DIRECTORY_SEPARATOR);
+        $relative = Str::after($target, $base.DIRECTORY_SEPARATOR);
+
         return str_replace(DIRECTORY_SEPARATOR, '/', $relative);
     }
 
@@ -164,7 +170,7 @@ class FileManagerStorageService
         abort_unless(file_exists($source), 404);
         $targetDir = $this->absolutePath($targetDirectory);
         File::ensureDirectoryExists($targetDir);
-        $target = rtrim($targetDir, '/') . '/' . basename($source);
+        $target = rtrim($targetDir, '/').'/'.basename($source);
 
         if (is_dir($source)) {
             File::copyDirectory($source, $target);
@@ -173,7 +179,8 @@ class FileManagerStorageService
         }
 
         $base = rtrim($this->workingRoot(), '/');
-        $relative = Str::after($target, $base . DIRECTORY_SEPARATOR);
+        $relative = Str::after($target, $base.DIRECTORY_SEPARATOR);
+
         return str_replace(DIRECTORY_SEPARATOR, '/', $relative);
     }
 
@@ -202,22 +209,24 @@ class FileManagerStorageService
             $this->scanWithClamAv($file->getRealPath());
         }
 
-        $filename = Str::lower(bin2hex(random_bytes(16))) . '.avif';
-        $absoluteTarget = rtrim($targetDir, '/') . '/' . $filename;
+        $filename = Str::lower(bin2hex(random_bytes(16))).'.avif';
+        $absoluteTarget = rtrim($targetDir, '/').'/'.$filename;
         $this->convertToAvifWithMetadata($binary, $absoluteTarget);
 
-        return ltrim(str_replace('\\', '/', trim($path, '/') . '/' . $filename), '/');
+        return ltrim(str_replace('\\', '/', trim($path, '/').'/'.$filename), '/');
     }
 
     private function convertToAvifWithMetadata(string $binary, string $absoluteTarget): void
     {
         if ($this->supportsImagickAvif()) {
             $this->convertWithImagick($binary, $absoluteTarget);
+
             return;
         }
 
         if ($this->supportsGdAvif()) {
             $this->convertWithGd($binary, $absoluteTarget);
+
             return;
         }
 
@@ -232,6 +241,7 @@ class FileManagerStorageService
 
         try {
             $formats = \Imagick::queryFormats('AVIF');
+
             return ! empty($formats);
         } catch (\Throwable $e) {
             return false;
@@ -245,7 +255,7 @@ class FileManagerStorageService
 
     private function convertWithImagick(string $binary, string $absoluteTarget): void
     {
-        $image = new \Imagick();
+        $image = new \Imagick;
         try {
             $image->readImageBlob($binary);
             abort_if($image->getNumberImages() < 1, 422, 'تصویر معتبر نیست.');
@@ -303,6 +313,7 @@ class FileManagerStorageService
         }
 
         $result = @shell_exec('command -v clamscan 2>/dev/null');
+
         return is_string($result) && trim($result) !== '';
     }
 

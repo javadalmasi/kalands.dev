@@ -12,7 +12,7 @@ class StoreCommentAction implements Action
     private function resolveProductId(string $productId): string
     {
         $product = Product::find($productId);
-        if (!$product) {
+        if (! $product) {
             return $productId;
         }
 

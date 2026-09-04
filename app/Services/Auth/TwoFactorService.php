@@ -8,7 +8,7 @@ class TwoFactorService
 {
     public function generateSecret(): string
     {
-        return (new Google2FA())->generateSecretKey();
+        return (new Google2FA)->generateSecretKey();
     }
 
     public function generateRecoveryCodes(): array
@@ -23,10 +23,10 @@ class TwoFactorService
 
     public function qrInline(string $issuer, string $label, string $secret): string
     {
-        $qr = (new Google2FA())->getQRCodeInline($issuer, $label, $secret);
+        $qr = (new Google2FA)->getQRCodeInline($issuer, $label, $secret);
 
-        if (!str_starts_with($qr, 'data:image') && str_contains($qr, '<svg')) {
-            return 'data:image/svg+xml;base64,' . base64_encode($qr);
+        if (! str_starts_with($qr, 'data:image') && str_contains($qr, '<svg')) {
+            return 'data:image/svg+xml;base64,'.base64_encode($qr);
         }
 
         return $qr;
@@ -34,6 +34,6 @@ class TwoFactorService
 
     public function verify(string $code, string $secret): bool
     {
-        return (new Google2FA())->verifyKey($secret, trim((string) enNumber($code)));
+        return (new Google2FA)->verifyKey($secret, trim((string) enNumber($code)));
     }
 }

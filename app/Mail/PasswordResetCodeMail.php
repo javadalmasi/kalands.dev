@@ -2,19 +2,17 @@
 
 namespace App\Mail;
 
+use App\Services\EmailTemplateService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use App\Services\EmailTemplateService;
 
 class PasswordResetCodeMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(private readonly string $code)
-    {
-    }
+    public function __construct(private readonly string $code) {}
 
     public function envelope(): Envelope
     {

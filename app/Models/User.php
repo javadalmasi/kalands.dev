@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Traits\HasPermissions;
-use Illuminate\Database\Eloquent\Attributes\Casts;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -13,20 +12,20 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable([
-    "first_name",
-    "last_name",
-    "email",
-    "phone",
-    "password_hash",
-    "password_salt",
-    "two_factor_secret",
-    "two_factor_recovery_codes",
-    "dashboard_authkey",
-    "dashboard_authkey_expires_at",
-    "theme_preference",
-    "is_active",
-    "profile_bio",
-    "marketing_opt_in",
+    'first_name',
+    'last_name',
+    'email',
+    'phone',
+    'password_hash',
+    'password_salt',
+    'two_factor_secret',
+    'two_factor_recovery_codes',
+    'dashboard_authkey',
+    'dashboard_authkey_expires_at',
+    'theme_preference',
+    'is_active',
+    'profile_bio',
+    'marketing_opt_in',
 ])]
 #[Hidden([
     'password_hash',
@@ -37,7 +36,7 @@ use Laravel\Sanctum\HasApiTokens;
 ])]
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasPermissions;
+    use HasApiTokens, HasFactory, HasPermissions, Notifiable;
 
     public function otp()
     {
@@ -83,6 +82,6 @@ class User extends Authenticatable
 
     public function name(): Attribute
     {
-        return Attribute::get(fn() => trim($this->first_name . " " . $this->last_name));
+        return Attribute::get(fn () => trim($this->first_name.' '.$this->last_name));
     }
 }

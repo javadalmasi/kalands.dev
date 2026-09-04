@@ -37,10 +37,10 @@ class MarkdownConverter
                     // Found table header
                     $headerCells = $this->parseCells($line);
 
-                    if (!empty($headerCells)) {
+                    if (! empty($headerCells)) {
                         $html = '<table class="markdown-table"><thead><tr>';
                         foreach ($headerCells as $cell) {
-                            $html .= '<th>' . htmlspecialchars($cell, ENT_QUOTES, 'UTF-8') . '</th>';
+                            $html .= '<th>'.htmlspecialchars($cell, ENT_QUOTES, 'UTF-8').'</th>';
                         }
                         $html .= '</tr></thead><tbody>';
 
@@ -57,10 +57,10 @@ class MarkdownConverter
                             }
 
                             $cells = $this->parseCells($rowLine);
-                            if (!empty($cells)) {
+                            if (! empty($cells)) {
                                 $html .= '<tr>';
                                 foreach ($cells as $cell) {
-                                    $html .= '<td>' . htmlspecialchars($cell, ENT_QUOTES, 'UTF-8') . '</td>';
+                                    $html .= '<td>'.htmlspecialchars($cell, ENT_QUOTES, 'UTF-8').'</td>';
                                 }
                                 $html .= '</tr>';
                             }
@@ -70,6 +70,7 @@ class MarkdownConverter
 
                         $html .= '</tbody></table>';
                         $result[] = $html;
+
                         continue;
                     }
                 }
@@ -85,6 +86,7 @@ class MarkdownConverter
     private function isSeparatorLine(string $line): bool
     {
         $line = trim($line);
+
         // Check if line contains only pipes, dashes, colons, and spaces
         return preg_match('/^[\|\s\-:]+$/', $line) && strpos($line, '-') !== false;
     }
@@ -99,6 +101,7 @@ class MarkdownConverter
 
         // Trim and filter
         $cells = array_map('trim', $cells);
-        return array_filter($cells, fn($cell) => $cell !== '');
+
+        return array_filter($cells, fn ($cell) => $cell !== '');
     }
 }

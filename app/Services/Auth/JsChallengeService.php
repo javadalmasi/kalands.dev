@@ -12,9 +12,9 @@ class JsChallengeService
         $left = random_int(2, 9);
         $right = random_int(1, 9);
         $answer = $left + $right;
-        $key = $context . ':' . Str::lower(Str::random(20));
+        $key = $context.':'.Str::lower(Str::random(20));
 
-        session()->put('js_challenge.' . $key, [
+        session()->put('js_challenge.'.$key, [
             'answer' => $answer,
             'context' => $context,
             'expires_at' => CarbonImmutable::now()->addMinutes(15)->toISOString(),
@@ -28,14 +28,15 @@ class JsChallengeService
 
     public function validate(string $key, string $answer, ?string $context = null): bool
     {
-        $payload = session()->get('js_challenge.' . $key);
-        if (!$payload) {
+        $payload = session()->get('js_challenge.'.$key);
+        if (! $payload) {
             return false;
         }
 
         $expiresAt = CarbonImmutable::parse($payload['expires_at']);
         if ($expiresAt->isPast()) {
-            session()->forget('js_challenge.' . $key);
+            session()->forget('js_challenge.'.$key);
+
             return false;
         }
 
@@ -47,7 +48,7 @@ class JsChallengeService
         $isValid = ctype_digit($normalized) && (int) $normalized === (int) $payload['answer'];
 
         if ($isValid) {
-            session()->forget('js_challenge.' . $key);
+            session()->forget('js_challenge.'.$key);
         }
 
         return $isValid;

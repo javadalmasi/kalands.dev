@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Cache;
 class VisitorIntelligenceService
 {
     private SettingsRepository $settings;
+
     private const CACHE_KEY = 'visitor_intelligence:config';
 
     public function __construct(SettingsRepository $settings)

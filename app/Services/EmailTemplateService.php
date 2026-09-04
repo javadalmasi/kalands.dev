@@ -6,9 +6,7 @@ use App\Repositories\SettingsRepository;
 
 class EmailTemplateService
 {
-    public function __construct(private readonly SettingsRepository $settingsRepository)
-    {
-    }
+    public function __construct(private readonly SettingsRepository $settingsRepository) {}
 
     public function catalog(): array
     {
@@ -130,7 +128,7 @@ class EmailTemplateService
         $logoHtml = '';
         if ($logoPath !== '') {
             $logoUrl = $this->resolvePublicPath($logoPath);
-            $logoHtml = '<div style="margin-bottom:18px"><img src="' . e($logoUrl) . '" alt="logo" style="max-height:48px"></div>';
+            $logoHtml = '<div style="margin-bottom:18px"><img src="'.e($logoUrl).'" alt="logo" style="max-height:48px"></div>';
         }
 
         $linksHtml = '';
@@ -142,21 +140,21 @@ class EmailTemplateService
                 if ($label === '' || $url === '') {
                     continue;
                 }
-                $links[] = '<a href="' . e($url) . '" style="color:#2563eb;text-decoration:none;margin-inline:8px">' . e($label) . '</a>';
+                $links[] = '<a href="'.e($url).'" style="color:#2563eb;text-decoration:none;margin-inline:8px">'.e($label).'</a>';
             }
             if ($links !== []) {
-                $linksHtml = '<div style="margin-top:12px">' . implode('', $links) . '</div>';
+                $linksHtml = '<div style="margin-top:12px">'.implode('', $links).'</div>';
             }
         }
 
-        $html = '<!doctype html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . e($subject) . '</title></head><body style="font-family:sans-serif;line-height:1.8;background:#f8fafc;padding:24px"><div style="max-width:720px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;color:#0f172a">'
-            . $logoHtml
-            . $headerHtml
-            . '<div>' . $body . '</div>'
-            . '<hr style="margin:24px 0;border:none;border-top:1px solid #e2e8f0">'
-            . $footerHtml
-            . $linksHtml
-            . '</div></body></html>';
+        $html = '<!doctype html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'.e($subject).'</title></head><body style="font-family:sans-serif;line-height:1.8;background:#f8fafc;padding:24px"><div style="max-width:720px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;color:#0f172a">'
+            .$logoHtml
+            .$headerHtml
+            .'<div>'.$body.'</div>'
+            .'<hr style="margin:24px 0;border:none;border-top:1px solid #e2e8f0">'
+            .$footerHtml
+            .$linksHtml
+            .'</div></body></html>';
 
         return ['subject' => $subject, 'html' => $html];
     }
@@ -175,7 +173,7 @@ class EmailTemplateService
     public function layout(): array
     {
         $layout = $this->settingsRepository->get('email.templates.layout', []);
-        if (!is_array($layout)) {
+        if (! is_array($layout)) {
             $layout = [];
         }
 
@@ -191,7 +189,7 @@ class EmailTemplateService
     {
         $replacements = [];
         foreach ($variables as $key => $value) {
-            $replacements['{{' . $key . '}}'] = (string) $value;
+            $replacements['{{'.$key.'}}'] = (string) $value;
         }
 
         return strtr($template, $replacements);
@@ -203,6 +201,6 @@ class EmailTemplateService
             return $path;
         }
 
-        return url('/' . ltrim($path, '/'));
+        return url('/'.ltrim($path, '/'));
     }
 }

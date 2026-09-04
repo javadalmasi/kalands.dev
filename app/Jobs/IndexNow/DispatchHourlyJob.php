@@ -16,6 +16,7 @@ class DispatchHourlyJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $timeout = 60;
+
     public int $tries = 1;
 
     public function __construct(
@@ -28,7 +29,7 @@ class DispatchHourlyJob implements ShouldQueue
         $engines = ['bing', 'yandex'];
 
         foreach ($engines as $engine) {
-            if (!$service->isEnabled($engine)) {
+            if (! $service->isEnabled($engine)) {
                 continue;
             }
 
@@ -46,7 +47,7 @@ class DispatchHourlyJob implements ShouldQueue
                 ->where('is_active', true)
                 ->where(function ($q) {
                     $q->whereNull('indexnow_submitted_at')
-                      ->orWhereColumn('updated_at', '>', 'indexnow_submitted_at');
+                        ->orWhereColumn('updated_at', '>', 'indexnow_submitted_at');
                 })
                 ->limit($limit)
                 ->pluck('id');
@@ -55,7 +56,7 @@ class DispatchHourlyJob implements ShouldQueue
                 continue;
             }
 
-            $runId = now()->format('Ymd_His') . "_{$engine}_h{$this->hour}";
+            $runId = now()->format('Ymd_His')."_{$engine}_h{$this->hour}";
 
             IndexNowRunLog::create([
                 'run_id' => $runId,

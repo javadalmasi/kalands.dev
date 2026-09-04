@@ -32,7 +32,7 @@ return [
     ],
 
     'melipayamak' => [
-        'key' => env('MELIPAYAMAK_API_TOKEN', env('MELIPAYAMAK_API_KEY'))
+        'key' => env('MELIPAYAMAK_API_TOKEN', env('MELIPAYAMAK_API_KEY')),
     ],
 
     'cdn' => [
