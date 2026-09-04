@@ -16,6 +16,7 @@
 /bootstrap/cache/*.php
 /.qwen/*
 /storage/app/backups/*
+/storage/app/geoip/*.mmdb
 /public/sitemap.xml
 /public/sitemaps/*
 .pachim.json
