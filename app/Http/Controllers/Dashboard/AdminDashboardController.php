@@ -4002,4 +4002,53 @@ class AdminDashboardController extends Controller
 
         return back()->with('message', "لاگ‌های سایت‌مپ حذف شدند. ({$deletedCount} رکورد)");
     }
+
+    public function emailSettingsHub(Request $request, SettingsRepository $settingsRepository)
+    {
+        $authkey = request()->route('authkey');
+        $mailCfg = $settingsRepository->get('mail.config');
+        if (empty($mailCfg) || empty($mailCfg['mailer'])) {
+            $mailCfg = $settingsRepository->get('smtp.general', []);
+        }
+        $queueSettings = $settingsRepository->get('queue.settings', []);
+
+        return view('dash.admin.email-settings', [
+            'mailCfg' => $mailCfg,
+            'queueConnection' => env('QUEUE_CONNECTION', $queueSettings['driver'] ?? 'sync'),
+            'authkey' => $authkey,
+        ]);
+    }
+
+    public function smsSettingsHub(Request $request, SettingsRepository $settingsRepository)
+    {
+        $authkey = request()->route('authkey');
+        $queueSettings = $settingsRepository->get('queue.settings', []);
+
+        return view('dash.admin.sms-settings', [
+            'smsCfg' => $settingsRepository->get('sms.melipayamak', []),
+            'queueConnection' => env('QUEUE_CONNECTION', $queueSettings['driver'] ?? 'sync'),
+            'authkey' => $authkey,
+        ]);
+    }
+
+    public function homeItemsHub(Request $request, SettingsRepository $settingsRepository, SliderStorage $sliderStorage, HomeCategoryBannerStorage $homeCategoryBannerStorage)
+    {
+        $authkey = request()->route('authkey');
+        $settings = [
+            'slider' => $sliderStorage->loadByModule('home_main_banners'),
+            'banners_categories' => $homeCategoryBannerStorage->load(),
+        ];
+        $fileManagerSettings = $settingsRepository->get('file_manager.storage', ['root_path' => 'uploads', 'cdn_base_url' => '']);
+
+        return view('dash.admin.home-items', [
+            'settings' => $settings,
+            'fileManagerSettings' => $fileManagerSettings,
+            'authkey' => $authkey,
+        ]);
+    }
+
+    public function sitemapHubView(SitemapGenerationService $sitemap)
+    {
+        return $this->sitemapHub($sitemap);
+    }
 }

@@ -27,7 +27,9 @@ class AdminCommentModerationTest extends TestCase
             'dashboard_authkey_expires_at' => now()->addHour(),
             'theme_preference' => 'light',
         ]);
-        $admin->syncRoles([Role::query()->where('name', 'super_admin')->valueOrFail('id')]);
+        $role = Role::query()->where('name', 'super_admin')->first()
+            ?? Role::query()->create(['name' => 'super_admin', 'label' => 'Super Admin']);
+        $admin->syncRoles([$role->id]);
 
         $user = User::query()->create([
             'first_name' => 'Test',
@@ -40,7 +42,7 @@ class AdminCommentModerationTest extends TestCase
         ]);
 
         $product = Product::query()->create([
-            'id' => 'test-product-1',
+            'id' => '1',
             'title' => 'Test Product',
         ]);
 
@@ -87,7 +89,9 @@ class AdminCommentModerationTest extends TestCase
             'dashboard_authkey_expires_at' => now()->addHour(),
             'theme_preference' => 'light',
         ]);
-        $admin->syncRoles([Role::query()->where('name', 'super_admin')->valueOrFail('id')]);
+        $role = Role::query()->where('name', 'super_admin')->first()
+            ?? Role::query()->create(['name' => 'super_admin', 'label' => 'Super Admin']);
+        $admin->syncRoles([$role->id]);
 
         $user = User::query()->create([
             'first_name' => 'Test',
@@ -100,7 +104,7 @@ class AdminCommentModerationTest extends TestCase
         ]);
 
         $product = Product::query()->create([
-            'id' => 'test-product-2',
+            'id' => '1',
             'title' => 'Test Product 2',
         ]);
 

@@ -15,7 +15,7 @@ class DashboardAccessTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(); // Seed standard roles/permissions if applicable
+        $this->seed();
     }
 
     public function test_guest_is_redirected_to_login()
@@ -26,7 +26,12 @@ class DashboardAccessTest extends TestCase
 
     public function test_admin_can_access_dashboard_with_correct_permission()
     {
-        $admin = Admin::factory()->create(['is_active' => true]);
+        $authKey = 'test-auth-key';
+        $admin = Admin::factory()->create([
+            'is_active' => true,
+            'dashboard_authkey' => $authKey,
+            'dashboard_authkey_expires_at' => now()->addHour(),
+        ]);
         $role = Role::create(['name' => 'manager', 'label' => 'Manager']);
         $permission = Permission::where('name', 'dashboard.view')->first()
                       ?? Permission::create(['name' => 'dashboard.view', 'label' => 'View Dashboard', 'module' => 'dashboard']);
@@ -34,7 +39,6 @@ class DashboardAccessTest extends TestCase
         $role->permissions()->attach($permission);
         $admin->roles()->attach($role);
 
-        $authKey = 'test-auth-key';
         session(['admin_dashboard_auth_key' => $authKey]);
 
         $response = $this->actingAs($admin, 'admin')
@@ -46,8 +50,12 @@ class DashboardAccessTest extends TestCase
 
     public function test_admin_without_permission_cannot_access_dashboard()
     {
-        $admin = Admin::factory()->create(['is_active' => true]);
         $authKey = 'test-auth-key';
+        $admin = Admin::factory()->create([
+            'is_active' => true,
+            'dashboard_authkey' => $authKey,
+            'dashboard_authkey_expires_at' => now()->addHour(),
+        ]);
         session(['admin_dashboard_auth_key' => $authKey]);
 
         $response = $this->actingAs($admin, 'admin')

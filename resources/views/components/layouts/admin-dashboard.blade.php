@@ -66,7 +66,7 @@
                     </div>
                     <div>
                         <p class="text-sm font-semibold leading-none" style="color: var(--adm-fg)">پنل مدیریت</p>
-                        <p class="text-[10px] mt-0.5 font-mono" style="color: var(--admin-primary)">Kalands</p>
+                        <p class="text-[10px] mt-0.5 font-mono" style="color: var(--admin-primary)">Kalands Unified</p>
                     </div>
                 </div>
             </div>

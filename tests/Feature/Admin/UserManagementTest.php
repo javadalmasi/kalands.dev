@@ -20,8 +20,13 @@ class UserManagementTest extends TestCase
     {
         parent::setUp();
 
-        $this->admin = Admin::factory()->create(['is_active' => true]);
-        $role = Role::create(['name' => 'super_admin', 'label' => 'Super Admin']);
+        $this->admin = Admin::factory()->create([
+            'is_active' => true,
+            'dashboard_authkey' => $this->authKey,
+            'dashboard_authkey_expires_at' => now()->addHour(),
+        ]);
+        $role = Role::query()->where('name', 'super_admin')->first()
+            ?? Role::query()->create(['name' => 'super_admin', 'label' => 'Super Admin']);
         $this->admin->roles()->attach($role);
 
         session(['admin_dashboard_auth_key' => $this->authKey]);

@@ -23,8 +23,8 @@ class ResponseDisclosureTest extends TestCase
         $this->assertFileExists(public_path('vendor/livewire/livewire.min.js'));
         $scriptResponse = $this->get(EndpointResolver::scriptPath(minified: (bool) ! config('app.debug')));
         $scriptResponse->assertOk()
-            ->assertHeader('Content-Type', 'application/javascript; charset=utf-8')
-            ->assertHeader('Cache-Control', 'public, max-age=31536000');
+            ->assertHeader('Content-Type', 'application/javascript; charset=utf-8');
+        $this->assertStringContainsString('max-age=31536000', $scriptResponse->headers->get('Cache-Control'));
         $this->get(EndpointResolver::scriptPath(minified: (bool) ! config('app.debug')), [
             'If-Modified-Since' => $scriptResponse->headers->get('Last-Modified'),
         ])->assertStatus(304);

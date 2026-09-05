@@ -45,6 +45,7 @@ export default defineConfig({
                 'resources/js/admin-object-cache-hub.js',
                 'resources/js/admin-artisan-commands-hub.js',
                 'resources/js/admin-visitor-intelligence.js',
+                'resources/js/admin-categories.js',
                 'resources/js/error-pages.js',
                 'resources/js/admin-cache-hub.js',
                 'resources/js/result-page.js',
