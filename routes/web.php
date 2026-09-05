@@ -35,7 +35,7 @@ Route::get('/api/bslm/{productId}', [AffiliateRedirectController::class, 'fetchA
 
 Route::get('/', [HomeController::class, 'home'])->name('index');
 
-// Dynamic XML sitemap (Yoast-style: index + per-shard product sitemaps).
+// Dynamic XML sitemap
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
 Route::get('/product-sitemap{shard}.xml', [SitemapController::class, 'shard'])
     ->where('shard', '[1-9][0-9]*')
@@ -142,26 +142,19 @@ Route::prefix('dash/user/{authkey}')
         Route::post('/2fa/disable', [TwoFAController::class, 'disable'])->name('2fa.disable');
     });
 
+/*
+|--------------------------------------------------------------------------
+| Native Admin Dashboard Routes
+|--------------------------------------------------------------------------
+*/
 Route::prefix('dash/admin/{authkey}')
     ->name('dash.admin.')
     ->middleware(['auth:admin', 'dash.authkey:admin', '2fa'])
     ->group(function () {
+        // Dashboard Overview
         Route::get('/', [AdminDashboardController::class, 'index'])->name('index')->middleware('permission:dashboard.view');
-        Route::get('/modules', [AdminDashboardController::class, 'modules'])->name('modules')->middleware('permission:dashboard.view');
-        Route::get('/modules/{moduleKey}', [AdminDashboardController::class, 'moduleSettings'])
-            ->whereIn('moduleKey', ['email_settings', 'sms_settings', 'contact', 'affiliate', 'file_manager', 'home_items_management', 'email_templates', 'queues', 'comments', 'tickets', 'faq', 'geoip', 'robots', 'search', 'megamenu', 'error_pages', 'cache_management', 'object_cache', 'artisan_commands', 'visitor_intelligence', 'categories', 'sitemap', 'indexnow'])
-            ->name('modules.show');
-        Route::post('/modules/home-slider', [AdminDashboardController::class, 'saveHomeSliderSettings'])->name('modules.home-slider.save')->middleware('permission:home_items.edit');
-        Route::post('/modules/home-banners-categories', [AdminDashboardController::class, 'saveHomeBannerCategorySettings'])->name('modules.home-banners-categories.save')->middleware('permission:home_items.edit');
-        Route::get('/modules/file-manager/explore', [AdminDashboardController::class, 'fileManagerExplore'])->name('modules.explore')->middleware('permission:file_manager.view');
-        Route::post('/modules/file-manager/explore/upload', [AdminDashboardController::class, 'fileManagerUpload'])->name('modules.explore.upload')->middleware('permission:file_manager.full');
-        Route::post('/modules/file-manager/explore/create-folder', [AdminDashboardController::class, 'fileManagerCreateFolder'])->name('modules.explore.create-folder')->middleware('permission:file_manager.full');
-        Route::post('/modules/file-manager/explore/delete', [AdminDashboardController::class, 'fileManagerDelete'])->name('modules.explore.delete')->middleware('permission:file_manager.full');
-        Route::post('/modules/file-manager/explore/rename', [AdminDashboardController::class, 'fileManagerRename'])->name('modules.explore.rename')->middleware('permission:file_manager.full');
-        Route::post('/modules/file-manager/explore/move', [AdminDashboardController::class, 'fileManagerMove'])->name('modules.explore.move')->middleware('permission:file_manager.full');
-        Route::post('/modules/file-manager/explore/copy', [AdminDashboardController::class, 'fileManagerCopy'])->name('modules.explore.copy')->middleware('permission:file_manager.full');
-        Route::post('/modules/file-manager/settings/save', [AdminDashboardController::class, 'fileManagerSettingsSave'])->name('file-manager.settings.save')->middleware('permission:file_manager.full');
 
+        // Users
         Route::get('/users', [AdminDashboardController::class, 'users'])->name('users')->middleware('permission:users.view');
         Route::post('/users/bulk', [AdminDashboardController::class, 'bulkUserAction'])->name('users.bulk')->middleware('permission:users.edit');
         Route::get('/users/create', [AdminDashboardController::class, 'createUser'])->name('users.create')->middleware('permission:users.create');
@@ -170,11 +163,13 @@ Route::prefix('dash/admin/{authkey}')
         Route::post('/users/{user}/password', [AdminDashboardController::class, 'updateUserPassword'])->name('users.password')->middleware('permission:users.edit');
         Route::delete('/users/{user}', [AdminDashboardController::class, 'deleteUser'])->name('users.delete')->middleware('permission:users.delete');
 
+        // Admins
         Route::get('/admins', [AdminDashboardController::class, 'admins'])->name('admins')->middleware('permission:admins.view');
         Route::post('/admins', [AdminDashboardController::class, 'storeAdmin'])->name('admins.store')->middleware('permission:admins.create');
         Route::post('/admins/{admin}', [AdminDashboardController::class, 'updateAdmin'])->name('admins.update')->middleware('permission:admins.edit');
         Route::delete('/admins/{admin}', [AdminDashboardController::class, 'deleteAdmin'])->name('admins.delete')->middleware('permission:admins.delete');
 
+        // Roles
         Route::get('/roles', [AdminDashboardController::class, 'roles'])->name('roles')->middleware('permission:roles.view');
         Route::get('/roles/create', [AdminDashboardController::class, 'createRole'])->name('roles.create')->middleware('permission:roles.create');
         Route::post('/roles/create', [AdminDashboardController::class, 'storeRole'])->name('roles.store')->middleware('permission:roles.create');
@@ -182,28 +177,39 @@ Route::prefix('dash/admin/{authkey}')
         Route::post('/roles/{role}/edit', [AdminDashboardController::class, 'updateRole'])->name('roles.update')->middleware('permission:roles.edit');
         Route::delete('/roles/{role}', [AdminDashboardController::class, 'deleteRole'])->name('roles.delete')->middleware('permission:roles.delete');
 
-        Route::get('/queues', [AdminDashboardController::class, 'queues'])->name('queues')->middleware('permission:queues.view');
-        Route::post('/queues', [AdminDashboardController::class, 'saveQueueSettings'])->name('queues.save')->middleware('permission:queues.full');
-        Route::post('/queues/regenerate-token', [AdminDashboardController::class, 'regenerateQueueToken'])->name('queues.token.regenerate')->middleware('permission:queues.full');
+        // Products
+        Route::get('/products', [AdminDashboardController::class, 'products'])->name('products')->middleware('permission:products.view');
+        Route::get('/products/checker', [AdminDashboardController::class, 'productsChecker'])->name('products.checker')->middleware('permission:products.check');
+        Route::post('/products/bulk', [AdminDashboardController::class, 'bulkProductAction'])->name('products.bulk')->middleware('permission:products.edit');
+        Route::post('/products/{product}/toggle', [AdminDashboardController::class, 'toggleProductStatus'])->name('products.toggle')->middleware('permission:products.edit');
+        Route::get('/products/digikala-ids', [AdminDashboardController::class, 'getDigikalaIdsForCheck'])->name('products.digikala_ids')->middleware('permission:products.check');
+        Route::post('/products/check-api', [AdminDashboardController::class, 'checkProductsApiStatus'])->name('products.check_api')->middleware('permission:products.check');
 
-        // ── Email Settings ─────────────────────────────────────────────────────────
-        Route::post('/mail-config', [AdminDashboardController::class, 'saveMailConfig'])->name('mail.config.save')->middleware('permission:communication.edit');
-        Route::post('/mail-config/test', [AdminDashboardController::class, 'sendMailTest'])->name('mail.config.test')->middleware('permission:communication.full');
+        // Product Mappings
+        Route::get('/product-mappings', [AdminDashboardController::class, 'productIdMappings'])->name('product_mappings')->middleware('permission:products.view');
+        Route::post('/product-mappings', [AdminDashboardController::class, 'storeProductIdMapping'])->name('product_mappings.store')->middleware('permission:products.edit');
+        Route::delete('/product-mappings/{mapping}', [AdminDashboardController::class, 'deleteProductIdMapping'])->name('product_mappings.delete')->middleware('permission:products.edit');
 
-        // ── SMS Settings ───────────────────────────────────────────────────────────
-        Route::post('/sms-config', [AdminDashboardController::class, 'saveSmsConfig'])->name('sms.config.save')->middleware('permission:communication.edit');
-        Route::post('/sms-config/test', [AdminDashboardController::class, 'sendSmsTest'])->name('sms.config.test')->middleware('permission:communication.full');
-        Route::get('/email-templates', [AdminDashboardController::class, 'emailTemplates'])->name('email.templates')->middleware('permission:email_templates.view');
-        Route::post('/email-templates/layout', [AdminDashboardController::class, 'saveEmailTemplateLayout'])->name('email.templates.layout.save')->middleware('permission:email_templates.edit');
-        Route::post('/email-templates/{key}', [AdminDashboardController::class, 'saveEmailTemplate'])->name('email.templates.save')->middleware('permission:email_templates.edit');
-        Route::get('/email-templates/{key}/preview', [AdminDashboardController::class, 'previewEmailTemplate'])->name('email.templates.preview')->middleware('permission:email_templates.view');
+        // Categories
+        Route::get('/categories', [AdminDashboardController::class, 'categoriesHub'])->name('categories.hub')->middleware('permission:dashboard.view');
+        Route::get('/categories/tree', [AdminDashboardController::class, 'getCategoryTree'])->name('categories.tree');
+        Route::get('/categories/{category}/details', [AdminDashboardController::class, 'getCategoryDetails'])->name('categories.details');
+        Route::post('/categories/map', [AdminDashboardController::class, 'saveCategoryMapping'])->name('categories.map');
+        Route::post('/categories/{category}/update', [AdminDashboardController::class, 'updateCategory'])->name('categories.update');
+        Route::post('/categories/settings', [AdminDashboardController::class, 'saveCategorySettings'])->name('categories.settings.save');
+        Route::post('/categories/import-snapp', [AdminDashboardController::class, 'importSnappShopCategories'])->name('categories.import.snapp');
+        Route::post('/categories/ai-test', [AdminDashboardController::class, 'testAiEmbedding'])->name('categories.ai_test');
+        Route::post('/categories/sync-all', [AdminDashboardController::class, 'syncAllCategories'])->name('categories.sync_all');
+        Route::get('/categories/linked', [AdminDashboardController::class, 'getLinkedCategories'])->name('categories.linked');
 
-        Route::get('/comments', [AdminDashboardController::class, 'comments'])->name('comments')->middleware('permission:comments.view');
+        // Comments
+        Route::get('/comments', [AdminDashboardController::class, 'commentsHub'])->name('comments')->middleware('permission:comments.view');
         Route::post('/comments/settings', [AdminDashboardController::class, 'saveCommentSettings'])->name('comments.settings.save')->middleware('permission:comments.full');
         Route::post('/comments/bulk', [AdminDashboardController::class, 'bulkCommentAction'])->name('comments.bulk')->middleware('permission:comments.edit');
         Route::post('/comments/{comment}/status/{status}', [AdminDashboardController::class, 'setCommentStatus'])->name('comments.status')->middleware('permission:comments.edit');
         Route::delete('/comments/{comment}', [AdminDashboardController::class, 'deleteComment'])->name('comments.delete')->middleware('permission:comments.delete');
 
+        // Tickets
         Route::get('/tickets', [AdminDashboardController::class, 'ticketsHub'])->name('tickets')->middleware('permission:tickets.view');
         Route::post('/tickets/bulk', [AdminDashboardController::class, 'bulkTicketAction'])->name('tickets.bulk')->middleware('permission:tickets.edit');
         Route::get('/tickets/{ticket}', [AdminDashboardController::class, 'showTicket'])->name('tickets.show')->middleware('permission:tickets.view');
@@ -216,14 +222,18 @@ Route::prefix('dash/admin/{authkey}')
         Route::post('/ticket-categories', [AdminDashboardController::class, 'storeTicketCategory'])->name('ticket.categories.store')->middleware('permission:tickets.full');
         Route::post('/ticket-categories/{category}/toggle', [AdminDashboardController::class, 'toggleTicketCategory'])->name('ticket.categories.toggle')->middleware('permission:tickets.full');
 
-        Route::get('/contact-us', [AdminDashboardController::class, 'contactMessages'])->name('contact.messages')->middleware('permission:contact.view');
+        // Contact Messages
+        Route::get('/contact-us', [AdminDashboardController::class, 'contactHub'])->name('contact.messages')->middleware('permission:contact.view');
         Route::post('/contact-us/bulk', [AdminDashboardController::class, 'bulkContactAction'])->name('contact.bulk')->middleware('permission:contact.edit');
         Route::get('/contact-us/{contactMessage}/edit', [AdminDashboardController::class, 'editContactMessage'])->name('contact.edit')->middleware('permission:contact.edit');
         Route::post('/contact-us/{contactMessage}', [AdminDashboardController::class, 'updateContactMessage'])->name('contact.update')->middleware('permission:contact.edit');
         Route::post('/contact-us/{contactMessage}/read', [AdminDashboardController::class, 'markContactRead'])->name('contact.read')->middleware('permission:contact.edit');
         Route::delete('/contact-us/{contactMessage}', [AdminDashboardController::class, 'deleteContact'])->name('contact.delete')->middleware('permission:contact.delete');
-        Route::get('/contact-page-info', [AdminDashboardController::class, 'contactPageInfo'])->name('contact.page.info')->middleware('permission:contact.full');
+        Route::get('/contact-page-info', [AdminDashboardController::class, 'contactHub'])->name('contact.page.info')->middleware('permission:contact.full');
         Route::post('/contact-page-info', [AdminDashboardController::class, 'saveContactPageInfo'])->name('contact.page.info.save')->middleware('permission:contact.full');
+
+        // FAQ
+        Route::get('/faq', [AdminDashboardController::class, 'faqHub'])->name('faq.hub')->middleware('permission:faq.view');
         Route::post('/faq', [AdminDashboardController::class, 'storeFaq'])->name('faq.store')->middleware('permission:faq.create');
         Route::post('/faq/reorder', [AdminDashboardController::class, 'reorderFaq'])->name('faq.reorder')->middleware('permission:faq.edit');
         Route::post('/faq/bulk', [AdminDashboardController::class, 'bulkFaqAction'])->name('faq.bulk')->middleware('permission:faq.edit');
@@ -231,6 +241,36 @@ Route::prefix('dash/admin/{authkey}')
         Route::post('/faq/{faq}/toggle', [AdminDashboardController::class, 'toggleFaq'])->name('faq.toggle')->middleware('permission:faq.edit');
         Route::delete('/faq/{faq}', [AdminDashboardController::class, 'deleteFaq'])->name('faq.delete')->middleware('permission:faq.delete');
 
+        // Megamenu
+        Route::get('/megamenu', [AdminDashboardController::class, 'megamenuHub'])->name('megamenu')->middleware('permission:megamenu.view');
+        Route::post('/megamenu/save', [AdminDashboardController::class, 'saveMegamenu'])->name('megamenu.save')->middleware('permission:megamenu.edit');
+        Route::post('/megamenu/test-links', [AdminDashboardController::class, 'testMegamenuLinks'])->name('megamenu.test_links')->middleware('permission:megamenu.view');
+
+        // Home Slider & Banners
+        Route::get('/home-items', [AdminDashboardController::class, 'homeItemsHub'])->name('home_items')->middleware('permission:home_items.view');
+        Route::post('/home-slider/save', [AdminDashboardController::class, 'saveHomeSliderSettings'])->name('home-slider.save')->middleware('permission:home_items.edit');
+        Route::post('/home-banners-categories/save', [AdminDashboardController::class, 'saveHomeBannerCategorySettings'])->name('home-banners-categories.save')->middleware('permission:home_items.edit');
+
+        // Error Pages
+        Route::get('/error-pages', [AdminDashboardController::class, 'errorPagesHub'])->name('error_pages')->middleware('permission:error_pages.view');
+        Route::post('/error-pages/save', [AdminDashboardController::class, 'saveErrorPagesSettings'])->name('error_pages.save')->middleware('permission:error_pages.edit');
+
+        // Email Settings & Templates
+        Route::get('/email-settings', [AdminDashboardController::class, 'emailSettingsHub'])->name('email_settings')->middleware('permission:communication.view');
+        Route::post('/mail-config', [AdminDashboardController::class, 'saveMailConfig'])->name('mail.config.save')->middleware('permission:communication.edit');
+        Route::post('/mail-config/test', [AdminDashboardController::class, 'sendMailTest'])->name('mail.config.test')->middleware('permission:communication.full');
+
+        Route::get('/email-templates', [AdminDashboardController::class, 'emailTemplates'])->name('email.templates')->middleware('permission:email_templates.view');
+        Route::post('/email-templates/layout', [AdminDashboardController::class, 'saveEmailTemplateLayout'])->name('email.templates.layout.save')->middleware('permission:email_templates.edit');
+        Route::post('/email-templates/{key}', [AdminDashboardController::class, 'saveEmailTemplate'])->name('email.templates.save')->middleware('permission:email_templates.edit');
+        Route::get('/email-templates/{key}/preview', [AdminDashboardController::class, 'previewEmailTemplate'])->name('email.templates.preview')->middleware('permission:email_templates.view');
+
+        // SMS Settings
+        Route::get('/sms-settings', [AdminDashboardController::class, 'smsSettingsHub'])->name('sms_settings')->middleware('permission:communication.view');
+        Route::post('/sms-config', [AdminDashboardController::class, 'saveSmsConfig'])->name('sms.config.save')->middleware('permission:communication.edit');
+        Route::post('/sms-config/test', [AdminDashboardController::class, 'sendSmsTest'])->name('sms.config.test')->middleware('permission:communication.full');
+
+        // Affiliate System
         Route::get('/affiliate-settings', [AdminDashboardController::class, 'affiliateSettings'])->name('affiliate.settings')->middleware('permission:affiliate.view');
         Route::post('/affiliate-settings', [AdminDashboardController::class, 'saveAffiliateSettings'])->name('affiliate.settings.save')->middleware('permission:affiliate.edit');
         Route::get('/affiliate/export/{type}', [AdminDashboardController::class, 'exportAffiliateSettings'])->name('affiliate.export')->middleware('permission:affiliate.full');
@@ -240,67 +280,122 @@ Route::prefix('dash/admin/{authkey}')
         Route::get('/affiliate/links-export', [AdminDashboardController::class, 'exportAffiliateLinks'])->name('affiliate.links.export')->middleware('permission:affiliate.full');
         Route::post('/affiliate/links-import', [AdminDashboardController::class, 'importAffiliateLinks'])->name('affiliate.links.import')->middleware('permission:affiliate.full');
 
-        Route::post('/modules/geoip/update', [AdminDashboardController::class, 'updateGeoIp'])->name('geoip.update')->middleware('permission:geoip.full');
+        // Queues Management
+        Route::get('/queues', [AdminDashboardController::class, 'queues'])->name('queues')->middleware('permission:queues.view');
+        Route::post('/queues', [AdminDashboardController::class, 'saveQueueSettings'])->name('queues.save')->middleware('permission:queues.full');
+        Route::post('/queues/regenerate-token', [AdminDashboardController::class, 'regenerateQueueToken'])->name('queues.token.regenerate')->middleware('permission:queues.full');
 
-        Route::post('/modules/robots/save', [AdminDashboardController::class, 'saveRobots'])->name('robots.save')->middleware('permission:robots.edit');
-        Route::post('/modules/robots/test', [AdminDashboardController::class, 'testRobots'])->name('robots.test')->middleware('permission:robots.view');
-
-        Route::get('/search', [AdminSearchController::class, 'search'])->name('search.ajax')->middleware('permission:search.view');
-        Route::post('/search/settings', [AdminSearchController::class, 'saveSettings'])->name('search.settings.save')->middleware('permission:search.edit');
-
-        Route::get('/products', [AdminDashboardController::class, 'products'])->name('products')->middleware('permission:products.view');
-        Route::get('/products/checker', [AdminDashboardController::class, 'productsChecker'])->name('products.checker')->middleware('permission:products.check');
-        Route::post('/products/bulk', [AdminDashboardController::class, 'bulkProductAction'])->name('products.bulk')->middleware('permission:products.edit');
-        Route::post('/products/{product}/toggle', [AdminDashboardController::class, 'toggleProductStatus'])->name('products.toggle')->middleware('permission:products.edit');
-        Route::get('/products/digikala-ids', [AdminDashboardController::class, 'getDigikalaIdsForCheck'])->name('products.digikala_ids')->middleware('permission:products.check');
-        Route::post('/products/check-api', [AdminDashboardController::class, 'checkProductsApiStatus'])->name('products.check_api')->middleware('permission:products.check');
-
-        Route::get('/product-mappings', [AdminDashboardController::class, 'productIdMappings'])->name('product_mappings')->middleware('permission:products.view');
-        Route::post('/product-mappings', [AdminDashboardController::class, 'storeProductIdMapping'])->name('product_mappings.store')->middleware('permission:products.edit');
-        Route::delete('/product-mappings/{mapping}', [AdminDashboardController::class, 'deleteProductIdMapping'])->name('product_mappings.delete')->middleware('permission:products.edit');
-
-        Route::get('/megamenu', [AdminDashboardController::class, 'megamenuHub'])->name('megamenu')->middleware('permission:megamenu.view');
-        Route::post('/megamenu/save', [AdminDashboardController::class, 'saveMegamenu'])->name('megamenu.save')->middleware('permission:megamenu.edit');
-        Route::post('/megamenu/test-links', [AdminDashboardController::class, 'testMegamenuLinks'])->name('megamenu.test_links')->middleware('permission:megamenu.view');
-
-        Route::get('/error-pages', [AdminDashboardController::class, 'errorPagesHub'])->name('error_pages')->middleware('permission:error_pages.view');
-        Route::post('/error-pages/save', [AdminDashboardController::class, 'saveErrorPagesSettings'])->name('error_pages.save')->middleware('permission:error_pages.edit');
-
+        // Object Cache & Web Cache
+        Route::get('/object-cache', [AdminDashboardController::class, 'objectCacheHub'])->name('object_cache')->middleware('permission:object_cache.view');
         Route::post('/object-cache/settings', [AdminDashboardController::class, 'saveObjectCacheSettings'])->name('object-cache.settings.save')->middleware('permission:object_cache.edit');
         Route::post('/object-cache/test', [AdminDashboardController::class, 'testObjectCacheConnection'])->name('object-cache.test')->middleware('permission:object_cache.view');
         Route::post('/object-cache/purge', [AdminDashboardController::class, 'purgeObjectCache'])->name('object-cache.purge')->middleware('permission:object_cache.full');
         Route::post('/object-cache/item-delete', [AdminDashboardController::class, 'deleteObjectCacheItem'])->name('object-cache.item.delete')->middleware('permission:object_cache.full');
 
+        Route::get('/cache-management', [AdminDashboardController::class, 'cacheManagementHub'])->name('cache_management')->middleware('permission:cache_management.view');
         Route::post('/cache-management/settings', [AdminDashboardController::class, 'saveCacheManagementSettings'])->name('cache-management.settings.save')->middleware('permission:cache_management.edit');
         Route::post('/cache-management/htaccess', [AdminDashboardController::class, 'saveHtaccessSettings'])->name('cache-management.htaccess.save')->middleware('permission:cache_management.edit');
         Route::get('/cache-management/htaccess-backup', [AdminDashboardController::class, 'downloadHtaccessBackup'])->name('cache-management.htaccess.backup')->middleware('permission:cache_management.edit');
 
-        Route::post('/artisan-commands/execute', [AdminDashboardController::class, 'executeArtisanCommand'])->name('artisan-commands.execute')->middleware('permission:dashboard.view');
-        Route::post('/artisan-commands/verify-password', [AdminDashboardController::class, 'verifyArtisanPassword'])->name('artisan-commands.verify-password')->middleware('permission:dashboard.view');
+        // GeoIP & Visitor Intelligence
+        Route::get('/geoip', [AdminDashboardController::class, 'geoipHub'])->name('geoip')->middleware('permission:geoip.view');
+        Route::post('/geoip/update', [AdminDashboardController::class, 'updateGeoIp'])->name('geoip.update')->middleware('permission:geoip.full');
+
+        Route::get('/visitor-intelligence', [AdminDashboardController::class, 'visitorIntelligenceHub'])->name('visitor_intelligence')->middleware('permission:geoip.full');
         Route::post('/visitor-intelligence/save', [AdminDashboardController::class, 'saveVisitorIntelligence'])->name('visitor-intelligence.save')->middleware('permission:geoip.full');
         Route::post('/visitor-intelligence/test', [AdminDashboardController::class, 'testUserAgent'])->name('visitor-intelligence.test')->middleware('permission:geoip.full');
         Route::post('/visitor-intelligence/asn-fetch', [AdminDashboardController::class, 'fetchAsnData'])->name('visitor-intelligence.asn_fetch')->middleware('permission:geoip.full');
         Route::post('/visitor-intelligence/asn-bulk-update', [AdminDashboardController::class, 'bulkUpdateAsnData'])->name('visitor-intelligence.asn_bulk_update')->middleware('permission:geoip.full');
 
-        Route::get('/categories/tree', [AdminDashboardController::class, 'getCategoryTree'])->name('categories.tree');
-        Route::get('/categories/{category}/details', [AdminDashboardController::class, 'getCategoryDetails'])->name('categories.details');
-        Route::post('/categories/map', [AdminDashboardController::class, 'saveCategoryMapping'])->name('categories.map');
-        Route::post('/categories/{category}/update', [AdminDashboardController::class, 'updateCategory'])->name('categories.update');
-        Route::post('/categories/settings', [AdminDashboardController::class, 'saveCategorySettings'])->name('categories.settings.save');
-        Route::post('/categories/import-snapp', [AdminDashboardController::class, 'importSnappShopCategories'])->name('categories.import.snapp');
-        Route::post('/categories/ai-test', [AdminDashboardController::class, 'testAiEmbedding'])->name('categories.ai_test');
-        Route::post('/categories/sync-all', [AdminDashboardController::class, 'syncAllCategories'])->name('categories.sync_all');
-        Route::get('/categories/linked', [AdminDashboardController::class, 'getLinkedCategories'])->name('categories.linked');
+        // Robots
+        Route::get('/robots', [AdminDashboardController::class, 'robotsHub'])->name('robots')->middleware('permission:robots.view');
+        Route::post('/robots/save', [AdminDashboardController::class, 'saveRobots'])->name('robots.save')->middleware('permission:robots.edit');
+        Route::post('/robots/test', [AdminDashboardController::class, 'testRobots'])->name('robots.test')->middleware('permission:robots.view');
 
-        Route::get('/modules/sitemap/status', [AdminDashboardController::class, 'sitemapStatus'])->name('sitemap.status')->middleware('permission:sitemap.view');
-        Route::post('/modules/sitemap/settings', [AdminDashboardController::class, 'saveSitemapSettings'])->name('sitemap.settings')->middleware('permission:sitemap.view');
-        Route::post('/modules/sitemap/rebuild', [AdminDashboardController::class, 'startSitemapRebuild'])->name('sitemap.rebuild')->middleware('permission:sitemap.view');
-        Route::post('/modules/sitemap/stop', [AdminDashboardController::class, 'stopSitemap'])->name('sitemap.stop')->middleware('permission:sitemap.view');
-        Route::post('/modules/sitemap/reset', [AdminDashboardController::class, 'resetSitemap'])->name('sitemap.reset')->middleware('permission:sitemap.view');
-        Route::post('/modules/sitemap/clean-logs', [AdminDashboardController::class, 'cleanSitemapLogs'])->name('sitemap.clean-logs')->middleware('permission:sitemap.view');
+        // Search
+        Route::get('/search', [AdminSearchController::class, 'search'])->name('search.ajax')->middleware('permission:search.view');
+        Route::get('/search/hub', [AdminSearchController::class, 'searchHub'])->name('search.hub')->middleware('permission:search.view');
+        Route::post('/search/settings', [AdminSearchController::class, 'saveSettings'])->name('search.settings.save')->middleware('permission:search.edit');
 
-        Route::post('/modules/indexnow/settings', [IndexNowController::class, 'saveSettings'])->name('indexnow.settings.save')->middleware('permission:indexnow.edit');
-        Route::post('/modules/indexnow/regenerate-key', [IndexNowController::class, 'regenerateKey'])->name('indexnow.key.regenerate')->middleware('permission:indexnow.edit');
+        // Sitemap
+        Route::get('/sitemap', [AdminDashboardController::class, 'sitemapHubView'])->name('sitemap')->middleware('permission:sitemap.view');
+        Route::get('/sitemap/status', [AdminDashboardController::class, 'sitemapStatus'])->name('sitemap.status')->middleware('permission:sitemap.view');
+        Route::post('/sitemap/settings', [AdminDashboardController::class, 'saveSitemapSettings'])->name('sitemap.settings')->middleware('permission:sitemap.view');
+        Route::post('/sitemap/rebuild', [AdminDashboardController::class, 'startSitemapRebuild'])->name('sitemap.rebuild')->middleware('permission:sitemap.view');
+        Route::post('/sitemap/stop', [AdminDashboardController::class, 'stopSitemap'])->name('sitemap.stop')->middleware('permission:sitemap.view');
+        Route::post('/sitemap/reset', [AdminDashboardController::class, 'resetSitemap'])->name('sitemap.reset')->middleware('permission:sitemap.view');
+        Route::post('/sitemap/clean-logs', [AdminDashboardController::class, 'cleanSitemapLogs'])->name('sitemap.clean-logs')->middleware('permission:sitemap.view');
+
+        // IndexNow
+        Route::get('/indexnow', [IndexNowController::class, 'hub'])->name('indexnow')->middleware('permission:indexnow.view');
+        Route::post('/indexnow/settings', [IndexNowController::class, 'saveSettings'])->name('indexnow.settings.save')->middleware('permission:indexnow.edit');
+        Route::post('/indexnow/regenerate-key', [IndexNowController::class, 'regenerateKey'])->name('indexnow.key.regenerate')->middleware('permission:indexnow.edit');
+
+        // File Manager
+        Route::get('/file-manager', [AdminDashboardController::class, 'fileManagerHub'])->name('file_manager')->middleware('permission:file_manager.view');
+        Route::get('/file-manager/explore', [AdminDashboardController::class, 'fileManagerExplore'])->name('file_manager.explore')->middleware('permission:file_manager.view');
+        Route::post('/file-manager/explore/upload', [AdminDashboardController::class, 'fileManagerUpload'])->name('file_manager.explore.upload')->middleware('permission:file_manager.full');
+        Route::post('/file-manager/explore/create-folder', [AdminDashboardController::class, 'fileManagerCreateFolder'])->name('file_manager.explore.create-folder')->middleware('permission:file_manager.full');
+        Route::post('/file-manager/explore/delete', [AdminDashboardController::class, 'fileManagerDelete'])->name('file_manager.explore.delete')->middleware('permission:file_manager.full');
+        Route::post('/file-manager/explore/rename', [AdminDashboardController::class, 'fileManagerRename'])->name('file_manager.explore.rename')->middleware('permission:file_manager.full');
+        Route::post('/file-manager/explore/move', [AdminDashboardController::class, 'fileManagerMove'])->name('file_manager.explore.move')->middleware('permission:file_manager.full');
+        Route::post('/file-manager/explore/copy', [AdminDashboardController::class, 'fileManagerCopy'])->name('file_manager.explore.copy')->middleware('permission:file_manager.full');
+        Route::post('/file-manager/settings/save', [AdminDashboardController::class, 'fileManagerSettingsSave'])->name('file-manager.settings.save')->middleware('permission:file_manager.full');
+
+        // Artisan Commands
+        Route::get('/artisan-commands', [AdminDashboardController::class, 'artisanCommandsHub'])->name('artisan_commands')->middleware('permission:dashboard.view');
+        Route::post('/artisan-commands/execute', [AdminDashboardController::class, 'executeArtisanCommand'])->name('artisan-commands.execute')->middleware('permission:dashboard.view');
+        Route::post('/artisan-commands/verify-password', [AdminDashboardController::class, 'verifyArtisanPassword'])->name('artisan-commands.verify-password')->middleware('permission:dashboard.view');
+
+        // Legacy Aliases / Compatibility Redirects
+        Route::get('/modules', fn () => redirect()->route('dash.admin.index', ['authkey' => request()->route('authkey')]))->name('modules');
+        Route::get('/modules/{moduleKey}', function ($authkey, $moduleKey) {
+            $routes = [
+                'email_settings' => 'email_settings',
+                'sms_settings' => 'sms_settings',
+                'contact' => 'contact.messages',
+                'affiliate' => 'affiliate.settings',
+                'file_manager' => 'file_manager',
+                'home_items_management' => 'home_items',
+                'email_templates' => 'email.templates',
+                'queues' => 'queues',
+                'comments' => 'comments',
+                'tickets' => 'tickets',
+                'faq' => 'faq.hub',
+                'geoip' => 'geoip',
+                'robots' => 'robots',
+                'search' => 'search.hub',
+                'megamenu' => 'megamenu',
+                'error_pages' => 'error_pages',
+                'cache_management' => 'cache_management',
+                'object_cache' => 'object_cache',
+                'artisan_commands' => 'artisan_commands',
+                'visitor_intelligence' => 'visitor_intelligence',
+                'categories' => 'categories.hub',
+                'sitemap' => 'sitemap',
+                'indexnow' => 'indexnow',
+            ];
+            $target = $routes[$moduleKey] ?? 'index';
+
+            return redirect()->route("dash.admin.{$target}", array_merge(['authkey' => $authkey], request()->query()));
+        })->name('modules.show');
+        Route::post('/modules/home-slider', [AdminDashboardController::class, 'saveHomeSliderSettings'])->name('modules.home-slider.save');
+        Route::post('/modules/home-banners-categories', [AdminDashboardController::class, 'saveHomeBannerCategorySettings'])->name('modules.home-banners-categories.save');
+        Route::get('/modules/file-manager/explore', [AdminDashboardController::class, 'fileManagerExplore'])->name('modules.explore');
+        Route::post('/modules/file-manager/explore/upload', [AdminDashboardController::class, 'fileManagerUpload']);
+        Route::post('/modules/file-manager/explore/create-folder', [AdminDashboardController::class, 'fileManagerCreateFolder']);
+        Route::post('/modules/file-manager/explore/delete', [AdminDashboardController::class, 'fileManagerDelete']);
+        Route::post('/modules/file-manager/explore/rename', [AdminDashboardController::class, 'fileManagerRename']);
+        Route::post('/modules/file-manager/explore/move', [AdminDashboardController::class, 'fileManagerMove']);
+        Route::post('/modules/file-manager/explore/copy', [AdminDashboardController::class, 'fileManagerCopy']);
+        Route::get('/modules/sitemap/status', [AdminDashboardController::class, 'sitemapStatus']);
+        Route::post('/modules/sitemap/settings', [AdminDashboardController::class, 'saveSitemapSettings']);
+        Route::post('/modules/sitemap/rebuild', [AdminDashboardController::class, 'startSitemapRebuild']);
+        Route::post('/modules/sitemap/stop', [AdminDashboardController::class, 'stopSitemap']);
+        Route::post('/modules/sitemap/reset', [AdminDashboardController::class, 'resetSitemap']);
+        Route::post('/modules/sitemap/clean-logs', [AdminDashboardController::class, 'cleanSitemapLogs']);
+        Route::post('/modules/indexnow/settings', [IndexNowController::class, 'saveSettings']);
+        Route::post('/modules/indexnow/regenerate-key', [IndexNowController::class, 'regenerateKey']);
     });
 
 Route::prefix('admin')
